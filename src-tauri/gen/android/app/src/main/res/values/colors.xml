@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="launcher_background">#122033</color>
+    <color name="launcher_glow">#1E3854</color>
+    <color name="splash_background">#122033</color>
+    <color name="system_surface">#FFF7EF</color>
+    <color name="system_surface_dark">#0F1A28</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>

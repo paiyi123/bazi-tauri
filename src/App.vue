@@ -1,160 +1,115 @@
-<script setup lang="ts">
-import { ref } from "vue";
-import { invoke } from "@tauri-apps/api/core";
-
-const greetMsg = ref("");
-const name = ref("");
-
-async function greet() {
-  // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-  greetMsg.value = await invoke("greet", { name: name.value });
-}
-</script>
-
 <template>
-  <main class="container">
-    <h1>Welcome to Tauri + Vue</h1>
+  <div class="app-shell">
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Tauri + tyme4rs</p>
+        <h1>八字排盤</h1>
+        <p class="subtitle">
+          參考 `bazi-sources` 的核心流程改寫為本機應用，現在同時可往 Windows 與 Android 版本延伸，並保留大運、流年、流月展示。
+        </p>
+      </div>
+    </header>
 
-    <div class="row">
-      <a href="https://vite.dev" target="_blank">
-        <img src="/vite.svg" class="logo vite" alt="Vite logo" />
-      </a>
-      <a href="https://tauri.app" target="_blank">
-        <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-      </a>
-      <a href="https://vuejs.org/" target="_blank">
-        <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-      </a>
-    </div>
-    <p>Click on the Tauri, Vite, and Vue logos to learn more.</p>
+    <main class="page-grid">
+      <section class="left-column">
+        <el-card shadow="never" class="mode-card">
+          <el-segmented v-model="inputMode" :options="modeOptions" block />
+        </el-card>
+        <BirthForm
+          v-if="inputMode === 'birth'"
+          :loading="loading"
+          :error="error"
+          @submit="handleSubmit"
+        />
+        <PillarInputForm
+          v-else
+          :loading="loading"
+          :error="error"
+          @submit="handleSubmitPillars"
+        />
+      </section>
 
-    <form class="row" @submit.prevent="greet">
-      <input id="greet-input" v-model="name" placeholder="Enter a name..." />
-      <button type="submit">Greet</button>
-    </form>
-    <p>{{ greetMsg }}</p>
-  </main>
+      <section class="right-column">
+        <div v-if="result" class="result-stack">
+          <SummaryPanel :result="result" />
+          <PillarPanel :result="result" :preview-pillars="focusedLuckPillars" />
+          <LuckCyclePanel :result="result" @preview-change="handlePreviewChange" />
+          <FiveElementStrengthPanel :result="result" />
+          <QuantFivePhasePanel :result="result" @preview-change="handlePreviewChange" />
+          <TenGodPanel :result="result" />
+        </div>
+
+        <el-card v-else shadow="hover" class="empty-card">
+          <el-empty description="左側輸入出生資料後，系統會以本機 Rust 引擎計算四柱、大運與起運資訊。">
+            <template #image>
+              <div class="empty-mark">命</div>
+            </template>
+          </el-empty>
+        </el-card>
+      </section>
+    </main>
+  </div>
 </template>
 
-<style scoped>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
+<script setup lang="ts">
+import { ref, watch } from "vue";
+import BirthForm from "./components/BirthForm.vue";
+import FiveElementStrengthPanel from "./components/FiveElementStrengthPanel.vue";
+import LuckCyclePanel from "./components/LuckCyclePanel.vue";
+import PillarPanel from "./components/PillarPanel.vue";
+import PillarInputForm from "./components/PillarInputForm.vue";
+import QuantFivePhasePanel from "./components/QuantFivePhasePanel.vue";
+import SummaryPanel from "./components/SummaryPanel.vue";
+import TenGodPanel from "./components/TenGodPanel.vue";
+import { analyzePillars, calculateBazi } from "./services/bazi";
+import type {
+  BaziRequest,
+  BaziResponse,
+  LuckPreviewPillar,
+  PillarAnalyzeRequest,
+} from "./types/bazi";
+
+const result = ref<BaziResponse | null>(null);
+const loading = ref(false);
+const error = ref("");
+const inputMode = ref<"birth" | "pillars">("birth");
+const focusedLuckPillars = ref<LuckPreviewPillar[]>([]);
+const modeOptions = [
+  { label: "出生資料", value: "birth" },
+  { label: "直接輸入四柱", value: "pillars" },
+];
+
+watch(result, () => {
+  focusedLuckPillars.value = [];
+});
+
+function handlePreviewChange(pillars: LuckPreviewPillar[] | null) {
+  focusedLuckPillars.value = pillars ?? [];
 }
 
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #249b73);
-}
+async function handleSubmit(payload: BaziRequest) {
+  loading.value = true;
+  error.value = "";
 
-</style>
-<style>
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
-
-  a:hover {
-    color: #24c8db;
-  }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
+  try {
+    result.value = await calculateBazi(payload);
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : "排盤失敗";
+  } finally {
+    loading.value = false;
   }
 }
 
-</style>
+async function handleSubmitPillars(payload: PillarAnalyzeRequest) {
+  loading.value = true;
+  error.value = "";
+
+  try {
+    result.value = await analyzePillars(payload);
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : "四柱分析失敗";
+  } finally {
+    loading.value = false;
+  }
+}
+</script>

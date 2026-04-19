@@ -1,0 +1,12 @@
+{
+  "productName": "BaZi",
+  "build": {
+    "beforeDevCommand": "npm.cmd run dev",
+    "devUrl": null,
+    "beforeBuildCommand": "npm.cmd run build",
+    "frontendDist": "../dist"
+  },
+  "bundle": {
+    "active": true
+  }
+}

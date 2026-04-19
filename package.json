@@ -1,18 +1,26 @@
 {
-  "name": "bazi",
+  "name": "bazi-desktop",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "tauri:android:init": "powershell -ExecutionPolicy Bypass -File .\\scripts\\tauri-android.ps1 init --ci",
+    "tauri:android:dev": "powershell -ExecutionPolicy Bypass -File .\\scripts\\tauri-android.ps1 dev",
+    "tauri:android:build": "powershell -ExecutionPolicy Bypass -File .\\scripts\\tauri-android.ps1 build",
+    "tauri:android:apk": "powershell -ExecutionPolicy Bypass -File .\\scripts\\tauri-android.ps1 build --apk",
+    "tauri:android:aab": "powershell -ExecutionPolicy Bypass -File .\\scripts\\tauri-android.ps1 build --aab"
   },
   "dependencies": {
-    "vue": "^3.5.13",
     "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-opener": "^2"
+    "@tauri-apps/plugin-opener": "^2",
+    "element-plus": "^2.13.5",
+    "vue": "^3.5.13"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.1",
