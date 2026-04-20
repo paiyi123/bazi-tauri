@@ -10,10 +10,10 @@
       </div>
     </template>
 
-    <el-form label-position="top" @submit.prevent="onSubmit">
+    <el-form label-position="top" :size="formSize" @submit.prevent="onSubmit">
       <el-row :gutter="12">
         <el-col :span="24">
-          <el-form-item label="已儲存人物">
+          <el-form-item label="已儲存人物" :class="{ 'compact-form-item': compact }">
             <el-select
               v-model="selectedRecordId"
               clearable
@@ -33,21 +33,21 @@
         </el-col>
 
         <el-col :span="12">
-          <el-form-item label="姓名（儲存用）">
+          <el-form-item label="姓名（儲存用）" :class="{ 'compact-form-item': compact }">
             <el-input v-model="saveName" placeholder="輸入姓名以便儲存" />
           </el-form-item>
         </el-col>
 
         <el-col :span="12" class="save-button-wrap">
-          <el-space wrap>
-            <el-button type="success" plain @click="onSaveRecord">新增儲存</el-button>
-            <el-button type="warning" plain :disabled="!selectedRecordId" @click="onUpdateRecord">
+          <el-space :direction="compact ? 'vertical' : 'horizontal'" :fill="compact" wrap class="save-button-group">
+            <el-button :size="formSize" type="success" plain @click="onSaveRecord">新增儲存</el-button>
+            <el-button :size="formSize" type="warning" plain :disabled="!selectedRecordId" @click="onUpdateRecord">
               更新所選
             </el-button>
-            <el-button type="danger" plain :disabled="!selectedRecordId" @click="onDeleteRecord">
+            <el-button :size="formSize" type="danger" plain :disabled="!selectedRecordId" @click="onDeleteRecord">
               刪除所選
             </el-button>
-            <el-button plain @click="onClearLocalRecords">清除全部</el-button>
+            <el-button :size="formSize" plain @click="onClearLocalRecords">清除全部</el-button>
           </el-space>
         </el-col>
 
@@ -249,7 +249,7 @@
         </el-col>
 
         <el-col :span="24">
-          <el-button type="primary" native-type="submit" :loading="loading" class="submit-button">
+          <el-button :size="formSize" type="primary" native-type="submit" :loading="loading" class="submit-button">
             開始排盤
           </el-button>
         </el-col>
@@ -272,9 +272,10 @@ import type {
 const RECORDS_STORAGE_KEY = "bazi:birth-records:v1";
 const DRAFT_STORAGE_KEY = "bazi:birth-form-draft:v1";
 
-defineProps<{
+const props = defineProps<{
   loading: boolean;
   error: string;
+  compact?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -317,6 +318,7 @@ const saveMessage = ref("");
 const auxiliaryError = ref("");
 const savedRecords = ref<BirthRecordResponse[]>([]);
 const selectedRecordId = ref<number | null>(null);
+const formSize = computed(() => (props.compact ? "small" : "default"));
 
 const timePresetMap: Record<TimePreset, { hour: number; minute: number; label: string }> = {
   ZI_EARLY: { hour: 0, minute: 0, label: "日子 00:00" },
@@ -626,6 +628,10 @@ function onSubmit() {
   align-items: center;
 }
 
+.save-button-group {
+  width: 100%;
+}
+
 .storage-label {
   margin-top: 8px;
   font-size: 12px;
@@ -633,6 +639,32 @@ function onSubmit() {
 }
 
 @media (max-width: 768px) {
+  :deep(.el-form-item) {
+    margin-bottom: 14px;
+  }
+
+  :deep(.el-form-item__label) {
+    padding-bottom: 4px;
+    font-size: 12px;
+    line-height: 1.3;
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-select__wrapper),
+  :deep(.el-textarea__inner),
+  :deep(.el-input-number) {
+    min-height: 34px;
+  }
+
+  :deep(.el-alert) {
+    padding: 8px 10px;
+  }
+
+  :deep(.el-alert__title) {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
   :deep(.el-row) {
     row-gap: 12px;
   }
@@ -644,6 +676,36 @@ function onSubmit() {
 
   .save-button-wrap {
     align-items: stretch;
+  }
+
+  .save-button-group :deep(.el-button) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .storage-label {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  :deep(.el-row) {
+    row-gap: 8px;
+  }
+
+  :deep(.el-form-item) {
+    margin-bottom: 10px;
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-select__wrapper),
+  :deep(.el-textarea__inner),
+  :deep(.el-input-number) {
+    min-height: 32px;
+  }
+
+  .save-button-wrap {
+    margin-top: -2px;
   }
 }
 </style>

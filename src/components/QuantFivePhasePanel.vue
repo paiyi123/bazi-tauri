@@ -14,19 +14,19 @@
       class="mb-4"
     />
 
-    <el-descriptions :column="2" border class="mb-4" v-if="result.quantModel">
+    <el-descriptions :column="compact ? 1 : 2" :size="compact ? 'small' : 'default'" border class="mb-4" v-if="result.quantModel">
       <el-descriptions-item label="天干總分">{{ result.quantModel.stemScoreTotal }}</el-descriptions-item>
       <el-descriptions-item label="地支總分">{{ result.quantModel.branchScoreTotal }}</el-descriptions-item>
       <el-descriptions-item label="命局總分">{{ result.quantModel.totalScore }}</el-descriptions-item>
       <el-descriptions-item label="判定">{{ result.quantModel.strengthLabel }}</el-descriptions-item>
-      <el-descriptions-item label="說明" :span="2">{{ result.quantModel.note }}</el-descriptions-item>
+      <el-descriptions-item label="說明" :span="compact ? 1 : 2">{{ result.quantModel.note }}</el-descriptions-item>
     </el-descriptions>
 
     <h3 class="sub-title">天干計分（書表列法）</h3>
-    <QuantStemScoreTable :scores="result.quantModel?.stemScores || []" />
+    <QuantStemScoreTable :scores="result.quantModel?.stemScores || []" :compact="compact" />
 
     <h3 class="sub-title">地支計分（書表列法）</h3>
-    <QuantBranchScoreList :scores="result.quantModel?.branchScores || []" />
+    <QuantBranchScoreList :scores="result.quantModel?.branchScores || []" :compact="compact" />
 
     <h3 class="sub-title" v-if="(result.quantModel?.luckScores || []).length">大運量化</h3>
     <LuckQuantTable
@@ -51,6 +51,7 @@ const emit = defineEmits<{
 
 defineProps<{
   result: BaziResponse;
+  compact?: boolean;
 }>();
 </script>
 
@@ -68,5 +69,17 @@ defineProps<{
   margin-top: 12px;
   font-size: 12px;
   color: var(--el-text-color-secondary);
+}
+
+@media (max-width: 768px) {
+  :deep(.el-descriptions__label),
+  :deep(.el-descriptions__content) {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .sub-title {
+    font-size: 14px;
+  }
 }
 </style>

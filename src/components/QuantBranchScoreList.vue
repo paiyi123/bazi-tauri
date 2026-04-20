@@ -7,21 +7,21 @@
       </el-tag>
     </div>
     <el-table :data="branch.rows || []" stripe size="small" class="mb-3">
-      <el-table-column prop="hiddenStem" label="藏干" width="80" />
-      <el-table-column prop="tenGod" label="十神" width="90" />
-      <el-table-column prop="ratio" label="比例" width="90">
+      <el-table-column prop="hiddenStem" label="藏干" :width="compact ? 68 : 80" />
+      <el-table-column prop="tenGod" label="十神" :width="compact ? 76 : 90" />
+      <el-table-column prop="ratio" label="比例" :width="compact ? 76 : 90">
         <template #default="{ row }">{{ formatRatio(row.ratio) }}</template>
       </el-table-column>
-      <el-table-column prop="rawScore" label="本分" width="90" />
-      <el-table-column prop="positionAdjustedScore" label="位調" width="90" />
-      <el-table-column prop="interaction" label="互動" width="90" />
-      <el-table-column prop="adjustmentScore" label="增減" width="90">
+      <el-table-column prop="rawScore" label="本分" :width="compact ? 76 : 90" />
+      <el-table-column prop="positionAdjustedScore" label="位調" :width="compact ? 76 : 90" />
+      <el-table-column prop="interaction" label="互動" :width="compact ? 76 : 90" />
+      <el-table-column prop="adjustmentScore" label="增減" :width="compact ? 76 : 90">
         <template #default="{ row }">{{ formatMaybe(row.adjustmentScore) }}</template>
       </el-table-column>
-      <el-table-column prop="finalContribution" label="列分" width="90" />
-      <el-table-column prop="note" label="說明" min-width="260" />
+      <el-table-column prop="finalContribution" label="列分" :width="compact ? 76 : 90" />
+      <el-table-column prop="note" label="說明" :min-width="compact ? 180 : 260" />
     </el-table>
-    <el-descriptions :column="5" border size="small" class="mb-4">
+    <el-descriptions :column="compact ? 1 : 5" border size="small" class="mb-4">
       <el-descriptions-item label="合化">{{ branch.combineNote || "-" }}</el-descriptions-item>
       <el-descriptions-item label="支基礎分">{{ branch.baseScore }}</el-descriptions-item>
       <el-descriptions-item label="位調後">{{ formatMaybe(branch.positionAdjustedScore) }}</el-descriptions-item>
@@ -37,6 +37,7 @@ import type { QuantModelPillarScore } from "../types/bazi";
 
 const props = defineProps<{
   scores: QuantModelPillarScore[];
+  compact?: boolean;
 }>();
 
 const displayBranchScores = computed(() => {
@@ -83,5 +84,19 @@ function formatRatio(value?: number) {
 
 .branch-combine-tag {
   font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .branch-title {
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  :deep(.el-table .cell),
+  :deep(.el-descriptions__label),
+  :deep(.el-descriptions__content) {
+    font-size: 12px;
+    line-height: 1.4;
+  }
 }
 </style>

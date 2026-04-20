@@ -9,7 +9,7 @@
       </div>
     </template>
 
-    <el-form label-position="top" @submit.prevent="onSubmit">
+    <el-form label-position="top" :size="formSize" @submit.prevent="onSubmit">
       <el-row :gutter="12">
         <el-col :span="12">
           <el-form-item label="性別">
@@ -54,10 +54,10 @@
         </template>
 
         <el-col :span="24" class="action-row">
-          <el-button type="primary" native-type="submit" :loading="loading" class="submit-button">
+          <el-button :size="formSize" type="primary" native-type="submit" :loading="loading" class="submit-button">
             開始分析四柱
           </el-button>
-          <el-button @click="resetSavedInput">清除暫存</el-button>
+          <el-button :size="formSize" @click="resetSavedInput">清除暫存</el-button>
         </el-col>
 
         <el-col v-if="error" :span="24">
@@ -74,9 +74,10 @@ import type { PillarAnalyzeRequest } from "../types/bazi";
 
 const STORAGE_KEY = "bazi:pillar-input:v1";
 
-defineProps<{
+const props = defineProps<{
   loading: boolean;
   error: string;
+  compact?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -115,6 +116,7 @@ function loadSavedForm() {
 }
 
 const form = reactive(loadSavedForm());
+const formSize = computed(() => (props.compact ? "small" : "default"));
 
 watch(
   form,
@@ -162,6 +164,30 @@ function resetSavedInput() {
 }
 
 @media (max-width: 768px) {
+  :deep(.el-form-item) {
+    margin-bottom: 14px;
+  }
+
+  :deep(.el-form-item__label) {
+    padding-bottom: 4px;
+    font-size: 12px;
+    line-height: 1.3;
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-select__wrapper) {
+    min-height: 34px;
+  }
+
+  :deep(.el-alert) {
+    padding: 8px 10px;
+  }
+
+  :deep(.el-alert__title) {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
   :deep(.el-row) {
     row-gap: 12px;
   }
@@ -169,6 +195,30 @@ function resetSavedInput() {
   :deep(.el-col) {
     max-width: 100%;
     flex: 0 0 100%;
+  }
+
+  .pillar-row-title {
+    font-size: 13px;
+  }
+
+  .action-row :deep(.el-button) {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  :deep(.el-form-item) {
+    margin-bottom: 10px;
+  }
+
+  :deep(.el-row) {
+    row-gap: 8px;
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-select__wrapper) {
+    min-height: 32px;
   }
 }
 </style>

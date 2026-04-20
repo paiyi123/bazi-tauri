@@ -9,7 +9,7 @@
       </div>
     </template>
 
-    <el-descriptions :column="2" border>
+    <el-descriptions :column="descriptionColumns" border :size="compact ? 'small' : 'default'">
       <el-descriptions-item label="輸入曆別">{{ result.inputCalendarType }}</el-descriptions-item>
       <el-descriptions-item label="輸入日期">{{ result.inputDateTime }}</el-descriptions-item>
       <el-descriptions-item label="公曆">{{ result.solarDateTime }}</el-descriptions-item>
@@ -32,20 +32,20 @@
       <el-descriptions-item label="身宮">{{ result.shenGong }}</el-descriptions-item>
       <template v-if="hasExactLuckTiming">
         <el-descriptions-item label="起運日期">{{ luckStart?.startSolar }}</el-descriptions-item>
-        <el-descriptions-item label="起運偏移" :span="2">
+        <el-descriptions-item label="起運偏移" :span="fullSpan">
           {{ luckStart?.startYear }}年 {{ luckStart?.startMonth }}月 {{ luckStart?.startDay }}日 {{ luckStart?.startHour }}時
         </el-descriptions-item>
-        <el-descriptions-item label="上大運" :span="2">
+        <el-descriptions-item label="上大運" :span="fullSpan">
           出生後{{ luckStart?.startSummary || `${luckStart?.startYear}年${luckStart?.startMonth}月${luckStart?.startDay}日` }}上大運
         </el-descriptions-item>
       </template>
-      <el-descriptions-item v-else label="起運資訊" :span="2">
+      <el-descriptions-item v-else label="起運資訊" :span="fullSpan">
         {{ luckStartSummary }}
       </el-descriptions-item>
-      <el-descriptions-item v-if="luckTransitionSummary" label="交脫大運" :span="2">
+      <el-descriptions-item v-if="luckTransitionSummary" label="交脫大運" :span="fullSpan">
         {{ luckTransitionSummary }}
       </el-descriptions-item>
-      <el-descriptions-item v-if="luckStart?.transitionSummaryExperimental" label="交脫大運（研究值）" :span="2">
+      <el-descriptions-item v-if="luckStart?.transitionSummaryExperimental" label="交脫大運（研究值）" :span="fullSpan">
         {{ luckStart.transitionSummaryExperimental }}
       </el-descriptions-item>
     </el-descriptions>
@@ -56,7 +56,10 @@
 import { computed } from "vue";
 import type { BaziResponse } from "../types/bazi";
 
-const props = defineProps<{ result: BaziResponse }>();
+const props = defineProps<{
+  result: BaziResponse;
+  compact?: boolean;
+}>();
 
 type WuXing = "wood" | "fire" | "earth" | "metal" | "water";
 
@@ -89,6 +92,8 @@ const BRANCH_WUXING: Record<string, WuXing> = {
 };
 
 const luckStart = computed(() => props.result.luckStart);
+const descriptionColumns = computed(() => (props.compact ? 1 : 2));
+const fullSpan = computed(() => (props.compact ? 1 : 2));
 const hasExactLuckTiming = computed(
   () =>
     !!luckStart.value &&
@@ -120,7 +125,15 @@ const baziPillars = computed(() => {
 </script>
 
 <style scoped>
+.section-header {
+  align-items: center;
+}
+
 .bazi-colored {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.16em;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -161,5 +174,37 @@ const baziPillars = computed(() => {
 
 .wuxing-water {
   color: #1565c0;
+}
+
+@media (max-width: 768px) {
+  :deep(.el-descriptions__label),
+  :deep(.el-descriptions__content) {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  :deep(.el-descriptions__label.el-descriptions__cell.is-bordered-label) {
+    width: 92px;
+  }
+
+  .bazi-colored {
+    font-size: 16px;
+    line-height: 1.35;
+  }
+
+  .pillar-gap {
+    width: 0.18em;
+  }
+}
+
+@media (max-width: 480px) {
+  :deep(.el-descriptions__cell) {
+    padding: 8px 10px;
+  }
+
+  .bazi-colored {
+    font-size: 15px;
+    gap: 0 0.1em;
+  }
 }
 </style>

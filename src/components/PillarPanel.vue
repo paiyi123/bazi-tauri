@@ -1,67 +1,108 @@
 <template>
-  <el-card shadow="hover">
+  <el-card shadow="hover" :class="{ 'pillar-panel-compact': compact }">
     <template #header>
       <div class="section-header">
-        <h2>四柱</h2>
+        <h2>{{ panelTitle }}</h2>
       </div>
     </template>
 
-    <el-row :gutter="16">
+    <el-row v-if="showPillars" :gutter="compact ? 10 : 16">
       <el-col
         v-for="item in pillarItems"
         :key="item.key"
-        :xs="24"
+        :xs="compact ? 12 : 24"
         :sm="12"
         :xl="columnSpanXl"
       >
-        <div :class="['pillar-box', { 'is-preview': item.isPreview, 'is-current-year-preview': item.isCurrentYear }]">
-          <div class="score-band score-band-top">
-            <span class="score-band-label">{{ item.topScoreLabel }}</span>
-            <span class="score-band-value">{{ item.topScoreValue }}</span>
-          </div>
-          <p class="pillar-label">{{ item.label }}</p>
-          <div class="meta-row">
-            <div class="meta-label">天干十神</div>
-            <div class="meta-value">{{ item.stemTenGod }}</div>
-          </div>
-          <div class="pillar-main">
-            <div class="pillar-main-row">
-              <div class="pillar-main-label">天干</div>
-              <div :class="['pillar-main-value', 'wuxing-char', `wuxing-${item.stemElement}`]">{{ item.value.stem }}</div>
+        <div
+          :class="[
+            'pillar-box',
+            { 'is-preview': item.isPreview, 'is-current-year-preview': item.isCurrentYear, 'is-compact': compact }
+          ]"
+        >
+          <template v-if="compact">
+            <div class="compact-pillar-header">
+              <p class="pillar-label">{{ item.label }}</p>
+              <span class="compact-score-chip">{{ item.topScoreValue }}</span>
             </div>
-            <div class="pillar-main-row">
-              <div class="pillar-main-label">地支</div>
-              <div :class="['pillar-main-value', 'wuxing-char', `wuxing-${item.branchElement}`]">{{ item.value.branch }}</div>
+            <div :class="['compact-ten-god-chip', tenGodClass(item.stemTenGod)]">{{ item.stemTenGod }}</div>
+            <div class="compact-pillar-ganzhi">
+              <div class="compact-pillar-char-block">
+                <div class="pillar-main-label">天干</div>
+                <div :class="['pillar-main-value', 'wuxing-char', `wuxing-${item.stemElement}`]">{{ item.value.stem }}</div>
+              </div>
+              <div class="compact-pillar-char-block">
+                <div class="pillar-main-label">地支</div>
+                <div :class="['pillar-main-value', 'wuxing-char', `wuxing-${item.branchElement}`]">{{ item.value.branch }}</div>
+              </div>
             </div>
-          </div>
-          <div class="meta-row">
-            <div class="meta-label">地支藏干</div>
-            <div class="meta-value">
-              <template v-for="(hiddenStem, idx) in item.hiddenStems" :key="`${hiddenStem}-${idx}`">
-                <span :class="['wuxing-char', `wuxing-${stemElement(hiddenStem)}`]">{{ hiddenStem }}</span>
-                <span v-if="idx < item.hiddenStems.length - 1" class="hidden-sep">、</span>
-              </template>
+            <div class="compact-pillar-line">
+              <span class="compact-line-label">藏干</span>
+              <span class="compact-line-value compact-hidden-stems">
+                <template v-for="(hiddenStem, idx) in item.hiddenStems" :key="`${hiddenStem}-${idx}`">
+                  <span :class="['wuxing-char', `wuxing-${stemElement(hiddenStem)}`]">{{ hiddenStem }}</span>
+                  <span v-if="idx < item.hiddenStems.length - 1" class="hidden-sep">、</span>
+                </template>
+              </span>
             </div>
-          </div>
-          <div class="meta-row">
-            <div class="meta-label">地支十神</div>
-            <div class="meta-value">{{ item.branchTenGods.join('、') }}</div>
-          </div>
-          <el-descriptions :column="1" size="small">
-            <el-descriptions-item label="納音">{{ item.value.naYin }}</el-descriptions-item>
-            <el-descriptions-item label="五行">{{ item.value.wuXing }}</el-descriptions-item>
-            <el-descriptions-item label="地勢">{{ item.value.diShi }}</el-descriptions-item>
-            <el-descriptions-item label="旬 / 空亡">{{ item.value.xun }} / {{ item.value.xunKong }}</el-descriptions-item>
-          </el-descriptions>
-          <div class="score-band score-band-bottom">
-            <span class="score-band-label">{{ item.bottomScoreLabel }}</span>
-            <span class="score-band-value">{{ item.bottomScoreValue }}</span>
-          </div>
+            <div class="compact-pillar-line">
+              <span class="compact-line-label">支神</span>
+              <span class="compact-line-value">{{ item.branchTenGods.join('、') }}</span>
+            </div>
+            <div class="compact-pillar-foot">
+              <span>{{ item.value.naYin }}</span>
+              <span>{{ item.value.xunKong }}</span>
+            </div>
+          </template>
+          <template v-else>
+            <div class="score-band score-band-top">
+              <span class="score-band-label">{{ item.topScoreLabel }}</span>
+              <span class="score-band-value">{{ item.topScoreValue }}</span>
+            </div>
+            <p class="pillar-label">{{ item.label }}</p>
+            <div class="meta-row">
+              <div class="meta-label">天干十神</div>
+              <div class="meta-value">{{ item.stemTenGod }}</div>
+            </div>
+            <div class="pillar-main">
+              <div class="pillar-main-row">
+                <div class="pillar-main-label">天干</div>
+                <div :class="['pillar-main-value', 'wuxing-char', `wuxing-${item.stemElement}`]">{{ item.value.stem }}</div>
+              </div>
+              <div class="pillar-main-row">
+                <div class="pillar-main-label">地支</div>
+                <div :class="['pillar-main-value', 'wuxing-char', `wuxing-${item.branchElement}`]">{{ item.value.branch }}</div>
+              </div>
+            </div>
+            <div class="meta-row">
+              <div class="meta-label">地支藏干</div>
+              <div class="meta-value">
+                <template v-for="(hiddenStem, idx) in item.hiddenStems" :key="`${hiddenStem}-${idx}`">
+                  <span :class="['wuxing-char', `wuxing-${stemElement(hiddenStem)}`]">{{ hiddenStem }}</span>
+                  <span v-if="idx < item.hiddenStems.length - 1" class="hidden-sep">、</span>
+                </template>
+              </div>
+            </div>
+            <div class="meta-row">
+              <div class="meta-label">地支十神</div>
+              <div class="meta-value">{{ item.branchTenGods.join('、') }}</div>
+            </div>
+            <el-descriptions :column="1" size="small">
+              <el-descriptions-item label="納音">{{ item.value.naYin }}</el-descriptions-item>
+              <el-descriptions-item label="五行">{{ item.value.wuXing }}</el-descriptions-item>
+              <el-descriptions-item label="地勢">{{ item.value.diShi }}</el-descriptions-item>
+              <el-descriptions-item label="旬 / 空亡">{{ item.value.xun }} / {{ item.value.xunKong }}</el-descriptions-item>
+            </el-descriptions>
+            <div class="score-band score-band-bottom">
+              <span class="score-band-label">{{ item.bottomScoreLabel }}</span>
+              <span class="score-band-value">{{ item.bottomScoreValue }}</span>
+            </div>
+          </template>
         </div>
       </el-col>
     </el-row>
 
-    <div class="relation-map-section">
+    <div v-if="showRelationMap" class="relation-map-section">
       <div class="relation-map-header">
         <h3>柱位關係圖</h3>
         <div class="relation-legend">
@@ -149,7 +190,7 @@
       </div>
     </div>
 
-    <div class="interaction-section">
+    <div v-if="showInteractionSection" class="interaction-section">
       <div class="interaction-header">
         <h3>目前盤面合沖刑破</h3>
         <span class="interaction-count">{{ pillarItems.length }}柱</span>
@@ -209,6 +250,10 @@ import type { BaziResponse, LuckPreviewPillar, Pillar } from '../types/bazi'
 const props = defineProps<{
   result: BaziResponse
   previewPillars?: LuckPreviewPillar[]
+  compact?: boolean
+  showPillars?: boolean
+  showRelationMap?: boolean
+  showInteractionSection?: boolean
 }>()
 
 type WuXing = 'wood' | 'fire' | 'earth' | 'metal' | 'water'
@@ -643,6 +688,16 @@ const previewPillarItems = computed<DisplayPillarItem[]>(() =>
 )
 
 const pillarItems = computed<DisplayPillarItem[]>(() => [...natalPillarItems.value, ...previewPillarItems.value])
+
+const showPillars = computed(() => props.showPillars ?? true)
+const showRelationMap = computed(() => props.showRelationMap ?? true)
+const showInteractionSection = computed(() => props.showInteractionSection ?? true)
+const panelTitle = computed(() => {
+  if (showPillars.value) {
+    return '四柱'
+  }
+  return '盤面關係'
+})
 
 const columnSpanXl = computed(() => (previewPillarItems.value.length ? 4 : 6))
 
@@ -1403,6 +1458,192 @@ const relationLinks = computed<RelationLink[]>(() => {
   color: #6a4f1f;
 }
 
+.pillar-panel-compact :deep(.el-card__body) {
+  padding: 12px;
+}
+
+.pillar-box.is-compact {
+  padding: 10px 8px;
+  border-radius: 14px;
+}
+
+.compact-pillar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.compact-score-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 18px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(146, 64, 14, 0.12);
+  color: #92400e;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.compact-ten-god-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 18px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.1;
+  border: 1px solid transparent;
+}
+
+.compact-pillar-ganzhi {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.compact-pillar-char-block {
+  padding: 6px 4px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  text-align: center;
+}
+
+.compact-pillar-line {
+  display: grid;
+  gap: 3px;
+  margin-bottom: 7px;
+}
+
+.compact-line-label {
+  color: var(--el-text-color-secondary);
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.compact-line-value {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.compact-hidden-stems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 2px;
+}
+
+.compact-pillar-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 2px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(188, 195, 211, 0.35);
+  color: #6b7280;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.pillar-panel-compact .relation-map-section {
+  margin-top: 14px;
+}
+
+.pillar-panel-compact .relation-map-header h3,
+.pillar-panel-compact .interaction-header h3 {
+  font-size: 14px;
+}
+
+.pillar-panel-compact .relation-legend-item,
+.pillar-panel-compact .interaction-count,
+.pillar-panel-compact .interaction-hint,
+.pillar-panel-compact .interaction-group-title {
+  font-size: 11px;
+}
+
+.pillar-panel-compact .relation-node-label {
+  font-size: 10px;
+}
+
+.pillar-panel-compact .relation-node-ten-god,
+.pillar-panel-compact .relation-node-hidden-ten-god {
+  font-size: 9px;
+}
+
+.pillar-panel-compact .relation-node-hidden-stem {
+  font-size: 12px;
+}
+
+.pillar-panel-compact .relation-map {
+  min-height: 320px;
+}
+
+.pillar-panel-compact .relation-node {
+  min-width: 84px;
+  max-width: 108px;
+  height: 156px;
+  padding: 6px 6px 8px;
+}
+
+.pillar-panel-compact .relation-node-stem,
+.pillar-panel-compact .relation-node-branch {
+  font-size: 18px;
+}
+
+.pillar-panel-compact .relation-node-hidden-stems {
+  min-height: 52px;
+  max-height: 52px;
+  gap: 4px;
+}
+
+.pillar-panel-compact :deep(.el-table .cell) {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.pillar-box.is-compact .pillar-label,
+.pillar-box.is-compact .meta-value,
+.pillar-box.is-compact .pillar-main-value {
+  word-break: break-word;
+}
+
+.pillar-box.is-compact .pillar-label {
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.pillar-box.is-compact .meta-row {
+  margin-bottom: 6px;
+}
+
+.pillar-box.is-compact .meta-label,
+.pillar-box.is-compact .pillar-main-label {
+  font-size: 10px;
+}
+
+.pillar-box.is-compact .meta-value {
+  font-size: 13px;
+}
+
+.pillar-box.is-compact .pillar-main {
+  gap: 3px;
+  margin-bottom: 6px;
+}
+
+.pillar-box.is-compact .pillar-main-value {
+  font-size: 20px;
+}
+
 @media (max-width: 767px) {
   .relation-map-header {
     flex-direction: column;
@@ -1417,15 +1658,142 @@ const relationLinks = computed<RelationLink[]>(() => {
   }
 
   .relation-node {
-    min-width: 104px;
-    max-width: 132px;
-    height: 198px;
-    padding: 8px 8px 10px;
+    min-width: 92px;
+    max-width: 116px;
+    height: 172px;
+    padding: 6px 6px 8px;
   }
 
   .relation-node-stem,
   .relation-node-branch {
-    font-size: 24px;
+    font-size: 20px;
+  }
+
+  .relation-node-hidden-stems {
+    min-height: 54px;
+    max-height: 54px;
+    gap: 4px;
+  }
+
+  .relation-node-hidden-stem {
+    font-size: 13px;
+  }
+
+  .relation-node-hidden-ten-god {
+    padding: 1px 5px;
+    font-size: 9px;
+  }
+
+  .meta-value {
+    font-size: 15px;
+  }
+
+  .pillar-main-value {
+    font-size: 22px;
+  }
+
+  .pillar-panel-compact :deep(.el-row) {
+    row-gap: 10px;
+  }
+
+  .pillar-box.is-compact .compact-line-value {
+    font-size: 10px;
+  }
+
+  .pillar-panel-compact .relation-map {
+    min-height: 286px;
+  }
+
+  .pillar-panel-compact .relation-node {
+    min-width: 76px;
+    max-width: 96px;
+    height: 142px;
+  }
+
+  .pillar-panel-compact .relation-node-stem,
+  .pillar-panel-compact .relation-node-branch {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .relation-map {
+    min-height: 360px;
+  }
+
+  .relation-node {
+    min-width: 84px;
+    max-width: 104px;
+    height: 156px;
+  }
+
+  .relation-node-stem,
+  .relation-node-branch {
+    font-size: 18px;
+  }
+
+  .meta-value {
+    font-size: 14px;
+  }
+
+  .pillar-main-value {
+    font-size: 20px;
+  }
+
+  .pillar-panel-compact :deep(.el-card__body) {
+    padding: 10px;
+  }
+
+  .pillar-box.is-compact {
+    padding: 8px 6px;
+  }
+
+  .pillar-box.is-compact .pillar-label {
+    font-size: 12px;
+  }
+
+  .pillar-box.is-compact .meta-value {
+    font-size: 12px;
+  }
+
+  .pillar-box.is-compact .pillar-main-value {
+    font-size: 18px;
+  }
+
+  .compact-score-chip,
+  .compact-ten-god-chip,
+  .compact-line-label,
+  .compact-line-value,
+  .compact-pillar-foot {
+    font-size: 9px;
+  }
+
+  .pillar-panel-compact .relation-map-header h3,
+  .pillar-panel-compact .interaction-header h3 {
+    font-size: 13px;
+  }
+
+  .pillar-panel-compact .relation-legend-item,
+  .pillar-panel-compact .interaction-count,
+  .pillar-panel-compact .interaction-hint,
+  .pillar-panel-compact .interaction-group-title,
+  .pillar-panel-compact :deep(.el-table .cell) {
+    font-size: 10px;
+  }
+
+  .pillar-panel-compact .relation-map {
+    min-height: 260px;
+  }
+
+  .pillar-panel-compact .relation-node {
+    min-width: 70px;
+    max-width: 88px;
+    height: 132px;
+  }
+
+  .pillar-panel-compact .relation-node-stem,
+  .pillar-panel-compact .relation-node-branch {
+    font-size: 14px;
   }
 }
 

@@ -1,5 +1,5 @@
 <template>
-  <el-card shadow="hover" class="luck-panel">
+  <el-card shadow="hover" :class="['luck-panel', { 'is-compact': compact }]">
     <template #header>
       <div class="section-header">
         <div>
@@ -242,6 +242,7 @@ import type { BaziResponse, DaYun, LiuNian, LiuYue, LuckPreviewPillar } from "..
 
 const props = defineProps<{
   result: BaziResponse;
+  compact?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -683,11 +684,11 @@ const interactionColumnIndexMap = computed(
 );
 
 const interactionGridStyle = computed(() => ({
-  gridTemplateColumns: `repeat(${Math.max(interactionColumns.value.length, 1)}, minmax(120px, 1fr))`,
+  gridTemplateColumns: `repeat(${Math.max(interactionColumns.value.length, 1)}, minmax(${props.compact ? 92 : 120}px, 1fr))`,
 }));
 
 const interactionMatrixStyle = computed(() => ({
-  minWidth: `${Math.max(interactionColumns.value.length, 1) * 120}px`,
+  minWidth: `${Math.max(interactionColumns.value.length, 1) * (props.compact ? 92 : 120)}px`,
 }));
 
 const luckStartLine = computed(() => {
@@ -1425,6 +1426,113 @@ watch(selectedAnnualRow, (row) => {
   color: #1d4ed8;
 }
 
+.luck-panel.is-compact .luck-start-line {
+  font-size: 11px;
+}
+
+.luck-panel.is-compact .luck-board {
+  gap: 8px;
+}
+
+.luck-panel.is-compact .luck-lane {
+  grid-template-columns: 34px minmax(0, 1fr);
+}
+
+.luck-panel.is-compact .lane-label {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.luck-panel.is-compact .lane-track {
+  grid-auto-columns: minmax(66px, 66px);
+}
+
+.luck-panel.is-compact .fate-cell,
+.luck-panel.is-compact .fate-cell-major,
+.luck-panel.is-compact .fate-cell-annual {
+  height: 190px;
+  padding: 6px 6px 8px;
+  gap: 4px;
+}
+
+.luck-panel.is-compact .fate-cell-month {
+  height: 222px;
+  grid-template-rows: minmax(22px, auto) minmax(16px, auto) minmax(54px, auto) minmax(56px, auto) minmax(14px, auto);
+}
+
+.luck-panel.is-compact .fate-cell-year,
+.luck-panel.is-compact .fate-cell-topline,
+.luck-panel.is-compact .fate-cell-meta {
+  font-size: 9px;
+}
+
+.luck-panel.is-compact .fate-cell-main {
+  min-height: 54px;
+  gap: 4px;
+}
+
+.luck-panel.is-compact .fate-char-row {
+  min-height: 22px;
+}
+
+.luck-panel.is-compact .fate-char-row .wuxing-char,
+.luck-panel.is-compact .fate-cell-major .fate-char-row .wuxing-char {
+  font-size: 15px;
+}
+
+.luck-panel.is-compact .ten-god-text {
+  font-size: 8px;
+}
+
+.luck-panel.is-compact .hidden-ten-god-text {
+  font-size: 8px;
+}
+
+.luck-panel.is-compact .fate-hidden-list,
+.luck-panel.is-compact .fate-hidden-list-month {
+  min-height: 52px;
+  max-height: 52px;
+}
+
+.luck-panel.is-compact .luck-detail-bar {
+  gap: 6px 12px;
+  font-size: 10px;
+}
+
+.luck-panel.is-compact .interaction-summary-title,
+.luck-panel.is-compact .interaction-summary-strip,
+.luck-panel.is-compact .interaction-pillar-label {
+  font-size: 10px;
+}
+
+.luck-panel.is-compact .interaction-summary-strip {
+  min-height: 24px;
+  padding: 4px 5px;
+  line-height: 1.3;
+}
+
+.luck-panel.is-compact .interaction-pillar-card {
+  min-height: 68px;
+  padding: 5px 5px 6px;
+}
+
+.luck-panel.is-compact .interaction-pillar-main {
+  min-height: 20px;
+}
+
+.luck-panel.is-compact .interaction-pillar-main .wuxing-char {
+  font-size: 15px;
+}
+
+.luck-panel.is-compact .interaction-pillar-main .ten-god-text,
+.luck-panel.is-compact .interaction-pillar-hidden-item .wuxing-char {
+  font-size: 9px;
+}
+
+.luck-panel.is-compact .interaction-pillar-hidden-item .hidden-ten-god-text {
+  font-size: 8px;
+}
+
 @media (max-width: 960px) {
   .luck-lane {
     grid-template-columns: 44px minmax(0, 1fr);
@@ -1450,6 +1558,53 @@ watch(selectedAnnualRow, (row) => {
 
   .interaction-summary-strip {
     font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .luck-panel.is-compact :deep(.el-card__body) {
+    padding: 12px;
+  }
+
+  .luck-panel.is-compact .lane-scrollbar :deep(.el-scrollbar__bar.is-horizontal) {
+    height: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .luck-panel.is-compact .luck-lane {
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+
+  .luck-panel.is-compact .lane-track {
+    grid-auto-columns: minmax(60px, 60px);
+  }
+
+  .luck-panel.is-compact .fate-cell,
+  .luck-panel.is-compact .fate-cell-major,
+  .luck-panel.is-compact .fate-cell-annual {
+    height: 176px;
+    padding: 5px 5px 7px;
+  }
+
+  .luck-panel.is-compact .fate-cell-month {
+    height: 206px;
+  }
+
+  .luck-panel.is-compact .fate-char-row .wuxing-char,
+  .luck-panel.is-compact .fate-cell-major .fate-char-row .wuxing-char,
+  .luck-panel.is-compact .interaction-pillar-main .wuxing-char {
+    font-size: 14px;
+  }
+
+  .luck-panel.is-compact .ten-god-text {
+    font-size: 7px;
+  }
+
+  .luck-panel.is-compact .interaction-summary-strip,
+  .luck-panel.is-compact .interaction-pillar-label,
+  .luck-panel.is-compact .interaction-summary-title {
+    font-size: 9px;
   }
 }
 </style>
