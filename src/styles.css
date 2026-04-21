@@ -130,6 +130,10 @@ body {
   overflow: visible;
 }
 
+.compact-result-tabs .el-tab-pane {
+  padding-bottom: 0;
+}
+
 .compact-layout .el-card__header {
   padding: 14px 16px;
 }
@@ -357,6 +361,10 @@ body {
 }
 
 @media (max-width: 768px) {
+  .compact-layout.app-shell {
+    padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+
   .app-shell {
     padding: 12px;
   }
@@ -423,6 +431,25 @@ body {
     gap: 12px;
   }
 
+  .compact-layout .right-column,
+  .compact-layout .compact-result-shell,
+  .compact-layout .compact-section-stack,
+  .compact-layout .compact-result-tabs .el-tabs__content,
+  .compact-layout .compact-result-tabs .el-tab-pane {
+    padding-bottom: calc(26px + env(safe-area-inset-bottom, 0px));
+    scroll-padding-bottom: calc(26px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .compact-layout .compact-result-shell::after,
+  .compact-layout .compact-section-stack::after,
+  .compact-layout .compact-result-tabs .el-tab-pane::after {
+    content: "";
+    display: block;
+    height: calc(28px + env(safe-area-inset-bottom, 0px));
+    flex-shrink: 0;
+    pointer-events: none;
+  }
+
   .compact-layout .empty-card {
     min-height: 220px;
   }
@@ -449,6 +476,10 @@ body {
 }
 
 @media (max-width: 560px) {
+  .compact-layout.app-shell {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
   .app-shell {
     padding: 10px;
   }
@@ -500,6 +531,10 @@ body {
 }
 
 @media (max-width: 420px) {
+  .compact-layout.app-shell {
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+
   .app-shell {
     padding: 8px;
   }

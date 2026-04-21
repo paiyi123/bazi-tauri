@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::array;
 use tyme4rs::tyme::culture::Element;
 use tyme4rs::tyme::eightchar::provider::{
     ChildLimitProvider, DefaultEightCharProvider, EightCharProvider, LunarSect1ChildLimitProvider,
@@ -699,6 +698,23 @@ mod tests {
         }
     }
 
+    fn reported_lunar_request() -> BaziRequest {
+        BaziRequest {
+            calendar_type: CalendarType::Lunar,
+            gender: Gender::Male,
+            year: 68,
+            year_era: YearEra::Roc,
+            month: 10,
+            day: 28,
+            hour: 1,
+            minute: 0,
+            second: 0,
+            bazi_sect: 2,
+            yun_sect: 1,
+            leap_month: false,
+        }
+    }
+
     #[test]
     fn android_response_keeps_full_luck_and_quant_data() {
         let response = calculate_bazi(sample_request()).expect("sample chart should build");
@@ -732,6 +748,24 @@ mod tests {
                     .annual_scores
                     .as_ref()
                     .is_some_and(|annual_scores| !annual_scores.is_empty()))));
+        let quant_model = android_response
+            .quant_model
+            .as_ref()
+            .expect("quant model should exist");
+        assert!(quant_model.cong_pattern.is_some());
+        assert!(quant_model.sha_yin.is_some());
+        assert!(!quant_model.stem_scores.is_empty());
+        assert_eq!(quant_model.branch_scores.len(), 4);
+    }
+
+    #[test]
+    fn reported_lunar_chart_builds() {
+        let response = calculate_bazi(reported_lunar_request()).expect("reported lunar chart should build");
+        let bytes = serde_json::to_vec(&response)
+            .expect("response should serialize")
+            .len();
+        println!("reported_lunar_chart_bytes={bytes}");
+        assert!(!response.da_yun.is_empty());
     }
 }
 
@@ -851,6 +885,22 @@ fn build_luck_start(
     let birth_prev_jie_time = birth_prev_jie.get_julian_day().get_solar_time();
     let birth_prev_jie_days =
         (birth_time.subtract(birth_prev_jie_time) as f64 / 86400.0).round() as i32;
+    let normalized_offset = normalize_luck_offset(
+        info.get_year_count() as i32,
+        info.get_month_count() as i32,
+        info.get_day_count() as i32,
+        info.get_hour_count() as i32,
+    );
+    let normalized_offset_text = format_luck_offset(&normalized_offset);
+    let birth_year_gan_zhi = trad(&eight_char.get_year().get_name());
+    let birth_jie_name = trad(&birth_prev_jie.get_name());
+    let birth_jie_day_ordinal = birth_prev_jie_days.max(0);
+    let transition_schedule = derive_transition_schedule(
+        eight_char.get_year().get_heaven_stem(),
+        birth_prev_jie.clone(),
+        birth_jie_day_ordinal,
+        normalized_offset,
+    );
 
     Ok(LuckStartDto {
         forward: Some(forward),
@@ -860,21 +910,107 @@ fn build_luck_start(
         start_hour: Some(info.get_hour_count() as i32),
         start_solar: Some(format_solar_time(start_time)),
         start_summary: Some(format!(
-            "{}年{}個月{}天{}小時",
+            "出生為{}年{}後{}日，出生後{}上大運",
+            birth_year_gan_zhi, birth_jie_name, birth_jie_day_ordinal, normalized_offset_text
+        )),
+        transition_summary: Some(format!(
+            "每逢{}年及{}年{}後{}日交脫大運",
+            transition_schedule.primary_year_stem,
+            transition_schedule.secondary_year_stem,
+            transition_schedule.term_name,
+            transition_schedule.day_ordinal
+        )),
+        birth_jie_name: Some(birth_jie_name.clone()),
+        birth_jie_solar: Some(format_solar_time(birth_prev_jie_time)),
+        birth_jie_day_ordinal: Some(birth_jie_day_ordinal),
+        transition_summary_experimental: Some(format!(
+            "陽曆{}上大運（30日進位推算；原始位移 {}年{}月{}日{}時；交脫{}年/{}年 {}後{}日）",
+            format_solar_time(start_time),
             info.get_year_count(),
             info.get_month_count(),
             info.get_day_count(),
-            info.get_hour_count()
-        )),
-        transition_summary: Some(format!("約於 {} 起運。", format_solar_time(start_time))),
-        birth_jie_name: Some(trad(&birth_prev_jie.get_name())),
-        birth_jie_solar: Some(format_solar_time(birth_prev_jie_time)),
-        birth_jie_day_ordinal: Some(birth_prev_jie_days.max(0)),
-        transition_summary_experimental: Some(format!(
-            "依目前起運流派推算，出生後約 {} 上大運。",
-            format_solar_time(start_time)
+            info.get_hour_count(),
+            transition_schedule.primary_year_stem,
+            transition_schedule.secondary_year_stem,
+            transition_schedule.term_name,
+            transition_schedule.day_ordinal
         )),
     })
+}
+
+#[derive(Debug, Clone, Copy)]
+struct NormalizedLuckOffset {
+    years: i32,
+    months: i32,
+    days: i32,
+}
+
+fn normalize_luck_offset(years: i32, months: i32, days: i32, hours: i32) -> NormalizedLuckOffset {
+    let mut total_days = days.max(0);
+    if hours >= 24 {
+        total_days += hours / 24;
+    }
+
+    let mut total_months = months.max(0) + total_days / 30;
+    let normalized_days = total_days % 30;
+    let normalized_years = years.max(0) + total_months / 12;
+    total_months %= 12;
+
+    NormalizedLuckOffset {
+        years: normalized_years,
+        months: total_months,
+        days: normalized_days,
+    }
+}
+
+fn format_luck_offset(offset: &NormalizedLuckOffset) -> String {
+    format!("{}年{}月{}日", offset.years, offset.months, offset.days)
+}
+
+#[derive(Debug, Clone)]
+struct TransitionSchedule {
+    primary_year_stem: String,
+    secondary_year_stem: String,
+    term_name: String,
+    day_ordinal: i32,
+}
+
+fn derive_transition_schedule(
+    birth_year_stem: HeavenStem,
+    birth_jie: SolarTerm,
+    birth_jie_day_ordinal: i32,
+    offset: NormalizedLuckOffset,
+) -> TransitionSchedule {
+    let mut target_term = birth_jie;
+    let mut crossed_lichun_years = 0;
+    for _ in 0..offset.months.max(0) {
+        target_term = next_jie(target_term, &mut crossed_lichun_years);
+    }
+
+    let mut target_day_ordinal = birth_jie_day_ordinal.max(0) + offset.days.max(0);
+    while target_day_ordinal > 30 {
+        target_day_ordinal -= 30;
+        target_term = next_jie(target_term, &mut crossed_lichun_years);
+    }
+
+    let effective_years = offset.years.max(0) + crossed_lichun_years;
+    let primary_year_stem = birth_year_stem.next(effective_years as isize);
+    let secondary_year_stem = primary_year_stem.next(5);
+
+    TransitionSchedule {
+        primary_year_stem: trad(&primary_year_stem.get_name()),
+        secondary_year_stem: trad(&secondary_year_stem.get_name()),
+        term_name: trad(&target_term.get_name()),
+        day_ordinal: target_day_ordinal,
+    }
+}
+
+fn next_jie(term: SolarTerm, crossed_lichun_years: &mut i32) -> SolarTerm {
+    let next_term = term.next(2);
+    if next_term.get_name() == "立春" {
+        *crossed_lichun_years += 1;
+    }
+    next_term
 }
 
 fn build_da_yun(
@@ -1052,7 +1188,7 @@ fn resolve_liu_yue_jie_qi(year: i32, index: usize) -> String {
         year
     };
     let term = SolarTerm::from_name(target_year as isize, LIU_YUE_JIE_QI[index]);
-    format_month_day(term.get_julian_day().get_solar_time())
+    format_month_day_with_hour(term.get_julian_day().get_solar_time())
 }
 
 fn previous_jie(birth_time: SolarTime) -> SolarTerm {
@@ -1120,6 +1256,27 @@ fn format_month_day(time: SolarTime) -> String {
     format!("{}/{}", time.get_month(), time.get_day())
 }
 
+fn format_month_day_with_hour(time: SolarTime) -> String {
+    format!("{}/{} {}", time.get_month(), time.get_day(), hour_branch_label(time.get_hour() as i32))
+}
+
+fn hour_branch_label(hour: i32) -> &'static str {
+    match hour.rem_euclid(24) {
+        23 | 0 => "子",
+        1 | 2 => "丑",
+        3 | 4 => "寅",
+        5 | 6 => "卯",
+        7 | 8 => "辰",
+        9 | 10 => "巳",
+        11 | 12 => "午",
+        13 | 14 => "未",
+        15 | 16 => "申",
+        17 | 18 => "酉",
+        19 | 20 => "戌",
+        _ => "亥",
+    }
+}
+
 fn format_lunar_time(hour: LunarHour) -> String {
     let lunar_day = hour.get_lunar_day();
     let lunar_month = lunar_day.get_lunar_month();
@@ -1139,406 +1296,7 @@ fn build_quant_model(
     natal_cycles: &[SixtyCycle; 4],
     da_yun: &[DaYunDto],
 ) -> QuantModelResponse {
-    let day_master_name = trad(&day_master.get_name());
-    let day_element = day_master.get_element();
-    let mut interactions = Vec::new();
-    let mut stem_adjustments = [0.0_f64; 4];
-    let mut branch_adjustments = [0.0_f64; 4];
-    let mut stem_notes: [Vec<String>; 4] = array::from_fn(|_| Vec::new());
-    let mut branch_notes: [Vec<String>; 4] = array::from_fn(|_| Vec::new());
-    let mut stem_combine_notes: [Vec<String>; 4] = array::from_fn(|_| Vec::new());
-    let mut branch_combine_notes: [Vec<String>; 4] = array::from_fn(|_| Vec::new());
-
-    let stems = natal_cycles.clone().map(|cycle| cycle.get_heaven_stem());
-    let branches = natal_cycles.clone().map(|cycle| cycle.get_earth_branch());
-
-    for i in 0..4 {
-        for j in (i + 1)..4 {
-            if let Some(element) = stems[i].combine(stems[j].clone()) {
-                let adjustment =
-                    round1(element_relation_score(day_element.clone(), element.clone()) * 2.0);
-                let each = round1(adjustment / 2.0);
-                stem_adjustments[i] += each;
-                stem_adjustments[j] += each;
-                let outcome = trad(&element.get_name());
-                interactions.push(QuantModelInteraction {
-                    scope: "天干".to_string(),
-                    r#type: "五合".to_string(),
-                    target: format!(
-                        "{}{}合",
-                        trad(&stems[i].get_name()),
-                        trad(&stems[j].get_name())
-                    ),
-                    outcome: format!("化{}", outcome),
-                    pillars: format!("{}、{}", STEM_PILLAR_LABELS[i], STEM_PILLAR_LABELS[j]),
-                    detail: if adjustment >= 0.0 {
-                        format!(
-                            "{}與{}干合化{}，對日主{}偏扶助。",
-                            STEM_PILLAR_LABELS[i], STEM_PILLAR_LABELS[j], outcome, day_master_name
-                        )
-                    } else {
-                        format!(
-                            "{}與{}干合化{}，對日主{}偏消耗。",
-                            STEM_PILLAR_LABELS[i], STEM_PILLAR_LABELS[j], outcome, day_master_name
-                        )
-                    },
-                });
-                stem_notes[i].push(format!(
-                    "{}與{}干合，{} {:+}",
-                    STEM_PILLAR_LABELS[i], STEM_PILLAR_LABELS[j], outcome, each
-                ));
-                stem_notes[j].push(format!(
-                    "{}與{}干合，{} {:+}",
-                    STEM_PILLAR_LABELS[i], STEM_PILLAR_LABELS[j], outcome, each
-                ));
-                stem_combine_notes[i].push(outcome.clone());
-                stem_combine_notes[j].push(outcome);
-            }
-
-            if let Some(element) = branches[i].combine(branches[j].clone()) {
-                let adjustment =
-                    round1(element_relation_score(day_element.clone(), element.clone()) * 2.4);
-                let each = round1(adjustment / 2.0);
-                branch_adjustments[i] += each;
-                branch_adjustments[j] += each;
-                let outcome = trad(&element.get_name());
-                interactions.push(QuantModelInteraction {
-                    scope: "地支".to_string(),
-                    r#type: "六合".to_string(),
-                    target: format!(
-                        "{}{}合",
-                        trad(&branches[i].get_name()),
-                        trad(&branches[j].get_name())
-                    ),
-                    outcome: format!("化{}", outcome),
-                    pillars: format!("{}、{}", BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j]),
-                    detail: format!(
-                        "{}與{}成六合，化{}。",
-                        BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j], outcome
-                    ),
-                });
-                branch_notes[i].push(format!(
-                    "{}與{}六合化{} {:+}",
-                    BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j], outcome, each
-                ));
-                branch_notes[j].push(format!(
-                    "{}與{}六合化{} {:+}",
-                    BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j], outcome, each
-                ));
-                branch_combine_notes[i].push(outcome.clone());
-                branch_combine_notes[j].push(outcome);
-            }
-
-            if branches[i].get_opposite() == branches[j] {
-                let each = -1.4;
-                branch_adjustments[i] += each;
-                branch_adjustments[j] += each;
-                interactions.push(QuantModelInteraction {
-                    scope: "地支".to_string(),
-                    r#type: "沖".to_string(),
-                    target: format!(
-                        "{}{}沖",
-                        trad(&branches[i].get_name()),
-                        trad(&branches[j].get_name())
-                    ),
-                    outcome: "氣勢擾動".to_string(),
-                    pillars: format!("{}、{}", BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j]),
-                    detail: format!(
-                        "{}與{}相沖，命局穩定度下降。",
-                        BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j]
-                    ),
-                });
-                branch_notes[i].push(format!(
-                    "{}與{}相沖 {:+}",
-                    BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j], each
-                ));
-                branch_notes[j].push(format!(
-                    "{}與{}相沖 {:+}",
-                    BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j], each
-                ));
-            }
-
-            if branches[i].get_harm() == branches[j] {
-                let each = -0.8;
-                branch_adjustments[i] += each;
-                branch_adjustments[j] += each;
-                interactions.push(QuantModelInteraction {
-                    scope: "地支".to_string(),
-                    r#type: "害".to_string(),
-                    target: format!(
-                        "{}{}害",
-                        trad(&branches[i].get_name()),
-                        trad(&branches[j].get_name())
-                    ),
-                    outcome: "暗耗".to_string(),
-                    pillars: format!("{}、{}", BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j]),
-                    detail: format!(
-                        "{}與{}成害，易出現暗耗或牽制。",
-                        BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j]
-                    ),
-                });
-                branch_notes[i].push(format!(
-                    "{}與{}相害 {:+}",
-                    BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j], each
-                ));
-                branch_notes[j].push(format!(
-                    "{}與{}相害 {:+}",
-                    BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j], each
-                ));
-            }
-
-            if let Some(kind) = branch_penalty_kind(branches[i].clone(), branches[j].clone()) {
-                let each = -0.7;
-                branch_adjustments[i] += each;
-                branch_adjustments[j] += each;
-                interactions.push(QuantModelInteraction {
-                    scope: "地支".to_string(),
-                    r#type: "刑".to_string(),
-                    target: format!(
-                        "{}{}刑",
-                        trad(&branches[i].get_name()),
-                        trad(&branches[j].get_name())
-                    ),
-                    outcome: "牽制".to_string(),
-                    pillars: format!("{}、{}", BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j]),
-                    detail: format!(
-                        "{}與{}形成{}。",
-                        BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j], kind
-                    ),
-                });
-                branch_notes[i].push(format!(
-                    "{}與{}{} {:+}",
-                    BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j], kind, each
-                ));
-                branch_notes[j].push(format!(
-                    "{}與{}{} {:+}",
-                    BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j], kind, each
-                ));
-            }
-
-            if let Some(kind) = branch_break_kind(branches[i].clone(), branches[j].clone()) {
-                let each = -0.6;
-                branch_adjustments[i] += each;
-                branch_adjustments[j] += each;
-                interactions.push(QuantModelInteraction {
-                    scope: "地支".to_string(),
-                    r#type: "破".to_string(),
-                    target: format!(
-                        "{}{}破",
-                        trad(&branches[i].get_name()),
-                        trad(&branches[j].get_name())
-                    ),
-                    outcome: "破耗".to_string(),
-                    pillars: format!("{}、{}", BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j]),
-                    detail: format!(
-                        "{}與{}形成{}。",
-                        BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j], kind
-                    ),
-                });
-                branch_notes[i].push(format!(
-                    "{}與{}{} {:+}",
-                    BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j], kind, each
-                ));
-                branch_notes[j].push(format!(
-                    "{}與{}{} {:+}",
-                    BRANCH_PILLAR_LABELS[i], BRANCH_PILLAR_LABELS[j], kind, each
-                ));
-            }
-        }
-    }
-
-    let stem_weights = [0.9, 1.25, 1.05, 0.95];
-    let branch_weights = [1.0, 1.35, 1.1, 0.95];
-
-    let mut stem_scores = Vec::new();
-    let mut branch_scores = Vec::new();
-
-    for index in 0..4 {
-        let stem = stems[index].clone();
-        let ten_god = if index == 2 {
-            "日元".to_string()
-        } else {
-            ten_god_name(day_master.clone(), stem.clone())
-        };
-        let raw_score = round1(10.0 * ten_god_score(&ten_god));
-        let position_adjusted_score = round1(raw_score * stem_weights[index]);
-        let final_score = round1(position_adjusted_score + stem_adjustments[index]);
-        let details = if stem_notes[index].is_empty() {
-            format!(
-                "{}{}以{}入局。",
-                STEM_PILLAR_LABELS[index],
-                trad(&stem.get_name()),
-                ten_god
-            )
-        } else {
-            stem_notes[index].join("；")
-        };
-        let sub_rows = if stem_notes[index].is_empty() {
-            None
-        } else {
-            Some(
-                stem_notes[index]
-                    .iter()
-                    .map(|line| QuantModelSubScore {
-                        item: STEM_PILLAR_LABELS[index].to_string(),
-                        hidden_stem: None,
-                        ten_god: Some(ten_god.clone()),
-                        ratio: None,
-                        raw_score: Some(raw_score),
-                        position_adjusted_score: Some(position_adjusted_score),
-                        interaction: Some(line.clone()),
-                        adjustment_score: Some(if stem_adjustments[index] == 0.0 {
-                            0.0
-                        } else {
-                            round1(stem_adjustments[index] / stem_notes[index].len() as f64)
-                        }),
-                        final_contribution: Some(final_score),
-                        note: None,
-                    })
-                    .collect(),
-            )
-        };
-
-        stem_scores.push(QuantModelPillarScore {
-            pillar: STEM_PILLAR_LABELS[index].to_string(),
-            target: trad(&stem.get_name()),
-            ten_god,
-            base_score: raw_score,
-            position_weight: stem_weights[index],
-            final_score,
-            details,
-            category: Some("stem".to_string()),
-            combine_note: if stem_combine_notes[index].is_empty() {
-                None
-            } else {
-                Some(stem_combine_notes[index].join("、"))
-            },
-            raw_score: Some(raw_score),
-            position_adjusted_score: Some(position_adjusted_score),
-            clash_adjustment: Some(round1(stem_adjustments[index].min(0.0))),
-            bonus_score: Some(round1(stem_adjustments[index].max(0.0))),
-            rows: sub_rows,
-        });
-    }
-
-    for index in 0..4 {
-        let branch = branches[index].clone();
-        let hidden = branch.get_hide_heaven_stems();
-        let ratios = hidden_ratios(hidden.len());
-        let base_unit = 14.0;
-        let mut rows = Vec::new();
-        let mut raw_sum = 0.0;
-        let mut pos_sum = 0.0;
-        let mut final_sum = 0.0;
-
-        for (row_index, hidden_stem) in hidden.into_iter().enumerate() {
-            let stem = hidden_stem.get_heaven_stem();
-            let ten_god = ten_god_name(day_master.clone(), stem.clone());
-            let ratio = ratios[row_index];
-            let raw_score = round1(base_unit * ratio * ten_god_score(&ten_god));
-            let position_adjusted_score = round1(raw_score * branch_weights[index]);
-            let adjustment_score = round1(branch_adjustments[index] * ratio);
-            let final_contribution = round1(position_adjusted_score + adjustment_score);
-            raw_sum += raw_score;
-            pos_sum += position_adjusted_score;
-            final_sum += final_contribution;
-            rows.push(QuantModelSubScore {
-                item: BRANCH_PILLAR_LABELS[index].to_string(),
-                hidden_stem: Some(trad(&stem.get_name())),
-                ten_god: Some(ten_god),
-                ratio: Some(ratio),
-                raw_score: Some(raw_score),
-                position_adjusted_score: Some(position_adjusted_score),
-                interaction: Some(if branch_notes[index].is_empty() {
-                    "原局".to_string()
-                } else {
-                    branch_notes[index].join("；")
-                }),
-                adjustment_score: Some(adjustment_score),
-                final_contribution: Some(final_contribution),
-                note: Some(format!(
-                    "{}藏干按 {:.0}% 比重計入。",
-                    trad(&stem.get_name()),
-                    ratio * 100.0
-                )),
-            });
-        }
-
-        branch_scores.push(QuantModelPillarScore {
-            pillar: BRANCH_PILLAR_LABELS[index].to_string(),
-            target: trad(&branch.get_name()),
-            ten_god: "藏干綜合".to_string(),
-            base_score: round1(raw_sum),
-            position_weight: branch_weights[index],
-            final_score: round1(final_sum),
-            details: if branch_notes[index].is_empty() {
-                format!(
-                    "{}{}以藏干分布計分。",
-                    BRANCH_PILLAR_LABELS[index],
-                    trad(&branch.get_name())
-                )
-            } else {
-                branch_notes[index].join("；")
-            },
-            category: Some("branch".to_string()),
-            combine_note: if branch_combine_notes[index].is_empty() {
-                None
-            } else {
-                Some(branch_combine_notes[index].join("、"))
-            },
-            raw_score: Some(round1(raw_sum)),
-            position_adjusted_score: Some(round1(pos_sum)),
-            clash_adjustment: Some(round1(branch_adjustments[index].min(0.0))),
-            bonus_score: Some(round1(branch_adjustments[index].max(0.0))),
-            rows: Some(rows),
-        });
-    }
-
-    let stem_score_total = round1(stem_scores.iter().map(|item| item.final_score).sum());
-    let branch_score_total = round1(branch_scores.iter().map(|item| item.final_score).sum());
-    let total_score = round1(stem_score_total + branch_score_total);
-    let strength_label = strength_label(total_score);
-    let yong_shen = Some(build_yong_shen(
-        day_master.clone(),
-        total_score,
-        stem_score_total,
-        branch_score_total,
-    ));
-    let prefer_positive = total_score <= 0.0;
-    let luck_scores = if da_yun.is_empty() {
-        None
-    } else {
-        Some(build_luck_scores(
-            day_master.clone(),
-            total_score,
-            prefer_positive,
-            da_yun,
-            &branches,
-            &stems,
-        ))
-    };
-
-    QuantModelResponse {
-        day_master: day_master_name.clone(),
-        summary: format!(
-            "日主{}，天干 {:.1} 分、地支 {:.1} 分，命局 {:.1} 分，判定{}。",
-            day_master_name, stem_score_total, branch_score_total, total_score, strength_label
-        ),
-        note:
-            "此為 Rust 桌面版相容量化，用於補齊 UI 書表與四柱直輸流程，後續仍可向原 Java 規則細化。"
-                .to_string(),
-        stem_score_total,
-        branch_score_total,
-        total_score,
-        strength_label,
-        yong_shen,
-        cong_pattern: None,
-        sha_yin: None,
-        interactions: Some(interactions),
-        stem_scores,
-        branch_scores,
-        luck_scores,
-    }
+    crate::quant_model::build_quant_model_response(day_master, natal_cycles, da_yun)
 }
 
 fn build_luck_scores(

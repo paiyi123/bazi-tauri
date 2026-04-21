@@ -21,7 +21,29 @@
       <el-table-column prop="finalContribution" label="列分" :width="compact ? 76 : 90" />
       <el-table-column prop="note" label="說明" :min-width="compact ? 180 : 260" />
     </el-table>
-    <el-descriptions :column="compact ? 1 : 5" border size="small" class="mb-4">
+    <div v-if="compact" class="branch-summary-row mb-4">
+      <div class="branch-summary-item">
+        <span class="branch-summary-label">合化</span>
+        <span class="branch-summary-value">{{ branch.combineNote || "-" }}</span>
+      </div>
+      <div class="branch-summary-item">
+        <span class="branch-summary-label">支基礎分</span>
+        <span class="branch-summary-value">{{ branch.baseScore }}</span>
+      </div>
+      <div class="branch-summary-item">
+        <span class="branch-summary-label">位調後</span>
+        <span class="branch-summary-value">{{ formatMaybe(branch.positionAdjustedScore) }}</span>
+      </div>
+      <div class="branch-summary-item">
+        <span class="branch-summary-label">透干/增值</span>
+        <span class="branch-summary-value">{{ formatMaybe(branch.bonusScore) }}</span>
+      </div>
+      <div class="branch-summary-item">
+        <span class="branch-summary-label">總分</span>
+        <span class="branch-summary-value">{{ branch.finalScore }}</span>
+      </div>
+    </div>
+    <el-descriptions v-else :column="5" border size="small" class="mb-4">
       <el-descriptions-item label="合化">{{ branch.combineNote || "-" }}</el-descriptions-item>
       <el-descriptions-item label="支基礎分">{{ branch.baseScore }}</el-descriptions-item>
       <el-descriptions-item label="位調後">{{ formatMaybe(branch.positionAdjustedScore) }}</el-descriptions-item>
@@ -86,6 +108,41 @@ function formatRatio(value?: number) {
   font-weight: 500;
 }
 
+.branch-summary-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(72px, 1fr));
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.branch-summary-item {
+  min-width: 0;
+  padding: 8px 6px;
+  border-right: 1px solid var(--el-border-color-lighter);
+  display: grid;
+  gap: 4px;
+}
+
+.branch-summary-item:last-child {
+  border-right: none;
+}
+
+.branch-summary-label {
+  color: var(--el-text-color-secondary);
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.branch-summary-value {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
 @media (max-width: 768px) {
   .branch-title {
     font-size: 13px;
@@ -97,6 +154,22 @@ function formatRatio(value?: number) {
   :deep(.el-descriptions__content) {
     font-size: 12px;
     line-height: 1.4;
+  }
+
+  .branch-summary-row {
+    grid-template-columns: repeat(5, minmax(66px, 1fr));
+  }
+
+  .branch-summary-item {
+    padding: 7px 4px;
+  }
+
+  .branch-summary-label {
+    font-size: 10px;
+  }
+
+  .branch-summary-value {
+    font-size: 11px;
   }
 }
 </style>

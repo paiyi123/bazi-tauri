@@ -36,7 +36,7 @@
           {{ luckStart?.startYear }}年 {{ luckStart?.startMonth }}月 {{ luckStart?.startDay }}日 {{ luckStart?.startHour }}時
         </el-descriptions-item>
         <el-descriptions-item label="上大運" :span="fullSpan">
-          出生後{{ luckStart?.startSummary || `${luckStart?.startYear}年${luckStart?.startMonth}月${luckStart?.startDay}日` }}上大運
+          {{ luckStart?.startSummary || `出生後${luckStart?.startYear}年${luckStart?.startMonth}月${luckStart?.startDay}日上大運` }}
         </el-descriptions-item>
       </template>
       <el-descriptions-item v-else label="起運資訊" :span="fullSpan">

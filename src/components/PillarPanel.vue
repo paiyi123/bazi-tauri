@@ -6,12 +6,13 @@
       </div>
     </template>
 
-    <el-row v-if="showPillars" :gutter="compact ? 10 : 16">
+    <el-row v-if="showPillars" :gutter="compact ? 10 : 16" class="pillar-card-grid">
       <el-col
         v-for="item in pillarItems"
         :key="item.key"
-        :xs="compact ? 12 : 24"
+        :xs="compact ? 6 : 24"
         :sm="12"
+        :md="compact ? 6 : 6"
         :xl="columnSpanXl"
       >
         <div
@@ -48,6 +49,10 @@
             <div class="compact-pillar-line">
               <span class="compact-line-label">支神</span>
               <span class="compact-line-value">{{ item.branchTenGods.join('、') }}</span>
+            </div>
+            <div class="compact-score-row compact-score-row-bottom">
+              <span class="compact-score-label">{{ item.bottomScoreLabel }}</span>
+              <span class="compact-score-value">{{ item.bottomScoreValue }}</span>
             </div>
             <div class="compact-pillar-foot">
               <span>{{ item.value.naYin }}</span>
@@ -196,7 +201,7 @@
         <span class="interaction-count">{{ pillarItems.length }}柱</span>
       </div>
       <p class="interaction-hint">
-        只列出目前盤面中有 match 到的組合，先不做合化是否成立、優先級與裁決判斷。
+        原局四柱優先採用量化模型互動摘要；大運、流年預覽段落則依目前盤面即時補出新增的合、沖、刑、破。
       </p>
       <template v-if="interactionRows.length">
         <div v-if="groupedInteractionSections.annual" class="interaction-group">
@@ -245,16 +250,24 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { BaziResponse, LuckPreviewPillar, Pillar } from '../types/bazi'
+import type { BaziResponse, LuckPreviewPillar, Pillar, QuantModelInteraction } from '../types/bazi'
 
-const props = defineProps<{
-  result: BaziResponse
-  previewPillars?: LuckPreviewPillar[]
-  compact?: boolean
-  showPillars?: boolean
-  showRelationMap?: boolean
-  showInteractionSection?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    result: BaziResponse
+    previewPillars?: LuckPreviewPillar[]
+    compact?: boolean
+    showPillars?: boolean
+    showRelationMap?: boolean
+    showInteractionSection?: boolean
+  }>(),
+  {
+    compact: false,
+    showPillars: true,
+    showRelationMap: true,
+    showInteractionSection: true
+  }
+)
 
 type WuXing = 'wood' | 'fire' | 'earth' | 'metal' | 'water'
 type DisplayPillarItem = {
@@ -601,6 +614,111 @@ function buildTripleInteractionRow(
   }
 }
 
+function normalizeInteractionType(type: string): string {
+  if (type.includes('祿')) {
+    return '祿'
+  }
+  if (type.includes('三會')) {
+    return '三會'
+  }
+  if (type.includes('三合')) {
+    return '三合'
+  }
+  if (type.includes('半合')) {
+    return '半合'
+  }
+  if (type.includes('合')) {
+    return '合'
+  }
+  if (type.includes('沖')) {
+    return '沖'
+  }
+  if (type.includes('刑')) {
+    return '刑'
+  }
+  if (type.includes('破')) {
+    return '破'
+  }
+  return type
+}
+
+function normalizeInteractionScope(scope: string): InteractionRow['scope'] {
+  if (scope.includes('祿')) {
+    return '祿'
+  }
+  if (scope.includes('干')) {
+    return '天干'
+  }
+  return '地支'
+}
+
+function mapPillarTokenToKey(token: string): string | undefined {
+  const normalized = token.trim()
+  if (!normalized) {
+    return undefined
+  }
+  if (normalized.includes('年')) {
+    return 'year'
+  }
+  if (normalized.includes('月')) {
+    return 'month'
+  }
+  if (normalized.includes('日')) {
+    return 'day'
+  }
+  if (normalized.includes('時')) {
+    return 'hour'
+  }
+  if (normalized.includes('大運')) {
+    return previewPillarItems.value.find((item) => item.label === '大運')?.key
+  }
+  if (normalized.includes('流年')) {
+    return previewPillarItems.value.find((item) => item.label === '流年')?.key
+  }
+  return undefined
+}
+
+function splitInteractionParticipants(pillars: string): string[] {
+  return pillars
+    .split(/[、,，]/)
+    .map((token) => mapPillarTokenToKey(token))
+    .filter((value): value is string => !!value)
+}
+
+function mergeInteractionDetail(interaction: QuantModelInteraction): string {
+  const detail = interaction.detail?.trim() || ''
+  const outcome = interaction.outcome?.trim() || ''
+  if (!outcome || detail.includes(outcome)) {
+    return detail
+  }
+  return detail ? `${detail} ${outcome}` : outcome
+}
+
+function sortInteractionRows(rows: InteractionRow[]) {
+  const typePriority: Record<string, number> = {
+    合: 1,
+    祿: 2,
+    半合: 3,
+    三合: 4,
+    三會: 5,
+    沖: 6,
+    刑: 7,
+    破: 8
+  }
+
+  return [...rows].sort((a, b) => {
+    const scopeCompare = a.scope.localeCompare(b.scope, 'zh-Hant')
+    if (scopeCompare !== 0) {
+      return scopeCompare
+    }
+    const typeCompare = (typePriority[a.type] || 99) - (typePriority[b.type] || 99)
+    if (typeCompare !== 0) {
+      return typeCompare
+    }
+    return a.pillars.localeCompare(b.pillars, 'zh-Hant')
+  })
+}
+
 const natalPillarItems = computed<DisplayPillarItem[]>(() => [
   {
     key: 'hour',
@@ -689,9 +807,9 @@ const previewPillarItems = computed<DisplayPillarItem[]>(() =>
 
 const pillarItems = computed<DisplayPillarItem[]>(() => [...natalPillarItems.value, ...previewPillarItems.value])
 
-const showPillars = computed(() => props.showPillars ?? true)
-const showRelationMap = computed(() => props.showRelationMap ?? true)
-const showInteractionSection = computed(() => props.showInteractionSection ?? true)
+const showPillars = computed(() => props.showPillars)
+const showRelationMap = computed(() => props.showRelationMap)
+const showInteractionSection = computed(() => props.showInteractionSection)
 const panelTitle = computed(() => {
   if (showPillars.value) {
     return '四柱'
@@ -713,7 +831,7 @@ const previewKeyGroups = computed(() => ({
   luck: new Set(previewPillarItems.value.filter((item) => item.label === '大運').map((item) => item.key))
 }))
 
-const interactionRows = computed<InteractionRow[]>(() => {
+const derivedInteractionRows = computed<InteractionRow[]>(() => {
   const rows: InteractionRow[] = []
   const items = pillarItems.value
   const matchedThreeCombinationKeys = new Set<string>()
@@ -844,28 +962,39 @@ const interactionRows = computed<InteractionRow[]>(() => {
     }
   }
 
-  const typePriority: Record<string, number> = {
-    合: 1,
-    祿: 2,
-    半合: 3,
-    三合: 4,
-    三會: 5,
-    沖: 6,
-    刑: 7,
-    破: 8
+  return sortInteractionRows(rows)
+})
+
+const backendNatalInteractionRows = computed<InteractionRow[]>(() => {
+  const interactions = props.result.quantModel?.interactions || []
+  if (!interactions.length) {
+    return []
   }
 
-  return rows.sort((a, b) => {
-    const scopeCompare = a.scope.localeCompare(b.scope, 'zh-Hant')
-    if (scopeCompare !== 0) {
-      return scopeCompare
+  const deduped = new Map<string, InteractionRow>()
+  for (const interaction of interactions) {
+    const participantKeys = splitInteractionParticipants(interaction.pillars)
+    if (participantKeys.length < 2) {
+      continue
     }
-    const typeCompare = (typePriority[a.type] || 99) - (typePriority[b.type] || 99)
-    if (typeCompare !== 0) {
-      return typeCompare
+    const row: InteractionRow = {
+      scope: normalizeInteractionScope(interaction.scope),
+      type: normalizeInteractionType(interaction.type),
+      target: interaction.target,
+      pillars: interaction.pillars,
+      detail: mergeInteractionDetail(interaction),
+      participantKeys
     }
-    return a.pillars.localeCompare(b.pillars, 'zh-Hant')
-  })
+    const dedupeKey = [
+      row.scope,
+      row.type,
+      row.target,
+      [...row.participantKeys].sort().join('-')
+    ].join('|')
+    deduped.set(dedupeKey, row)
+  }
+
+  return sortInteractionRows([...deduped.values()])
 })
 
 const groupedInteractionSections = computed<{
@@ -873,16 +1002,19 @@ const groupedInteractionSections = computed<{
   luck: InteractionSection | null
   natal: InteractionSection
 }>(() => {
-  const annualRows = interactionRows.value.filter((row) =>
+  const annualRows = derivedInteractionRows.value.filter((row) =>
     row.participantKeys.some((key) => previewKeyGroups.value.annual.has(key))
   )
-  const luckRows = interactionRows.value.filter((row) =>
+  const luckRows = derivedInteractionRows.value.filter((row) =>
     !row.participantKeys.some((key) => previewKeyGroups.value.annual.has(key))
     && row.participantKeys.some((key) => previewKeyGroups.value.luck.has(key))
   )
-  const natalRows = interactionRows.value.filter((row) =>
+  const fallbackNatalRows = derivedInteractionRows.value.filter((row) =>
     !row.participantKeys.some((key) => previewKeyGroups.value.annual.has(key) || previewKeyGroups.value.luck.has(key))
   )
+  const natalRows = backendNatalInteractionRows.value.length
+    ? backendNatalInteractionRows.value
+    : fallbackNatalRows
 
   return {
     annual: annualRows.length ? { title: '流年加入後生成的', rows: annualRows } : null,
@@ -890,6 +1022,14 @@ const groupedInteractionSections = computed<{
     natal: { title: '原局四柱本來有的', rows: natalRows }
   }
 })
+
+const interactionRows = computed<InteractionRow[]>(() =>
+  sortInteractionRows([
+    ...(groupedInteractionSections.value.annual?.rows || []),
+    ...(groupedInteractionSections.value.luck?.rows || []),
+    ...groupedInteractionSections.value.natal.rows
+  ])
+)
 
 function resolveDiagramNodeX(index: number, total: number) {
   if (total <= 1) {
@@ -1163,11 +1303,16 @@ const relationLinks = computed<RelationLink[]>(() => {
   border-radius: 14px;
   padding: 14px 12px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95));
+  overflow: hidden;
 }
 
 .pillar-box.is-preview {
   border-style: dashed;
   background: linear-gradient(180deg, rgba(255, 251, 235, 0.98), rgba(255, 247, 237, 0.96));
+}
+
+.pillar-card-grid {
+  margin-bottom: 20px;
 }
 
 .pillar-box.is-current-year-preview {
@@ -1176,7 +1321,11 @@ const relationLinks = computed<RelationLink[]>(() => {
 }
 
 .relation-map-section {
-  margin-top: 20px;
+  display: flow-root;
+  clear: both;
+  position: relative;
+  z-index: 0;
+  margin-top: 0;
 }
 
 .relation-map-header {
@@ -1463,7 +1612,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 }
 
 .pillar-box.is-compact {
-  padding: 10px 8px;
+  padding: 8px 6px;
   border-radius: 14px;
 }
 
@@ -1471,20 +1620,20 @@ const relationLinks = computed<RelationLink[]>(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: 4px;
+  margin-bottom: 4px;
 }
 
 .compact-score-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 18px;
-  padding: 1px 6px;
+  min-height: 16px;
+  padding: 1px 5px;
   border-radius: 999px;
   background: rgba(146, 64, 14, 0.12);
   color: #92400e;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   line-height: 1.1;
   white-space: nowrap;
@@ -1494,46 +1643,70 @@ const relationLinks = computed<RelationLink[]>(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 18px;
-  padding: 1px 7px;
+  min-height: 16px;
+  padding: 1px 6px;
   border-radius: 999px;
-  margin-bottom: 8px;
-  font-size: 10px;
+  margin-bottom: 6px;
+  font-size: 9px;
   font-weight: 700;
   line-height: 1.1;
   border: 1px solid transparent;
 }
 
 .compact-pillar-ganzhi {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
 }
 
 .compact-pillar-char-block {
-  padding: 6px 4px;
-  border-radius: 12px;
+  padding: 4px 3px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.7);
   text-align: center;
 }
 
 .compact-pillar-line {
   display: grid;
-  gap: 3px;
-  margin-bottom: 7px;
+  gap: 2px;
+  margin-bottom: 5px;
+}
+
+.compact-score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 2px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(188, 195, 211, 0.35);
+}
+
+.compact-score-label {
+  color: var(--el-text-color-secondary);
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+.compact-score-value {
+  color: #0f172a;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 .compact-line-label {
   color: var(--el-text-color-secondary);
-  font-size: 10px;
+  font-size: 9px;
   line-height: 1.2;
 }
 
 .compact-line-value {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 1.25;
   word-break: break-word;
 }
 
@@ -1546,17 +1719,17 @@ const relationLinks = computed<RelationLink[]>(() => {
 .compact-pillar-foot {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 8px;
-  margin-top: 2px;
-  padding-top: 6px;
+  gap: 2px 6px;
+  margin-top: 4px;
+  padding-top: 5px;
   border-top: 1px solid rgba(188, 195, 211, 0.35);
   color: #6b7280;
-  font-size: 10px;
-  line-height: 1.3;
+  font-size: 9px;
+  line-height: 1.2;
 }
 
 .pillar-panel-compact .relation-map-section {
-  margin-top: 14px;
+  margin-top: 0;
 }
 
 .pillar-panel-compact .relation-map-header h3,
@@ -1693,7 +1866,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   }
 
   .pillar-panel-compact :deep(.el-row) {
-    row-gap: 10px;
+    row-gap: 8px;
   }
 
   .pillar-box.is-compact .compact-line-value {
@@ -1745,11 +1918,11 @@ const relationLinks = computed<RelationLink[]>(() => {
   }
 
   .pillar-box.is-compact {
-    padding: 8px 6px;
+    padding: 7px 5px;
   }
 
   .pillar-box.is-compact .pillar-label {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .pillar-box.is-compact .meta-value {
@@ -1757,7 +1930,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   }
 
   .pillar-box.is-compact .pillar-main-value {
-    font-size: 18px;
+    font-size: 16px;
   }
 
   .compact-score-chip,
@@ -1766,6 +1939,14 @@ const relationLinks = computed<RelationLink[]>(() => {
   .compact-line-value,
   .compact-pillar-foot {
     font-size: 9px;
+  }
+
+  .compact-pillar-char-block {
+    padding: 3px 2px;
+  }
+
+  .compact-pillar-ganzhi {
+    gap: 3px;
   }
 
   .pillar-panel-compact .relation-map-header h3,

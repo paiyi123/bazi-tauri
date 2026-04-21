@@ -9,6 +9,23 @@
       </div>
     </template>
 
+    <div class="compact-lane-toggle-bar">
+      <button
+        type="button"
+        :class="['compact-lane-toggle', { 'is-active': expandAnnualLane }]"
+        @click="toggleAnnualLane()"
+      >
+        {{ expandAnnualLane ? "收合流年" : "展開流年" }}
+      </button>
+      <button
+        type="button"
+        :class="['compact-lane-toggle', { 'is-active': expandMonthLane }]"
+        @click="toggleMonthLane()"
+      >
+        {{ expandMonthLane ? "收合流月" : "展開流月" }}
+      </button>
+    </div>
+
     <div class="luck-board">
       <div class="luck-lane">
         <div class="lane-label">大<br />運</div>
@@ -28,7 +45,7 @@
               ]"
               @click="selectLuckRow(row)"
             >
-              <div class="fate-cell-year">{{ row.startYear ?? "未定" }}</div>
+              <div class="fate-cell-year">{{ formatLuckRangeLabel(row) }}</div>
               <div class="fate-cell-main">
                 <div class="fate-char-row">
                   <span :class="['wuxing-char', `wuxing-${stemElement(ganZhiStem(row.ganZhi))}`]">
@@ -43,9 +60,9 @@
                   <span class="ten-god-text">{{ primaryBranchTenGod(row.branchTenGods) }}</span>
                 </div>
               </div>
-              <div v-if="hiddenTenGodPairs(row.branchHiddenStems, row.branchTenGods).length" class="fate-hidden-list">
+              <div v-if="displayCellHiddenTenGodPairs(row.branchHiddenStems, row.branchTenGods).length" class="fate-hidden-list">
                 <span
-                  v-for="(item, index) in hiddenTenGodPairs(row.branchHiddenStems, row.branchTenGods)"
+                  v-for="(item, index) in displayCellHiddenTenGodPairs(row.branchHiddenStems, row.branchTenGods)"
                   :key="`luck-hidden-${row.index}-${item.stem}-${index}`"
                   class="fate-hidden-item"
                 >
@@ -53,13 +70,12 @@
                   <span class="hidden-ten-god-text">{{ item.tenGod }}</span>
                 </span>
               </div>
-              <div class="fate-cell-meta">{{ row.yearRange }}</div>
             </button>
           </div>
         </el-scrollbar>
       </div>
 
-      <div class="luck-lane">
+      <div v-if="showAnnualLane" class="luck-lane">
         <div class="lane-label">流<br />年</div>
         <el-scrollbar v-if="selectedLuckRow?.liuNian?.length" class="lane-scrollbar" always>
           <div class="lane-track">
@@ -93,11 +109,11 @@
                 </div>
               </div>
               <div
-                v-if="hiddenTenGodPairs(annual.branchHiddenStems, annual.branchTenGods).length"
+                v-if="displayCellHiddenTenGodPairs(annual.branchHiddenStems, annual.branchTenGods).length"
                 class="fate-hidden-list"
               >
                 <span
-                  v-for="(item, index) in hiddenTenGodPairs(annual.branchHiddenStems, annual.branchTenGods)"
+                  v-for="(item, index) in displayCellHiddenTenGodPairs(annual.branchHiddenStems, annual.branchTenGods)"
                   :key="`annual-hidden-${selectedLuckRow.index}-${annual.year}-${item.stem}-${index}`"
                   class="fate-hidden-item"
                 >
@@ -112,7 +128,7 @@
         <div v-else class="lane-empty">這一步大運尚無流年資料</div>
       </div>
 
-      <div class="luck-lane">
+      <div v-if="showMonthLane" class="luck-lane">
         <div class="lane-label">流<br />月</div>
         <el-scrollbar v-if="selectedAnnualRow?.liuYue?.length" class="lane-scrollbar" always>
           <div class="lane-track">
@@ -147,11 +163,11 @@
                 </div>
               </div>
               <div
-                v-if="hiddenTenGodPairs(month.branchHiddenStems, month.branchTenGods).length"
+                v-if="displayCellHiddenTenGodPairs(month.branchHiddenStems, month.branchTenGods).length"
                 class="fate-hidden-list fate-hidden-list-month"
               >
                 <span
-                  v-for="(item, index) in hiddenTenGodPairs(month.branchHiddenStems, month.branchTenGods)"
+                  v-for="(item, index) in displayCellHiddenTenGodPairs(month.branchHiddenStems, month.branchTenGods)"
                   :key="`month-hidden-${selectedAnnualRow.year}-${month.index}-${item.stem}-${index}`"
                   class="fate-hidden-item"
                 >
@@ -169,15 +185,14 @@
 
     <div v-if="selectedLuckRow" class="luck-detail-bar">
       <span>目前大運：{{ selectedLuckRow.ganZhi }}（{{ selectedLuckRow.ageRange }}歲 / {{ selectedLuckRow.yearRange }}）</span>
-      <span v-if="selectedAnnualRow">目前流年：{{ selectedAnnualRow.year }} {{ selectedAnnualRow.ganZhi }}（{{ selectedAnnualRow.age }}歲）</span>
-      <span v-if="selectedMonthRow">目前流月：{{ formatLiuYueLabel(selectedMonthRow.month) }} {{ selectedMonthRow.ganZhi }}</span>
+      <span v-if="showAnnualLane && selectedAnnualRow">目前流年：{{ selectedAnnualRow.year }} {{ selectedAnnualRow.ganZhi }}（{{ selectedAnnualRow.age }}歲）</span>
+      <span v-if="showMonthLane && selectedMonthRow">目前流月：{{ formatLiuYueLabel(selectedMonthRow.month) }} {{ selectedMonthRow.ganZhi }}</span>
     </div>
 
     <div class="interaction-matrix-shell">
       <div class="interaction-matrix" :style="interactionMatrixStyle">
         <div class="interaction-summary-stack">
           <div v-if="stemSummaryStrips.length" class="interaction-summary-group">
-            <div class="interaction-summary-title">天干</div>
             <div class="interaction-summary-grid" :style="interactionGridStyle">
               <div
                 v-for="item in stemSummaryStrips"
@@ -219,7 +234,6 @@
         </div>
 
         <div v-if="branchSummaryStrips.length" class="interaction-summary-group">
-          <div class="interaction-summary-title">地支</div>
           <div class="interaction-summary-grid" :style="interactionGridStyle">
             <div
               v-for="item in branchSummaryStrips"
@@ -253,6 +267,7 @@ type WuXing = "wood" | "fire" | "earth" | "metal" | "water";
 type DisplayDaYun = DaYun & {
   ageRange: string;
   yearRange: string;
+  rangeLabel: string;
 };
 type HiddenTenGodPair = {
   stem: string;
@@ -280,6 +295,8 @@ const currentYear = new Date().getFullYear();
 const selectedLuckIndex = ref<number | null>(null);
 const selectedAnnualYear = ref<number | null>(null);
 const selectedMonthIndex = ref<number | null>(null);
+const expandAnnualLane = ref(!props.compact);
+const expandMonthLane = ref(!props.compact);
 
 const STEM_WUXING: Record<string, WuXing> = {
   甲: "wood",
@@ -430,6 +447,14 @@ function hiddenTenGodPairs(hiddenStems?: string[], tenGods?: string[]): HiddenTe
   }));
 }
 
+function displayCellHiddenTenGodPairs(hiddenStems?: string[], tenGods?: string[]) {
+  return hiddenTenGodPairs(hiddenStems, tenGods);
+}
+
+function formatLuckRangeLabel(row: DisplayDaYun) {
+  return props.compact ? `${row.ageRange}歲\n${row.yearRange}` : row.rangeLabel;
+}
+
 function unorderedPairKey(a: string, b: string) {
   return [a, b].sort().join("");
 }
@@ -578,6 +603,7 @@ const rows = computed<DisplayDaYun[]>(() =>
     ...item,
     ageRange: formatAgeRange(item.startAge, item.endAge),
     yearRange: formatRange(item.startYear, item.endYear),
+    rangeLabel: `（${formatAgeRange(item.startAge, item.endAge)}歲 / ${formatRange(item.startYear, item.endYear)}）`,
   })),
 );
 
@@ -638,10 +664,15 @@ const selectedAnnualRow = computed(
 
 const selectedMonthRow = computed(
   () =>
-    selectedAnnualRow.value?.liuYue?.find((month) => month.index === selectedMonthIndex.value) ??
-    selectedAnnualRow.value?.liuYue?.[0] ??
+    (showMonthLane.value
+      ? selectedAnnualRow.value?.liuYue?.find((month) => month.index === selectedMonthIndex.value) ??
+        selectedAnnualRow.value?.liuYue?.[0]
+      : null) ??
     null,
 );
+
+const showAnnualLane = computed(() => expandAnnualLane.value);
+const showMonthLane = computed(() => expandMonthLane.value);
 
 const selectedLuckItem = computed<InteractionPillarItem | null>(() => {
   if (!selectedLuckRow.value) {
@@ -659,7 +690,7 @@ const selectedLuckItem = computed<InteractionPillarItem | null>(() => {
 });
 
 const selectedAnnualItem = computed<InteractionPillarItem | null>(() => {
-  if (!selectedAnnualRow.value) {
+  if (!showAnnualLane.value || !selectedAnnualRow.value) {
     return null;
   }
   return {
@@ -693,9 +724,6 @@ const interactionMatrixStyle = computed(() => ({
 
 const luckStartLine = computed(() => {
   const luckStart = props.result.luckStart;
-  if (luckStart.startSummary && luckStart.startSolar) {
-    return `起運：${luckStart.startSummary}，陽曆${luckStart.startSolar}後起運`;
-  }
   if (luckStart.startSummary) {
     return `起運：${luckStart.startSummary}`;
   }
@@ -951,7 +979,7 @@ function buildSummaryRows(
 function buildMonthAnnualSummary(
   summarizePair: (left: InteractionPillarItem, right: InteractionPillarItem) => string[],
 ) {
-  if (!selectedAnnualItem.value || !selectedAnnualRow.value?.liuYue?.length) {
+  if (!showMonthLane.value || !selectedAnnualItem.value || !selectedAnnualRow.value?.liuYue?.length) {
     return [];
   }
 
@@ -976,15 +1004,42 @@ function buildMonthAnnualSummary(
   return summary ? [summary] : [];
 }
 
+function toggleAnnualLane() {
+  const next = !expandAnnualLane.value;
+  expandAnnualLane.value = next;
+  if (!next) {
+    expandMonthLane.value = false;
+  }
+}
+
+function toggleMonthLane() {
+  const next = !expandMonthLane.value;
+  expandMonthLane.value = next;
+  if (next) {
+    expandAnnualLane.value = true;
+  }
+}
+
 const stemSummaryStrips = computed(() => [
   ...buildMonthAnnualSummary(summarizeStemInteractionsCompact),
   ...buildSummaryRows(summarizeStemInteractions),
 ]);
 
-const branchSummaryStrips = computed(() => [
-  ...buildMonthAnnualSummary(summarizeBranchInteractionsCompact),
-  ...buildSummaryRows(summarizeBranchInteractions),
-]);
+const branchSummaryStrips = computed(() => {
+  const items = [
+    ...buildMonthAnnualSummary(summarizeBranchInteractionsCompact),
+    ...buildSummaryRows(summarizeBranchInteractions),
+  ];
+  const orderedKeys = ["annualLuck", "natal", "luckNatal", "annualNatal", "monthAnnual"];
+  const keySet = new Set(orderedKeys);
+
+  return [
+    ...orderedKeys
+      .map((key) => items.find((item) => item.key === key))
+      .filter((item): item is InteractionSummary => !!item),
+    ...items.filter((item) => !keySet.has(item.key)),
+  ];
+});
 
 function summaryStripStyle(item: InteractionSummary) {
   return {
@@ -1060,6 +1115,43 @@ watch(selectedAnnualRow, (row) => {
     selectedMonthIndex.value = row.liuYue?.[0]?.index ?? null;
   }
 });
+
+watch(
+  () => props.compact,
+  (compact) => {
+    expandAnnualLane.value = !compact;
+    expandMonthLane.value = !compact;
+  },
+  { immediate: true },
+);
+
+watch(expandAnnualLane, (expanded) => {
+  if (!expanded) {
+    expandMonthLane.value = false;
+    if (selectedLuckRow.value) {
+      emitLuckPreview(selectedLuckRow.value);
+    }
+    return;
+  }
+  if (expandMonthLane.value && selectedLuckRow.value && selectedAnnualRow.value && selectedMonthRow.value) {
+    emitMonthPreview(selectedLuckRow.value, selectedAnnualRow.value, selectedMonthRow.value);
+    return;
+  }
+  if (selectedLuckRow.value && selectedAnnualRow.value) {
+    emitAnnualPreview(selectedLuckRow.value, selectedAnnualRow.value);
+  }
+});
+
+watch(expandMonthLane, (expanded) => {
+  if (!selectedLuckRow.value || !selectedAnnualRow.value) {
+    return;
+  }
+  if (expanded && selectedMonthRow.value) {
+    emitMonthPreview(selectedLuckRow.value, selectedAnnualRow.value, selectedMonthRow.value);
+    return;
+  }
+  emitAnnualPreview(selectedLuckRow.value, selectedAnnualRow.value);
+});
 </script>
 
 <style scoped>
@@ -1071,6 +1163,31 @@ watch(selectedAnnualRow, (row) => {
   margin: 8px 0 0;
   color: #dc2626;
   font-size: 14px;
+}
+
+.compact-lane-toggle-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.compact-lane-toggle {
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  background: rgba(248, 250, 252, 0.96);
+  color: #334155;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  line-height: 1.1;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.compact-lane-toggle.is-active {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
 }
 
 .luck-board {
@@ -1098,9 +1215,9 @@ watch(selectedAnnualRow, (row) => {
 .lane-track {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(102px, 1fr);
+  grid-auto-columns: 112px;
   width: max-content;
-  min-width: 100%;
+  min-width: max-content;
 }
 
 .lane-scrollbar {
@@ -1427,7 +1544,8 @@ watch(selectedAnnualRow, (row) => {
 }
 
 .luck-panel.is-compact .luck-start-line {
-  font-size: 11px;
+  font-size: 10px;
+  line-height: 1.35;
 }
 
 .luck-panel.is-compact .luck-board {
@@ -1444,54 +1562,82 @@ watch(selectedAnnualRow, (row) => {
 }
 
 .luck-panel.is-compact .lane-track {
-  grid-auto-columns: minmax(66px, 66px);
+  grid-auto-columns: minmax(88px, 88px);
 }
 
 .luck-panel.is-compact .fate-cell,
 .luck-panel.is-compact .fate-cell-major,
 .luck-panel.is-compact .fate-cell-annual {
-  height: 190px;
-  padding: 6px 6px 8px;
-  gap: 4px;
+  height: 286px;
+  padding: 7px 8px 9px;
+  gap: 2px;
 }
 
 .luck-panel.is-compact .fate-cell-month {
-  height: 222px;
-  grid-template-rows: minmax(22px, auto) minmax(16px, auto) minmax(54px, auto) minmax(56px, auto) minmax(14px, auto);
+  height: 334px;
+  grid-template-rows: minmax(24px, auto) minmax(22px, auto) minmax(56px, auto) minmax(112px, auto) minmax(14px, auto);
 }
 
-.luck-panel.is-compact .fate-cell-year,
+.luck-panel.is-compact .fate-cell-year {
+  font-size: 10px;
+  min-height: 28px;
+  line-height: 1.15;
+  white-space: pre-line;
+}
+
 .luck-panel.is-compact .fate-cell-topline,
 .luck-panel.is-compact .fate-cell-meta {
   font-size: 9px;
+  line-height: 1.15;
 }
 
 .luck-panel.is-compact .fate-cell-main {
-  min-height: 54px;
+  min-height: 62px;
   gap: 4px;
 }
 
 .luck-panel.is-compact .fate-char-row {
-  min-height: 22px;
+  min-height: 24px;
+  gap: 4px;
+  align-items: baseline;
 }
 
 .luck-panel.is-compact .fate-char-row .wuxing-char,
 .luck-panel.is-compact .fate-cell-major .fate-char-row .wuxing-char {
-  font-size: 15px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .luck-panel.is-compact .ten-god-text {
-  font-size: 8px;
+  font-size: 11px;
+  line-height: 1.15;
+  letter-spacing: 0;
 }
 
 .luck-panel.is-compact .hidden-ten-god-text {
-  font-size: 8px;
+  font-size: 10px;
+  line-height: 1.15;
+  letter-spacing: 0;
 }
 
 .luck-panel.is-compact .fate-hidden-list,
 .luck-panel.is-compact .fate-hidden-list-month {
-  min-height: 52px;
-  max-height: 52px;
+  min-height: 104px;
+  max-height: 104px;
+  gap: 4px;
+}
+
+.luck-panel.is-compact .fate-hidden-item {
+  min-height: 18px;
+  gap: 4px;
+  align-items: baseline;
+}
+
+.luck-panel.is-compact .fate-hidden-item .wuxing-char {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
 }
 
 .luck-panel.is-compact .luck-detail-bar {
@@ -1577,28 +1723,36 @@ watch(selectedAnnualRow, (row) => {
   }
 
   .luck-panel.is-compact .lane-track {
-    grid-auto-columns: minmax(60px, 60px);
+    grid-auto-columns: minmax(80px, 80px);
   }
 
   .luck-panel.is-compact .fate-cell,
   .luck-panel.is-compact .fate-cell-major,
   .luck-panel.is-compact .fate-cell-annual {
-    height: 176px;
-    padding: 5px 5px 7px;
+    height: 270px;
+    padding: 6px 7px 8px;
   }
 
   .luck-panel.is-compact .fate-cell-month {
-    height: 206px;
+    height: 312px;
   }
 
   .luck-panel.is-compact .fate-char-row .wuxing-char,
   .luck-panel.is-compact .fate-cell-major .fate-char-row .wuxing-char,
   .luck-panel.is-compact .interaction-pillar-main .wuxing-char {
-    font-size: 14px;
+    font-size: 18px;
   }
 
   .luck-panel.is-compact .ten-god-text {
-    font-size: 7px;
+    font-size: 10px;
+  }
+
+  .luck-panel.is-compact .hidden-ten-god-text {
+    font-size: 9px;
+  }
+
+  .luck-panel.is-compact .fate-hidden-item .wuxing-char {
+    font-size: 13px;
   }
 
   .luck-panel.is-compact .interaction-summary-strip,

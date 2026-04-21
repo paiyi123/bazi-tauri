@@ -607,6 +607,19 @@ watch(timeInputMode, () => {
   }
 });
 
+watch(
+  () => form.calendarType,
+  (calendarType, previousCalendarType) => {
+    if (calendarType !== "LUNAR" || previousCalendarType === "LUNAR") {
+      return;
+    }
+    if (form.yearEra === "AD") {
+      form.year = Math.max(1, form.year - 1911);
+    }
+    form.yearEra = "ROC";
+  },
+);
+
 onMounted(async () => {
   loadSavedRecords();
   syncFormToTimePreset();
