@@ -647,6 +647,7 @@ watch(
     }
     await applyBirthDraft(draft);
   },
+  { immediate: true },
 );
 
 onMounted(async () => {

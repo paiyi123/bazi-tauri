@@ -49,6 +49,7 @@
               帶回生日輸入
             </el-button>
           </div>
+          <div v-if="candidateDateText" class="year-hint-text candidate-date-text">{{ candidateDateText }}</div>
           <div v-if="yearHintText" class="year-hint-text">{{ yearHintText }}</div>
         </el-col>
 
@@ -168,6 +169,12 @@ const yearHintText = computed(() => {
   }
   return inferredYearNote.value;
 });
+const candidateDateText = computed(() => {
+  if (!inferredCandidates.value.length) {
+    return "";
+  }
+  return `候選生日：${inferredCandidates.value.map((candidate) => candidate.label).join("、")}`;
+});
 
 async function inferGregorianYears() {
   inferLoading.value = true;
@@ -268,6 +275,11 @@ function resetSavedInput() {
   font-size: 12px;
   line-height: 1.6;
   color: #526071;
+}
+
+.candidate-date-text {
+  color: #253046;
+  font-weight: 500;
 }
 
 @media (max-width: 768px) {

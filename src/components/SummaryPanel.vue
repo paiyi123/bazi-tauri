@@ -30,6 +30,9 @@
       <el-descriptions-item label="胎元">{{ result.taiYuan }}</el-descriptions-item>
       <el-descriptions-item label="命宮">{{ result.mingGong }}</el-descriptions-item>
       <el-descriptions-item label="身宮">{{ result.shenGong }}</el-descriptions-item>
+      <el-descriptions-item v-if="directPillarYearSummary" label="可能西元年" :span="fullSpan">
+        <span class="shen-sha-text">{{ directPillarYearSummary }}</span>
+      </el-descriptions-item>
       <el-descriptions-item v-if="shenShaSummary" label="四柱神煞" :span="fullSpan">
         <span class="shen-sha-text">{{ shenShaSummary }}</span>
       </el-descriptions-item>
@@ -111,6 +114,23 @@ const hasExactLuckTiming = computed(
 );
 const luckStartSummary = computed(() => luckStart.value?.startSummary || "未提供起運資訊");
 const luckTransitionSummary = computed(() => luckStart.value?.transitionSummary || "");
+const directPillarYearSummary = computed(() => {
+  const hint = props.result.directPillarYearHint;
+  if (!hint) {
+    return "";
+  }
+  const parts: string[] = [];
+  if (hint.selectedYear != null) {
+    parts.push(`已選：${hint.selectedYear}`);
+  }
+  if (hint.candidateYears?.length) {
+    parts.push(`候選：${hint.candidateYears.join("、")}`);
+  }
+  if (hint.note) {
+    parts.push(hint.note);
+  }
+  return parts.join("；");
+});
 const shenShaSummary = computed(() => {
   const shenSha = props.result.shenSha;
   if (!shenSha) {
