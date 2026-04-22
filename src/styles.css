@@ -422,7 +422,8 @@ body {
     position: sticky;
     top: 10px;
     z-index: 20;
-    backdrop-filter: blur(10px);
+    background: rgba(255, 250, 243, 0.96);
+    box-shadow: 0 10px 24px rgba(69, 26, 3, 0.08);
   }
 
   .compact-layout .left-column,
