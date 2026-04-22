@@ -30,6 +30,12 @@
       <el-descriptions-item label="胎元">{{ result.taiYuan }}</el-descriptions-item>
       <el-descriptions-item label="命宮">{{ result.mingGong }}</el-descriptions-item>
       <el-descriptions-item label="身宮">{{ result.shenGong }}</el-descriptions-item>
+      <el-descriptions-item v-if="shenShaSummary" label="四柱神煞" :span="fullSpan">
+        <span class="shen-sha-text">{{ shenShaSummary }}</span>
+      </el-descriptions-item>
+      <el-descriptions-item v-if="result.shenSha?.note" label="神煞說明" :span="fullSpan">
+        <span class="shen-sha-text">{{ result.shenSha.note }}</span>
+      </el-descriptions-item>
       <template v-if="hasExactLuckTiming">
         <el-descriptions-item label="起運日期">{{ luckStart?.startSolar }}</el-descriptions-item>
         <el-descriptions-item label="起運偏移" :span="fullSpan">
@@ -105,6 +111,20 @@ const hasExactLuckTiming = computed(
 );
 const luckStartSummary = computed(() => luckStart.value?.startSummary || "未提供起運資訊");
 const luckTransitionSummary = computed(() => luckStart.value?.transitionSummary || "");
+const shenShaSummary = computed(() => {
+  const shenSha = props.result.shenSha;
+  if (!shenSha) {
+    return "";
+  }
+  return [
+    shenSha.year.length ? `年柱：${shenSha.year.join("、")}` : "",
+    shenSha.month.length ? `月柱：${shenSha.month.join("、")}` : "",
+    shenSha.day.length ? `日柱：${shenSha.day.join("、")}` : "",
+    shenSha.hour.length ? `時柱：${shenSha.hour.join("、")}` : "",
+  ]
+    .filter(Boolean)
+    .join("；");
+});
 
 const baziPillars = computed(() => {
   const pillars = [
@@ -174,6 +194,12 @@ const baziPillars = computed(() => {
 
 .wuxing-water {
   color: #1565c0;
+}
+
+.shen-sha-text {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #526071;
 }
 
 @media (max-width: 768px) {

@@ -49,13 +49,16 @@
           </div>
           <div class="subline">對應十神：{{ yongShen.unfavorableTenGods.join("、") }}</div>
         </el-descriptions-item>
-        <el-descriptions-item v-if="yongShen.cautionElements.length" label="慎用">
-          <div class="tag-list">
+        <el-descriptions-item label="慎用">
+          <div v-if="yongShen.cautionElements.length" class="tag-list">
             <el-tag v-for="item in yongShen.cautionElements" :key="`caution-element-${item}`" type="warning">
               {{ item }}
             </el-tag>
           </div>
-          <div class="subline">對應十神：{{ yongShen.cautionTenGods.join("、") }}</div>
+          <span v-else>無</span>
+          <div v-if="yongShen.cautionTenGods.length" class="subline">
+            對應十神：{{ yongShen.cautionTenGods.join("、") }}
+          </div>
         </el-descriptions-item>
         <el-descriptions-item label="判斷過程">
           {{ yongShen.process }}
@@ -185,4 +188,5 @@ const shaYin = computed(() => props.result.quantModel?.shaYin);
   color: var(--el-text-color-secondary);
   font-size: 13px;
 }
+
 </style>

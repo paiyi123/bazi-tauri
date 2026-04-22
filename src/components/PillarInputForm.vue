@@ -33,6 +33,25 @@
           <el-alert :title="`目前四柱：${currentBaZi}`" type="success" :closable="false" show-icon />
         </el-col>
 
+        <el-col :span="24">
+          <div class="year-hint-row">
+            <el-button :size="formSize" :loading="inferLoading" @click="inferGregorianYears">推算西元年</el-button>
+            <el-select v-model="selectedCandidateKey" class="year-select" placeholder="不加年" clearable>
+              <el-option label="不加年" :value="null" />
+              <el-option
+                v-for="candidate in inferredCandidates"
+                :key="candidate.solarDateTime"
+                :label="candidate.label"
+                :value="candidate.solarDateTime"
+              />
+            </el-select>
+            <el-button :size="formSize" :disabled="!selectedCandidate" @click="applyCandidateToBirthForm">
+              帶回生日輸入
+            </el-button>
+          </div>
+          <div v-if="yearHintText" class="year-hint-text">{{ yearHintText }}</div>
+        </el-col>
+
         <template v-for="pillar in pillarFields" :key="pillar.key">
           <el-col :span="24">
             <div class="pillar-row-title">{{ pillar.label }}：{{ getPillarValue(pillar.key) }}</div>
@@ -69,8 +88,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch } from "vue";
-import type { PillarAnalyzeRequest } from "../types/bazi";
+import { computed, reactive, ref, watch } from "vue";
+import { analyzePillars } from "../services/bazi";
+import type { BaziRequest, DirectPillarBirthCandidate, PillarAnalyzeRequest } from "../types/bazi";
 
 const STORAGE_KEY = "bazi:pillar-input:v1";
 
@@ -82,6 +102,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   submit: [payload: PillarAnalyzeRequest];
+  applyBirthDraft: [payload: BaziRequest];
 }>();
 
 const stems = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
@@ -117,6 +138,10 @@ function loadSavedForm() {
 
 const form = reactive(loadSavedForm());
 const formSize = computed(() => (props.compact ? "small" : "default"));
+const inferLoading = ref(false);
+const inferredCandidates = ref<DirectPillarBirthCandidate[]>([]);
+const inferredYearNote = ref("");
+const selectedCandidateKey = ref<string | null>(null);
 
 watch(
   form,
@@ -134,6 +159,66 @@ const currentBaZi = computed(
   () =>
     `${getPillarValue("year")} ${getPillarValue("month")} ${getPillarValue("day")} ${getPillarValue("hour")}`,
 );
+const selectedCandidate = computed(
+  () => inferredCandidates.value.find((candidate) => candidate.solarDateTime === selectedCandidateKey.value) || null,
+);
+const yearHintText = computed(() => {
+  if (inferredCandidates.value.length) {
+    return `候選西元年：${inferredCandidates.value.map((candidate) => candidate.year).join("、")}${inferredYearNote.value ? `；${inferredYearNote.value}` : ""}`;
+  }
+  return inferredYearNote.value;
+});
+
+async function inferGregorianYears() {
+  inferLoading.value = true;
+  inferredYearNote.value = "";
+  try {
+    const response = await analyzePillars({
+      yearPillar: getPillarValue("year"),
+      monthPillar: getPillarValue("month"),
+      dayPillar: getPillarValue("day"),
+      hourPillar: getPillarValue("hour"),
+      gender: form.gender,
+    });
+    inferredCandidates.value = response.directPillarYearHint?.candidates || [];
+    inferredYearNote.value =
+      response.directPillarYearHint?.note || (inferredCandidates.value.length ? "" : "找不到可用年份");
+    if (
+      selectedCandidateKey.value &&
+      !inferredCandidates.value.some((candidate) => candidate.solarDateTime === selectedCandidateKey.value)
+    ) {
+      selectedCandidateKey.value = null;
+    }
+    if (!selectedCandidateKey.value && inferredCandidates.value.length) {
+      selectedCandidateKey.value = inferredCandidates.value[0].solarDateTime;
+    }
+  } catch (error) {
+    inferredCandidates.value = [];
+    inferredYearNote.value = error instanceof Error ? error.message : "推算西元年失敗";
+  } finally {
+    inferLoading.value = false;
+  }
+}
+
+function applyCandidateToBirthForm() {
+  if (!selectedCandidate.value) {
+    return;
+  }
+  emit("applyBirthDraft", {
+    calendarType: "SOLAR",
+    gender: form.gender || "FEMALE",
+    yearEra: "AD",
+    year: selectedCandidate.value.year,
+    month: selectedCandidate.value.month,
+    day: selectedCandidate.value.day,
+    hour: selectedCandidate.value.hour,
+    minute: selectedCandidate.value.minute,
+    second: selectedCandidate.value.second,
+    baziSect: 2,
+    yunSect: 1,
+    leapMonth: false,
+  });
+}
 
 function onSubmit() {
   emit("submit", {
@@ -142,11 +227,15 @@ function onSubmit() {
     dayPillar: getPillarValue("day"),
     hourPillar: getPillarValue("hour"),
     gender: form.gender,
+    selectedGregorianYear: selectedCandidate.value?.year ?? null,
   });
 }
 
 function resetSavedInput() {
   Object.assign(form, defaultForm());
+  inferredCandidates.value = [];
+  inferredYearNote.value = "";
+  selectedCandidateKey.value = null;
   window.localStorage.removeItem(STORAGE_KEY);
 }
 </script>
@@ -161,6 +250,24 @@ function resetSavedInput() {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.year-hint-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.year-select {
+  min-width: 220px;
+}
+
+.year-hint-text {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #526071;
 }
 
 @media (max-width: 768px) {
@@ -204,6 +311,15 @@ function resetSavedInput() {
   .action-row :deep(.el-button) {
     width: 100%;
     justify-content: center;
+  }
+
+  .year-hint-row {
+    align-items: stretch;
+  }
+
+  .year-hint-row :deep(.el-button),
+  .year-select {
+    width: 100%;
   }
 }
 

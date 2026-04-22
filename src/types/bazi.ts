@@ -37,6 +37,7 @@ export interface PillarAnalyzeRequest {
   dayPillar: string;
   hourPillar: string;
   gender?: Gender;
+  selectedGregorianYear?: number | null;
 }
 
 export interface Pillar {
@@ -298,6 +299,39 @@ export interface QuantModelResponse {
   luckScores?: QuantLuckScore[];
 }
 
+export interface ShenShaMatch {
+  name: string;
+  basis: string;
+  matchedPillars: string[];
+}
+
+export interface FourPillarShenSha {
+  note: string;
+  year: string[];
+  month: string[];
+  day: string[];
+  hour: string[];
+  matches: ShenShaMatch[];
+}
+
+export interface DirectPillarYearHint {
+  candidateYears: number[];
+  selectedYear?: number | null;
+  candidates?: DirectPillarBirthCandidate[];
+  note: string;
+}
+
+export interface DirectPillarBirthCandidate {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+  solarDateTime: string;
+  label: string;
+}
+
 export interface BaziResponse {
   inputCalendarType: string;
   inputDateTime: string;
@@ -310,6 +344,8 @@ export interface BaziResponse {
   taiYuan: string;
   mingGong: string;
   shenGong: string;
+  shenSha?: FourPillarShenSha;
+  directPillarYearHint?: DirectPillarYearHint;
   yearPillar: Pillar;
   monthPillar: Pillar;
   dayPillar: Pillar;

@@ -276,6 +276,7 @@ const props = defineProps<{
   loading: boolean;
   error: string;
   compact?: boolean;
+  prefillDraft?: BaziRequest | null;
 }>();
 
 const emit = defineEmits<{
@@ -428,6 +429,24 @@ function applyRecord(record: BirthRecordResponse) {
   form.leapMonth = record.leapMonth;
   saveName.value = record.name;
   syncFormToTimePreset();
+}
+
+async function applyBirthDraft(draft: BaziRequest) {
+  form.calendarType = draft.calendarType;
+  form.gender = draft.gender;
+  form.yearEra = draft.yearEra;
+  form.year = draft.year;
+  form.month = draft.month;
+  form.day = draft.day;
+  form.hour = draft.hour;
+  form.minute = draft.minute;
+  form.second = draft.second;
+  form.baziSect = draft.baziSect;
+  form.yunSect = draft.yunSect;
+  form.leapMonth = draft.leapMonth;
+  timeInputMode.value = "SHICHEN";
+  syncFormToTimePreset();
+  await refreshLunarMonthOptions();
 }
 
 function applySelectedRecord() {
@@ -617,6 +636,16 @@ watch(
       form.year = Math.max(1, form.year - 1911);
     }
     form.yearEra = "ROC";
+  },
+);
+
+watch(
+  () => props.prefillDraft,
+  async (draft) => {
+    if (!draft) {
+      return;
+    }
+    await applyBirthDraft(draft);
   },
 );
 

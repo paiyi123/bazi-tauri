@@ -50,6 +50,10 @@
               <span class="compact-line-label">支神</span>
               <span class="compact-line-value">{{ item.branchTenGods.join('、') }}</span>
             </div>
+            <div class="compact-pillar-line">
+              <span class="compact-line-label">神煞</span>
+              <span class="compact-line-value">{{ item.shenSha.length ? item.shenSha.join('、') : '—' }}</span>
+            </div>
             <div class="compact-score-row compact-score-row-bottom">
               <span class="compact-score-label">{{ item.bottomScoreLabel }}</span>
               <span class="compact-score-value">{{ item.bottomScoreValue }}</span>
@@ -91,6 +95,10 @@
             <div class="meta-row">
               <div class="meta-label">地支十神</div>
               <div class="meta-value">{{ item.branchTenGods.join('、') }}</div>
+            </div>
+            <div class="meta-row">
+              <div class="meta-label">神煞</div>
+              <div class="meta-value meta-value-shen-sha">{{ item.shenSha.length ? item.shenSha.join('、') : '—' }}</div>
             </div>
             <el-descriptions :column="1" size="small">
               <el-descriptions-item label="納音">{{ item.value.naYin }}</el-descriptions-item>
@@ -277,6 +285,7 @@ type DisplayPillarItem = {
   stemTenGod: string
   hiddenStems: string[]
   branchTenGods: string[]
+  shenSha: string[]
   stemElement: WuXing
   branchElement: WuXing
   topScoreLabel: string
@@ -727,6 +736,7 @@ const natalPillarItems = computed<DisplayPillarItem[]>(() => [
     stemTenGod: props.result.hourStemTenGod,
     hiddenStems: props.result.hourHiddenStems,
     branchTenGods: props.result.hourBranchTenGods,
+    shenSha: props.result.shenSha?.hour || [],
     stemElement: stemElement(props.result.hourPillar.stem),
     branchElement: branchElement(props.result.hourPillar.branch),
     topScoreLabel: `${props.result.hourStemTenGod}：`,
@@ -743,6 +753,7 @@ const natalPillarItems = computed<DisplayPillarItem[]>(() => [
     stemTenGod: props.result.dayStemTenGod,
     hiddenStems: props.result.dayHiddenStems,
     branchTenGods: props.result.dayBranchTenGods,
+    shenSha: props.result.shenSha?.day || [],
     stemElement: stemElement(props.result.dayPillar.stem),
     branchElement: branchElement(props.result.dayPillar.branch),
     topScoreLabel: '日元：',
@@ -759,6 +770,7 @@ const natalPillarItems = computed<DisplayPillarItem[]>(() => [
     stemTenGod: props.result.monthStemTenGod,
     hiddenStems: props.result.monthHiddenStems,
     branchTenGods: props.result.monthBranchTenGods,
+    shenSha: props.result.shenSha?.month || [],
     stemElement: stemElement(props.result.monthPillar.stem),
     branchElement: branchElement(props.result.monthPillar.branch),
     topScoreLabel: `${props.result.monthStemTenGod}：`,
@@ -775,6 +787,7 @@ const natalPillarItems = computed<DisplayPillarItem[]>(() => [
     stemTenGod: props.result.yearStemTenGod,
     hiddenStems: props.result.yearHiddenStems,
     branchTenGods: props.result.yearBranchTenGods,
+    shenSha: props.result.shenSha?.year || [],
     stemElement: stemElement(props.result.yearPillar.stem),
     branchElement: branchElement(props.result.yearPillar.branch),
     topScoreLabel: `${props.result.yearStemTenGod}：`,
@@ -794,6 +807,7 @@ const previewPillarItems = computed<DisplayPillarItem[]>(() =>
     stemTenGod: item.stemTenGod || '-',
     hiddenStems: item.branchHiddenStems || [],
     branchTenGods: item.branchTenGods || [],
+    shenSha: [],
     stemElement: stemElement(item.ganZhi.charAt(0)),
     branchElement: branchElement(item.ganZhi.charAt(1)),
     topScoreLabel: `${item.stemTenGod || '天干十神'}：`,
@@ -1998,6 +2012,12 @@ const relationLinks = computed<RelationLink[]>(() => {
 .meta-value {
   font-size: 18px;
   font-weight: 600;
+}
+
+.meta-value-shen-sha {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.5;
 }
 
 .pillar-main-row {

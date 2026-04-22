@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use chrono::{Datelike, Local, NaiveDate};
 use tyme4rs::tyme::culture::Element;
 use tyme4rs::tyme::eightchar::provider::{
     ChildLimitProvider, DefaultEightCharProvider, EightCharProvider, LunarSect1ChildLimitProvider,
@@ -12,6 +13,8 @@ use tyme4rs::tyme::sixtycycle::{
 };
 use tyme4rs::tyme::solar::{SolarTerm, SolarTime};
 use tyme4rs::tyme::{Culture, Tyme};
+
+use crate::shen_sha::{analyze_shen_sha, FourPillarShenShaDto};
 
 const MONTH_LABELS: [&str; 12] = [
     "正月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "冬月", "臘月",
@@ -77,6 +80,7 @@ pub struct PillarAnalyzeRequest {
     pub day_pillar: String,
     pub hour_pillar: String,
     pub gender: Option<Gender>,
+    pub selected_gregorian_year: Option<i32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -160,6 +164,28 @@ pub struct LuckStartDto {
     pub birth_jie_solar: Option<String>,
     pub birth_jie_day_ordinal: Option<i32>,
     pub transition_summary_experimental: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DirectPillarBirthCandidateDto {
+    pub year: i32,
+    pub month: u32,
+    pub day: u32,
+    pub hour: u32,
+    pub minute: u32,
+    pub second: u32,
+    pub solar_date_time: String,
+    pub label: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DirectPillarYearHintDto {
+    pub candidate_years: Vec<i32>,
+    pub selected_year: Option<i32>,
+    pub candidates: Vec<DirectPillarBirthCandidateDto>,
+    pub note: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -400,6 +426,8 @@ pub struct BaziResponse {
     pub tai_yuan: String,
     pub ming_gong: String,
     pub shen_gong: String,
+    pub shen_sha: Option<FourPillarShenShaDto>,
+    pub direct_pillar_year_hint: Option<DirectPillarYearHintDto>,
     pub year_pillar: PillarDto,
     pub month_pillar: PillarDto,
     pub day_pillar: PillarDto,
@@ -419,6 +447,12 @@ pub struct BaziResponse {
     pub luck_start: LuckStartDto,
     pub da_yun: Vec<DaYunDto>,
     pub quant_model: Option<QuantModelResponse>,
+}
+
+#[derive(Debug, Clone)]
+struct GeJuResult {
+    ge_ju: String,
+    basis: String,
 }
 
 #[tauri::command]
@@ -509,6 +543,21 @@ pub fn calculate_bazi(request: BaziRequest) -> Result<BaziResponse, String> {
         hidden_ten_gods(day_master.clone(), eight_char.get_day().get_earth_branch());
     let hour_branch_ten_gods =
         hidden_ten_gods(day_master.clone(), eight_char.get_hour().get_earth_branch());
+    let year_stem_ten_god = ten_god_name(day_master.clone(), eight_char.get_year().get_heaven_stem());
+    let month_stem_ten_god =
+        ten_god_name(day_master.clone(), eight_char.get_month().get_heaven_stem());
+    let day_stem_analysis_ten_god = ten_god_name(day_master.clone(), day_master.clone());
+    let hour_stem_ten_god = ten_god_name(day_master.clone(), eight_char.get_hour().get_heaven_stem());
+    let ge_ju_result = analyze_ge_ju(
+        &month_stem_ten_god,
+        &month_branch_ten_gods,
+        [
+            &year_stem_ten_god,
+            &month_stem_ten_god,
+            &day_stem_analysis_ten_god,
+            &hour_stem_ten_god,
+        ],
+    );
 
     let luck_start = build_luck_start(&request, solar_time, &eight_char)?;
     let da_yun = build_da_yun(&request, solar_time, &eight_char, day_master.clone())?;
@@ -524,7 +573,7 @@ pub fn calculate_bazi(request: BaziRequest) -> Result<BaziResponse, String> {
         &da_yun,
     ));
 
-    Ok(finalize_bazi_response(BaziResponse {
+    let mut response = BaziResponse {
         input_calendar_type: match request.calendar_type {
             CalendarType::Solar => "公曆".to_string(),
             CalendarType::Lunar => "農曆".to_string(),
@@ -534,12 +583,13 @@ pub fn calculate_bazi(request: BaziRequest) -> Result<BaziResponse, String> {
         lunar_date_time: format_lunar_time(lunar_hour.clone()),
         ba_zi: trad(&eight_char.to_string()),
         day_master: trad(&day_master.get_name()),
-        ge_ju: "待移植".to_string(),
-        ge_ju_basis: "Rust 版已補上排盤、四柱直輸與相容量化；原 Java 細部格局公式仍可再逐步收斂。"
-            .to_string(),
+        ge_ju: ge_ju_result.ge_ju,
+        ge_ju_basis: ge_ju_result.basis,
         tai_yuan: trad(&eight_char.get_fetal_origin().get_name()),
         ming_gong: trad(&eight_char.get_own_sign().get_name()),
         shen_gong: trad(&eight_char.get_body_sign().get_name()),
+        shen_sha: None,
+        direct_pillar_year_hint: None,
         year_pillar: build_pillar(eight_char.get_year(), day_master.clone()),
         month_pillar: build_pillar(eight_char.get_month(), day_master.clone()),
         day_pillar: build_pillar(eight_char.get_day(), day_master.clone()),
@@ -548,16 +598,10 @@ pub fn calculate_bazi(request: BaziRequest) -> Result<BaziResponse, String> {
         month_hidden_stems,
         day_hidden_stems,
         hour_hidden_stems,
-        year_stem_ten_god: ten_god_name(
-            day_master.clone(),
-            eight_char.get_year().get_heaven_stem(),
-        ),
-        month_stem_ten_god: ten_god_name(
-            day_master.clone(),
-            eight_char.get_month().get_heaven_stem(),
-        ),
+        year_stem_ten_god,
+        month_stem_ten_god,
         day_stem_ten_god: "日元".to_string(),
-        hour_stem_ten_god: ten_god_name(day_master, eight_char.get_hour().get_heaven_stem()),
+        hour_stem_ten_god,
         year_branch_ten_gods,
         month_branch_ten_gods,
         day_branch_ten_gods,
@@ -565,7 +609,9 @@ pub fn calculate_bazi(request: BaziRequest) -> Result<BaziResponse, String> {
         luck_start,
         da_yun,
         quant_model,
-    }))
+    };
+    response.shen_sha = Some(analyze_shen_sha(&response));
+    Ok(finalize_bazi_response(response))
 }
 
 #[tauri::command]
@@ -575,7 +621,7 @@ pub fn analyze_pillars(request: PillarAnalyzeRequest) -> Result<BaziResponse, St
     let day_cycle = parse_direct_pillar(&request.day_pillar)?;
     let hour_cycle = parse_direct_pillar(&request.hour_pillar)?;
     let day_master = day_cycle.get_heaven_stem();
-    let gender = request.gender.unwrap_or(Gender::Female);
+    let gender = request.gender.clone().unwrap_or(Gender::Female);
     let forward = is_forward_direct(year_cycle.get_heaven_stem(), &gender);
     let da_yun = build_direct_da_yun(month_cycle.clone(), day_master.clone(), forward);
     let natal_cycles = [
@@ -589,13 +635,14 @@ pub fn analyze_pillars(request: PillarAnalyzeRequest) -> Result<BaziResponse, St
         &natal_cycles,
         &da_yun,
     ));
+    let direct_pillar_year_hint = Some(resolve_recent_matching_solar_years(&request)?);
 
     let year_hidden_stems = hidden_stems(year_cycle.get_earth_branch());
     let month_hidden_stems = hidden_stems(month_cycle.get_earth_branch());
     let day_hidden_stems = hidden_stems(day_cycle.get_earth_branch());
     let hour_hidden_stems = hidden_stems(hour_cycle.get_earth_branch());
 
-    Ok(finalize_bazi_response(BaziResponse {
+    let mut response = BaziResponse {
         input_calendar_type: "直接輸入四柱".to_string(),
         input_date_time: format!(
             "{} {} {} {}",
@@ -619,6 +666,8 @@ pub fn analyze_pillars(request: PillarAnalyzeRequest) -> Result<BaziResponse, St
         tai_yuan: "未提供".to_string(),
         ming_gong: "未提供".to_string(),
         shen_gong: "未提供".to_string(),
+        shen_sha: None,
+        direct_pillar_year_hint,
         year_pillar: build_pillar(year_cycle.clone(), day_master.clone()),
         month_pillar: build_pillar(month_cycle.clone(), day_master.clone()),
         day_pillar: build_pillar(day_cycle.clone(), day_master.clone()),
@@ -653,7 +702,9 @@ pub fn analyze_pillars(request: PillarAnalyzeRequest) -> Result<BaziResponse, St
         },
         da_yun,
         quant_model,
-    }))
+    };
+    response.shen_sha = Some(analyze_shen_sha(&response));
+    Ok(finalize_bazi_response(response))
 }
 
 fn finalize_bazi_response(response: BaziResponse) -> BaziResponse {
@@ -675,6 +726,128 @@ fn finalize_bazi_response(response: BaziResponse) -> BaziResponse {
 #[cfg_attr(not(target_os = "android"), allow(dead_code))]
 fn optimize_response_for_android(response: BaziResponse) -> BaziResponse {
     response
+}
+
+fn resolve_recent_matching_solar_years(
+    request: &PillarAnalyzeRequest,
+) -> Result<DirectPillarYearHintDto, String> {
+    let mut candidates = Vec::new();
+    let current_year = Local::now().year();
+
+    for year in build_candidate_gregorian_years(&request.year_pillar, current_year) {
+        if let Some(candidate) = find_matching_solar_in_year(year, request) {
+            candidates.push(candidate);
+            if candidates.len() >= 2 {
+                break;
+            }
+        }
+    }
+
+    let candidate_years = candidates.iter().map(|candidate| candidate.year).collect();
+    let note = if candidates.is_empty() {
+        "未在最近 180 年內找到四柱完全吻合的公曆年份。".to_string()
+    } else {
+        "依四柱完整匹配回推最近兩個可能公曆生日時間；若生日落在立春前後，年份可能落在前後一年邊界。".to_string()
+    };
+
+    Ok(DirectPillarYearHintDto {
+        candidate_years,
+        selected_year: request.selected_gregorian_year,
+        candidates,
+        note,
+    })
+}
+
+fn build_candidate_gregorian_years(year_pillar: &str, current_year: i32) -> Vec<i32> {
+    let normalized = year_pillar.trim();
+    let Some(cycle_index) = SIXTY_CYCLE_NAMES.iter().position(|item| *item == normalized) else {
+        return vec![];
+    };
+
+    let base_year = 1984 + cycle_index as i32;
+    let mut latest_cycle_year = base_year;
+    while latest_cycle_year + 60 <= current_year {
+        latest_cycle_year += 60;
+    }
+
+    let mut years = Vec::new();
+    let mut cycle_year = latest_cycle_year;
+    while cycle_year >= current_year - 180 {
+        if cycle_year + 1 <= current_year {
+            push_unique_year(&mut years, cycle_year + 1);
+        }
+        if cycle_year <= current_year {
+            push_unique_year(&mut years, cycle_year);
+        }
+        cycle_year -= 60;
+    }
+    years.sort_by(|a, b| b.cmp(a));
+    years
+}
+
+fn push_unique_year(years: &mut Vec<i32>, year: i32) {
+    if !years.contains(&year) {
+        years.push(year);
+    }
+}
+
+fn find_matching_solar_in_year(
+    year: i32,
+    request: &PillarAnalyzeRequest,
+) -> Option<DirectPillarBirthCandidateDto> {
+    for month in 1..=12u32 {
+        let day_count = days_in_month(year, month)?;
+        for day in 1..=day_count {
+            for hour in [0u32, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23] {
+                if let Some(candidate) = matches_four_pillars(year, month, day, hour, request) {
+                    return Some(candidate);
+                }
+            }
+        }
+    }
+    None
+}
+
+fn matches_four_pillars(
+    year: i32,
+    month: u32,
+    day: u32,
+    hour: u32,
+    request: &PillarAnalyzeRequest,
+) -> Option<DirectPillarBirthCandidateDto> {
+    let solar_time = SolarTime::new(year as isize, month as usize, day as usize, hour as usize, 30, 0).ok()?;
+    let eight_char = create_eight_char(2, solar_time.get_lunar_hour());
+
+    if trad(&eight_char.get_year().get_name()) == request.year_pillar
+        && trad(&eight_char.get_month().get_name()) == request.month_pillar
+        && trad(&eight_char.get_day().get_name()) == request.day_pillar
+        && trad(&eight_char.get_hour().get_name()) == request.hour_pillar
+    {
+        return Some(DirectPillarBirthCandidateDto {
+            year,
+            month,
+            day,
+            hour,
+            minute: 30,
+            second: 0,
+            solar_date_time: format!(
+                "{:04}-{:02}-{:02} {:02}:{:02}:{:02}",
+                year, month, day, hour, 30, 0
+            ),
+            label: format!("{:04}-{:02}-{:02} {:02}:{:02}", year, month, day, hour, 30),
+        });
+    }
+    None
+}
+
+fn days_in_month(year: i32, month: u32) -> Option<u32> {
+    let start = NaiveDate::from_ymd_opt(year, month, 1)?;
+    let next = if month == 12 {
+        NaiveDate::from_ymd_opt(year + 1, 1, 1)?
+    } else {
+        NaiveDate::from_ymd_opt(year, month + 1, 1)?
+    };
+    Some((next - start).num_days() as u32)
 }
 
 #[cfg(test)]
@@ -766,6 +939,40 @@ mod tests {
             .len();
         println!("reported_lunar_chart_bytes={bytes}");
         assert!(!response.da_yun.is_empty());
+    }
+
+    #[test]
+    fn calculated_chart_uses_ge_ju_analyzer() {
+        let response = calculate_bazi(sample_request()).expect("sample chart should build");
+
+        assert_ne!(response.ge_ju, "待移植");
+        assert!(!response.ge_ju.is_empty());
+        assert!(response.ge_ju.ends_with('格'));
+        assert!(response.ge_ju_basis.contains("以月令十神"));
+    }
+
+    #[test]
+    fn pillar_analysis_adds_common_shen_sha() {
+        let response = analyze_pillars(PillarAnalyzeRequest {
+            year_pillar: "甲子".to_string(),
+            month_pillar: "乙丑".to_string(),
+            day_pillar: "丙寅".to_string(),
+            hour_pillar: "丁卯".to_string(),
+            gender: Some(Gender::Female),
+            selected_gregorian_year: None,
+        })
+        .expect("pillar analysis should succeed");
+
+        let shen_sha = response.shen_sha.expect("shen sha should exist");
+        assert!(shen_sha.year.contains(&"將星".to_string()));
+        assert!(shen_sha.month.contains(&"天乙貴人".to_string()));
+        assert!(shen_sha.day.contains(&"驛馬".to_string()));
+        assert!(shen_sha.hour.contains(&"桃花".to_string()));
+        assert!(shen_sha.matches.len() >= 4);
+        let year_hint = response
+            .direct_pillar_year_hint
+            .expect("direct pillar year hint should exist");
+        assert!(!year_hint.note.is_empty());
     }
 }
 
@@ -862,6 +1069,79 @@ fn hidden_ten_gods(day_master: HeavenStem, branch: EarthBranch) -> Vec<String> {
 
 fn ten_god_name(day_master: HeavenStem, target: HeavenStem) -> String {
     trad(&day_master.get_ten_star(target).get_name())
+}
+
+fn analyze_ge_ju(
+    month_stem_ten_god: &str,
+    month_branch_ten_gods: &[String],
+    stem_ten_gods: [&str; 4],
+) -> GeJuResult {
+    let dominant_ten_god = pick_dominant_ge_ju_ten_god(month_branch_ten_gods, month_stem_ten_god);
+    let Some(dominant_ten_god) = dominant_ten_god else {
+        return GeJuResult {
+            ge_ju: "未定格".to_string(),
+            basis: "無法從月令十神取得有效資料".to_string(),
+        };
+    };
+
+    let pattern = ge_ju_pattern_name(dominant_ten_god);
+    let visible_in_stems = stem_ten_gods.into_iter().any(|item| item == dominant_ten_god);
+    let basis = format!(
+        "以月令十神「{}」判為「{}」，{}",
+        dominant_ten_god,
+        pattern,
+        if visible_in_stems {
+            "且同類十神透干"
+        } else {
+            "但同類十神未透干"
+        }
+    );
+
+    GeJuResult {
+        ge_ju: pattern.to_string(),
+        basis,
+    }
+}
+
+fn pick_dominant_ge_ju_ten_god<'a>(
+    month_branch_ten_gods: &'a [String],
+    month_stem_ten_god: &'a str,
+) -> Option<&'a str> {
+    month_branch_ten_gods
+        .iter()
+        .map(String::as_str)
+        .find(|item| is_supported_ge_ju_ten_god(item))
+        .or_else(|| {
+            let item = month_stem_ten_god;
+            if is_supported_ge_ju_ten_god(item) {
+                Some(item)
+            } else {
+                None
+            }
+        })
+}
+
+fn is_supported_ge_ju_ten_god(ten_god: &str) -> bool {
+    matches!(
+        ten_god,
+        "比肩" | "劫財" | "食神" | "傷官" | "偏財" | "正財" | "七殺" | "正官" | "偏印" | "正印"
+    )
+}
+
+fn ge_ju_pattern_name(ten_god: &str) -> &str {
+    match ten_god {
+        "比肩" => "建祿格",
+        "劫財" => "羊刃格",
+        "食神" => "食神格",
+        "傷官" => "傷官格",
+        "偏財" => "偏財格",
+        "正財" => "正財格",
+        "七殺" => "七殺格",
+        "正官" => "正官格",
+        "偏印" => "偏印格",
+        "正印" => "正印格",
+        _ => ten_god,
+    }
 }
 
 fn build_luck_start(

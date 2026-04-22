@@ -331,6 +331,7 @@ function buildResponse(overrides?: Partial<BaziResponse>): BaziResponse {
     taiYuan: "丁酉",
     mingGong: "壬子",
     shenGong: "甲寅",
+    directPillarYearHint: undefined,
     yearPillar: createPillar("甲寅", "大溪水", "木", "長生", "甲子", "子丑"),
     monthPillar: createPillar("丙午", "天河水", "火", "帝旺", "甲子", "戌亥"),
     dayPillar: createPillar("戊子", "霹靂火", "土", "胎", "甲子", "午未"),
@@ -384,12 +385,40 @@ export function browserFixtureCalculateBazi(request: BaziRequest): Promise<BaziR
 }
 
 export function browserFixtureAnalyzePillars(request: PillarAnalyzeRequest): Promise<BaziResponse> {
+  const candidates = [
+    {
+      year: request.selectedGregorianYear ?? 1998,
+      month: 2,
+      day: 4,
+      hour: 23,
+      minute: 30,
+      second: 0,
+      solarDateTime: `${String(request.selectedGregorianYear ?? 1998).padStart(4, "0")}-02-04 23:30:00`,
+      label: `${String(request.selectedGregorianYear ?? 1998).padStart(4, "0")}-02-04 23:30`,
+    },
+    {
+      year: (request.selectedGregorianYear ?? 1998) - 60,
+      month: 2,
+      day: 5,
+      hour: 23,
+      minute: 30,
+      second: 0,
+      solarDateTime: `${String((request.selectedGregorianYear ?? 1998) - 60).padStart(4, "0")}-02-05 23:30:00`,
+      label: `${String((request.selectedGregorianYear ?? 1998) - 60).padStart(4, "0")}-02-05 23:30`,
+    },
+  ];
   return Promise.resolve(
     clone(
       buildResponse({
         inputCalendarType: "四柱直輸",
         inputDateTime: `${request.yearPillar} ${request.monthPillar} ${request.dayPillar} ${request.hourPillar}`,
         baZi: `${request.yearPillar} ${request.monthPillar} ${request.dayPillar} ${request.hourPillar}`,
+        directPillarYearHint: {
+          candidateYears: candidates.map((candidate) => candidate.year),
+          selectedYear: request.selectedGregorianYear ?? null,
+          candidates,
+          note: "瀏覽器 debug fixture：回推最近兩個可能公曆生日時間。",
+        },
         yearPillar: createPillar(request.yearPillar, "海中金", "木", "長生", "甲子", "子丑"),
         monthPillar: createPillar(request.monthPillar, "爐中火", "火", "帝旺", "甲子", "戌亥"),
         dayPillar: createPillar(request.dayPillar, "大林木", "土", "胎", "甲子", "午未"),

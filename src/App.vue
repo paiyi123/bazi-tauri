@@ -20,6 +20,7 @@
           :compact="isCompactLayout"
           :loading="loading"
           :error="error"
+          :prefill-draft="prefillBirthDraft"
           @submit="handleSubmit"
         />
         <PillarInputForm
@@ -28,6 +29,7 @@
           :loading="loading"
           :error="error"
           @submit="handleSubmitPillars"
+          @apply-birth-draft="handleApplyBirthDraft"
         />
       </section>
 
@@ -121,6 +123,7 @@ const inputMode = ref<"birth" | "pillars">("birth");
 const focusedLuckPillars = ref<LuckPreviewPillar[]>([]);
 const isCompactLayout = ref(false);
 const activeCompactTab = ref<"summary" | "pillars" | "luck" | "quant" | "analysis">("summary");
+const prefillBirthDraft = ref<BaziRequest | null>(null);
 const modeOptions = [
   { label: "出生資料", value: "birth" },
   { label: "直接輸入四柱", value: "pillars" },
@@ -200,5 +203,10 @@ async function handleSubmitPillars(payload: PillarAnalyzeRequest) {
   } finally {
     loading.value = false;
   }
+}
+
+function handleApplyBirthDraft(payload: BaziRequest) {
+  prefillBirthDraft.value = { ...payload };
+  inputMode.value = "birth";
 }
 </script>
