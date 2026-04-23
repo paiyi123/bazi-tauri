@@ -98,18 +98,18 @@ fn build_template_values(result: &Value, context: Option<&PrintContext>) -> Hash
     put("交運節後天數", transition_info.after_days);
 
     let start_summary = value_string(luck_start, "startSummary");
-    let start_parts = digit_runs(&start_summary);
-    let start_years = start_parts.get(0).cloned().unwrap_or_default();
-    let start_months = start_parts.get(1).cloned().unwrap_or_default();
-    let start_days = start_parts.get(2).cloned().unwrap_or_default();
-    let virtual_age = start_years
-        .parse::<i32>()
-        .map(|value| (value + 1).to_string())
+    let start_offset = parse_luck_start_offset(&start_summary);
+    let birth_jie_after_days = luck_start
+        .get("birthJieDayOrdinal")
+        .and_then(Value::as_i64)
+        .map(|value| value.to_string())
         .unwrap_or_default();
+    let virtual_age = first_luck_start_age(result).unwrap_or_default();
     put("出生節氣", escape_html(&value_string(luck_start, "birthJieName")));
-    put("起運年", start_years);
-    put("起運月", start_months);
-    put("起運日", start_days);
+    put("出生節氣後天數", birth_jie_after_days);
+    put("起運年", start_offset.years);
+    put("起運月", start_offset.months);
+    put("起運日", start_offset.days);
     put("虛歲", virtual_age);
 
     let solar = parse_date_time(&value_string(result, "solarDateTime"));
@@ -312,6 +312,60 @@ struct TransitionInfo {
     stems: [String; 2],
     jie_qi: String,
     after_days: String,
+}
+
+#[derive(Debug, Default)]
+struct LuckStartOffset {
+    years: String,
+    months: String,
+    days: String,
+}
+
+fn parse_luck_start_offset(text: &str) -> LuckStartOffset {
+    let after_birth = text
+        .split("出生後")
+        .last()
+        .unwrap_or(text);
+    let days = {
+        let value = number_before_marker(after_birth, '日');
+        if value.is_empty() {
+            number_before_marker(after_birth, '天')
+        } else {
+            value
+        }
+    };
+
+    LuckStartOffset {
+        years: number_before_marker(after_birth, '年'),
+        months: number_before_marker(after_birth, '月'),
+        days,
+    }
+}
+
+fn first_luck_start_age(result: &Value) -> Option<String> {
+    result
+        .get("daYun")
+        .and_then(Value::as_array)
+        .and_then(|rows| rows.first())
+        .and_then(|row| row.get("startAge"))
+        .and_then(Value::as_i64)
+        .map(|age| age.to_string())
+}
+
+fn number_before_marker(text: &str, marker: char) -> String {
+    text.find(marker)
+        .map(|index| {
+            text[..index]
+                .chars()
+                .rev()
+                .take_while(|ch| ch.is_ascii_digit())
+                .collect::<Vec<_>>()
+                .into_iter()
+                .rev()
+                .collect::<String>()
+        })
+        .filter(|value| !value.is_empty())
+        .unwrap_or_default()
 }
 
 fn parse_transition_info(text: &str) -> TransitionInfo {
