@@ -266,6 +266,7 @@ import type {
   BirthRecordResponse,
   LunarDayOption,
   LunarMonthOption,
+  PrintContext,
   TimePreset,
 } from "../types/bazi";
 
@@ -281,6 +282,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   submit: [payload: BaziRequest];
+  printContext: [payload: PrintContext];
 }>();
 
 const defaultForm = (): BaziRequest => ({
@@ -661,6 +663,18 @@ function onSubmit() {
     syncTimePresetToForm();
   }
   form.second = 0;
+  emit("printContext", {
+    source: "birth",
+    name: saveName.value.trim() || undefined,
+    gender: form.gender,
+    calendarType: form.calendarType,
+    yearEra: form.yearEra,
+    inputText:
+      `${form.calendarType === "SOLAR" ? "公曆" : "農曆"} ` +
+      `${form.yearEra === "ROC" ? "民國" : "西元"}${form.year}年${form.leapMonth ? "閏" : ""}${form.month}月${form.day}日 ` +
+      `${String(form.hour).padStart(2, "0")}:${String(form.minute).padStart(2, "0")}`,
+    timeLabel: timeInputMode.value === "SHICHEN" ? timePresetMap[timePreset.value].label : currentShiChenLabel.value,
+  });
   emit("submit", { ...form });
 }
 </script>

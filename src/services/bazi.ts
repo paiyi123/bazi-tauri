@@ -11,6 +11,7 @@ import type {
   LunarMonthDetailResponse,
   LunarYearOptionsResponse,
   PillarAnalyzeRequest,
+  PrintContext,
   YearEra,
 } from "../types/bazi";
 
@@ -78,4 +79,14 @@ export async function analyzePillars(
     return browserFixtureAnalyzePillars(payload);
   }
   return invoke<BaziResponse>("analyze_pillars", { request: payload });
+}
+
+export async function renderPrintHtml(
+  result: BaziResponse,
+  context: PrintContext | null,
+): Promise<string | null> {
+  if (shouldUseBrowserFixtures()) {
+    return null;
+  }
+  return invoke<string>("render_print_html", { result, context });
 }

@@ -81,6 +81,37 @@ body {
   gap: 16px;
 }
 
+.result-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.print-preview-dialog .el-dialog__body {
+  padding-top: 12px;
+}
+
+.print-preview-shell {
+  display: flex;
+  justify-content: center;
+  max-height: 78vh;
+  overflow: auto;
+  padding: 8px 0 16px;
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(252, 248, 240, 0.96), rgba(245, 238, 226, 0.98));
+}
+
+.print-preview-frame {
+  width: min(100%, 980px);
+  min-height: 78vh;
+  border: 0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+}
+
 .compact-result-shell,
 .compact-section-stack {
   display: grid;

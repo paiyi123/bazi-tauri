@@ -21,6 +21,7 @@
           :loading="loading"
           :error="error"
           :prefill-draft="prefillBirthDraft"
+          @print-context="handlePrintContext"
           @submit="handleSubmit"
         />
         <PillarInputForm
@@ -28,12 +29,16 @@
           :compact="isCompactLayout"
           :loading="loading"
           :error="error"
+          @print-context="handlePrintContext"
           @submit="handleSubmitPillars"
           @apply-birth-draft="handleApplyBirthDraft"
         />
       </section>
 
       <section class="right-column">
+        <div v-if="result" class="result-toolbar">
+          <el-button type="primary" plain @click="handleOpenPrintPreview">列印命盤</el-button>
+        </div>
         <div v-if="result && !isCompactLayout" class="result-stack">
           <SummaryPanel :result="result" :compact="false" />
           <PillarPanel :result="result" :preview-pillars="focusedLuckPillars" :compact="false" />
@@ -95,6 +100,30 @@
         </el-card>
       </section>
     </main>
+
+    <el-dialog
+      v-model="showPrintPreview"
+      title="列印預覽"
+      width="1120px"
+      top="2vh"
+      class="print-preview-dialog"
+      destroy-on-close
+    >
+      <div class="print-preview-shell">
+        <iframe
+          v-if="printHtml"
+          ref="printFrame"
+          class="print-preview-frame"
+          :srcdoc="printHtml"
+          title="列印預覽"
+        />
+        <el-empty v-else description="列印預覽載入中" />
+      </div>
+      <template #footer>
+        <el-button @click="showPrintPreview = false">關閉</el-button>
+        <el-button type="primary" :disabled="!printHtml" @click="handlePrintFromPreview">確認列印</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -108,12 +137,13 @@ import PillarInputForm from "./components/PillarInputForm.vue";
 import QuantFivePhasePanel from "./components/QuantFivePhasePanel.vue";
 import SummaryPanel from "./components/SummaryPanel.vue";
 import TenGodPanel from "./components/TenGodPanel.vue";
-import { analyzePillars, calculateBazi } from "./services/bazi";
+import { analyzePillars, calculateBazi, renderPrintHtml } from "./services/bazi";
 import type {
   BaziRequest,
   BaziResponse,
   LuckPreviewPillar,
   PillarAnalyzeRequest,
+  PrintContext,
 } from "./types/bazi";
 
 const result = ref<BaziResponse | null>(null);
@@ -124,6 +154,10 @@ const focusedLuckPillars = ref<LuckPreviewPillar[]>([]);
 const isCompactLayout = ref(false);
 const activeCompactTab = ref<"summary" | "pillars" | "luck" | "quant" | "analysis">("summary");
 const prefillBirthDraft = ref<BaziRequest | null>(null);
+const printContext = ref<PrintContext | null>(null);
+const showPrintPreview = ref(false);
+const printHtml = ref<string | null>(null);
+const printFrame = ref<HTMLIFrameElement | null>(null);
 const modeOptions = [
   { label: "出生資料", value: "birth" },
   { label: "直接輸入四柱", value: "pillars" },
@@ -177,6 +211,36 @@ onBeforeUnmount(() => {
 
 function handlePreviewChange(pillars: LuckPreviewPillar[] | null) {
   focusedLuckPillars.value = pillars ?? [];
+}
+
+function handlePrintContext(payload: PrintContext) {
+  printContext.value = payload;
+}
+
+async function handleOpenPrintPreview() {
+  if (!result.value) {
+    return;
+  }
+
+  showPrintPreview.value = true;
+  printHtml.value = null;
+  error.value = "";
+
+  try {
+    printHtml.value = await renderPrintHtml(result.value, printContext.value);
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : "載入列印預覽失敗";
+  }
+}
+
+function handlePrintFromPreview() {
+  const frameWindow = printFrame.value?.contentWindow;
+  if (!frameWindow) {
+    return;
+  }
+
+  frameWindow.focus();
+  frameWindow.print();
 }
 
 async function handleSubmit(payload: BaziRequest) {

@@ -1,4 +1,5 @@
 mod bazi;
+mod print_template;
 mod quant_model;
 mod shen_sha;
 
@@ -10,7 +11,8 @@ pub fn run() {
             bazi::calculate_bazi,
             bazi::analyze_pillars,
             bazi::get_lunar_year_options,
-            bazi::get_lunar_month_detail
+            bazi::get_lunar_month_detail,
+            print_template::render_print_html
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

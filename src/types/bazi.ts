@@ -395,3 +395,14 @@ export interface LunarMonthDetailResponse {
   dayCount: number;
   dayOptions: LunarDayOption[];
 }
+
+export interface PrintContext {
+  source: "birth" | "pillars";
+  name?: string;
+  gender?: Gender;
+  calendarType?: CalendarType | null;
+  yearEra?: YearEra | null;
+  inputText: string;
+  timeLabel?: string;
+  note?: string;
+}

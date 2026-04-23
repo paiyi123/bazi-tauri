@@ -91,7 +91,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
 import { analyzePillars } from "../services/bazi";
-import type { BaziRequest, DirectPillarBirthCandidate, PillarAnalyzeRequest } from "../types/bazi";
+import type { BaziRequest, DirectPillarBirthCandidate, PillarAnalyzeRequest, PrintContext } from "../types/bazi";
 
 const STORAGE_KEY = "bazi:pillar-input:v1";
 
@@ -104,6 +104,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   submit: [payload: PillarAnalyzeRequest];
   applyBirthDraft: [payload: BaziRequest];
+  printContext: [payload: PrintContext];
 }>();
 
 const stems = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
@@ -228,6 +229,12 @@ function applyCandidateToBirthForm() {
 }
 
 function onSubmit() {
+  emit("printContext", {
+    source: "pillars",
+    gender: form.gender,
+    inputText: `四柱：${currentBaZi.value}${selectedCandidate.value ? `；候選西元生日：${selectedCandidate.value.label}` : ""}`,
+    note: selectedCandidate.value ? `候選西元年：${selectedCandidate.value.year}` : undefined,
+  });
   emit("submit", {
     yearPillar: getPillarValue("year"),
     monthPillar: getPillarValue("month"),
