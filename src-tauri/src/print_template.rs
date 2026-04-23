@@ -85,8 +85,8 @@ fn build_template_values(result: &Value, context: Option<&PrintContext>) -> Hash
         }
         put(&format!("{prefix}柱天干"), escape_html(&pillar.stem));
         put(&format!("{prefix}柱地支"), escape_html(&pillar.branch));
-        put(&format!("{prefix}支藏干"), escape_html(&pillar.hidden_stems.join("　")));
-        put(&format!("{prefix}支藏干十神"), pillar.branch_ten_gods.iter().map(|item| escape_html(item)).collect::<Vec<_>>().join("<br>"));
+        put(&format!("{prefix}支藏干"), escape_html(&join_reversed(&pillar.hidden_stems, "　")));
+        put(&format!("{prefix}支藏干十神"), ten_god_grid_html(&pillar.branch_ten_gods));
     }
 
     let luck_start = result.get("luckStart").unwrap_or(&Value::Null);
@@ -113,7 +113,7 @@ fn build_template_values(result: &Value, context: Option<&PrintContext>) -> Hash
     put("虛歲", virtual_age);
 
     let solar = parse_date_time(&value_string(result, "solarDateTime"));
-    let lunar = parse_date_time(&value_string(result, "lunarDateTime"));
+    let lunar = parse_lunar_date_time(&value_string(result, "lunarDateTime"), &solar.year);
     put("國曆年", solar.year);
     put("國曆月", solar.month);
     put("國曆日", solar.day);
@@ -133,8 +133,8 @@ fn build_template_values(result: &Value, context: Option<&PrintContext>) -> Hash
     let luck_rows = build_luck_rows(result.get("daYun"));
     for index in 0..8 {
         let row = luck_rows.get(index).cloned().unwrap_or_default();
-        put(&format!("大運{}_歲", index + 1), row.start_age.unwrap_or_default());
-        put(&format!("大運{}_干支", index + 1), escape_html(&row.gan_zhi));
+        put(&format!("大運{}_歲", index + 1), row.start_age.map(|age| age.to_string()).unwrap_or_default());
+        put(&format!("大運{}_干支", index + 1), vertical_chars_html(&row.gan_zhi));
         put(&format!("流年{}_干支", index + 1), build_annual_cells(&row.annuals, true));
         put(&format!("流年{}_歲數", index + 1), build_annual_cells(&row.annuals, false));
     }
@@ -171,7 +171,7 @@ impl PillarPrintData {
 #[derive(Debug, Clone, Default)]
 struct LuckPrintRow {
     gan_zhi: String,
-    start_age: Option<String>,
+    start_age: Option<i32>,
     annuals: Vec<AnnualPrintData>,
 }
 
@@ -198,16 +198,63 @@ fn build_luck_rows(value: Option<&Value>) -> Vec<LuckPrintRow> {
                     age: annual.get("age").and_then(Value::as_i64).unwrap_or_default() as i32,
                 })
                 .collect::<Vec<_>>();
-            annuals.sort_by(|left, right| right.age.cmp(&left.age));
-            annuals.truncate(10);
+            let start_age = row.get("startAge").and_then(Value::as_i64).map(|age| age as i32);
+            annuals = normalize_annuals(annuals, start_age);
 
             LuckPrintRow {
                 gan_zhi: value_string(row, "ganZhi"),
-                start_age: row.get("startAge").and_then(Value::as_i64).map(|age| age.to_string()),
+                start_age,
                 annuals,
             }
         })
         .collect()
+}
+
+fn normalize_annuals(mut annuals: Vec<AnnualPrintData>, start_age: Option<i32>) -> Vec<AnnualPrintData> {
+    let Some(start_age) = start_age else {
+        annuals.sort_by(|left, right| right.age.cmp(&left.age));
+        annuals.truncate(10);
+        return annuals;
+    };
+
+    if !annuals.iter().any(|annual| annual.age == start_age) {
+        if let Some(next_annual) = annuals.iter().find(|annual| annual.age == start_age + 1) {
+            if let Some(previous) = previous_gan_zhi(&next_annual.gan_zhi) {
+                annuals.push(AnnualPrintData {
+                    gan_zhi: previous,
+                    age: start_age,
+                });
+            }
+        }
+    }
+
+    let mut filtered = ((start_age)..=(start_age + 9))
+        .filter_map(|age| annuals.iter().find(|annual| annual.age == age).cloned())
+        .collect::<Vec<_>>();
+    filtered.sort_by(|left, right| right.age.cmp(&left.age));
+
+    if filtered.is_empty() {
+        annuals.sort_by(|left, right| right.age.cmp(&left.age));
+        annuals.truncate(10);
+        annuals
+    } else {
+        filtered
+    }
+}
+
+fn previous_gan_zhi(value: &str) -> Option<String> {
+    const STEMS: [&str; 10] = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
+    const BRANCHES: [&str; 12] = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+
+    let mut chars = value.chars();
+    let stem = chars.next()?.to_string();
+    let branch = chars.next()?.to_string();
+    let stem_index = STEMS.iter().position(|item| *item == stem)?;
+    let branch_index = BRANCHES.iter().position(|item| *item == branch)?;
+    let previous_stem = STEMS[(stem_index + STEMS.len() - 1) % STEMS.len()];
+    let previous_branch = BRANCHES[(branch_index + BRANCHES.len() - 1) % BRANCHES.len()];
+
+    Some(format!("{previous_stem}{previous_branch}"))
 }
 
 fn build_annual_cells(items: &[AnnualPrintData], use_gan_zhi: bool) -> String {
@@ -216,7 +263,7 @@ fn build_annual_cells(items: &[AnnualPrintData], use_gan_zhi: bool) -> String {
         .take(10)
         .map(|item| {
             if use_gan_zhi {
-                format!("<td>{}</td>", escape_html(&item.gan_zhi))
+                format!("<td><span class=\"annual-ganzhi\">{}</span></td>", vertical_chars_html(&item.gan_zhi))
             } else {
                 format!("<td>{}</td>", item.age)
             }
@@ -226,6 +273,38 @@ fn build_annual_cells(items: &[AnnualPrintData], use_gan_zhi: bool) -> String {
         cells.push("<td></td>".to_string());
     }
     cells.join("")
+}
+
+fn vertical_chars_html(value: &str) -> String {
+    value
+        .chars()
+        .filter(|ch| !ch.is_whitespace())
+        .map(|ch| format!("<span>{}</span>", escape_html(&ch.to_string())))
+        .collect::<Vec<_>>()
+        .join("")
+}
+
+fn ten_god_grid_html(items: &[String]) -> String {
+    let terms = items
+        .iter()
+        .rev()
+        .map(|item| format!("<span class=\"ten-god-term\">{}</span>", vertical_chars_html(item)))
+        .collect::<Vec<_>>();
+
+    if terms.is_empty() {
+        String::new()
+    } else {
+        format!("<span class=\"ten-god-grid\">{}</span>", terms.join(""))
+    }
+}
+
+fn join_reversed(items: &[String], separator: &str) -> String {
+    items
+        .iter()
+        .rev()
+        .map(String::as_str)
+        .collect::<Vec<_>>()
+        .join(separator)
 }
 
 #[derive(Debug, Default)]
@@ -286,13 +365,172 @@ struct DateTimeParts {
 }
 
 fn parse_date_time(text: &str) -> DateTimeParts {
-    let runs = digit_runs(text);
+    let mut runs = digit_runs(text);
+    if runs.len() < 3 {
+        runs = date_runs_from_chinese(text);
+    }
+
+    let year = runs
+        .get(0)
+        .and_then(|value| value.parse::<i32>().ok())
+        .map(to_roc_year)
+        .unwrap_or_default();
+
     DateTimeParts {
-        year: runs.get(0).cloned().unwrap_or_default(),
-        month: runs.get(1).cloned().unwrap_or_default(),
-        day: runs.get(2).cloned().unwrap_or_default(),
+        year,
+        month: strip_leading_zero(runs.get(1).cloned().unwrap_or_default()),
+        day: strip_leading_zero(runs.get(2).cloned().unwrap_or_default()),
         hour: runs.get(3).cloned().unwrap_or_default(),
         minute: runs.get(4).cloned().unwrap_or_default(),
+    }
+}
+
+fn parse_lunar_date_time(text: &str, fallback_year: &str) -> DateTimeParts {
+    if text.trim().is_empty() || text.contains("未提供") {
+        return DateTimeParts {
+            year: fallback_year.to_string(),
+            ..DateTimeParts::default()
+        };
+    }
+
+    let month = text
+        .find('年')
+        .and_then(|year_pos| {
+            let after_year = &text[year_pos + "年".len()..];
+            let month_token = after_year
+                .chars()
+                .take_while(|ch| *ch != ' ' && *ch != '　' && *ch != '(' && *ch != '（')
+                .collect::<String>()
+                .replace('閏', "")
+                .replace('月', "");
+            chinese_date_number(&month_token).map(|value| value.to_string())
+        })
+        .unwrap_or_default();
+
+    let day = text
+        .find('（')
+        .and_then(|start| {
+            text[start + "（".len()..]
+                .find('）')
+                .map(|end| &text[start + "（".len()..start + "（".len() + end])
+        })
+        .and_then(chinese_date_number)
+        .map(|value| value.to_string())
+        .unwrap_or_default();
+
+    if month.is_empty() && day.is_empty() {
+        let mut parsed = parse_date_time(text);
+        if parsed.year.is_empty() || parsed.year == "0" {
+            parsed.year = fallback_year.to_string();
+        }
+        return parsed;
+    }
+
+    DateTimeParts {
+        year: fallback_year.to_string(),
+        month,
+        day,
+        hour: String::new(),
+        minute: String::new(),
+    }
+}
+
+fn to_roc_year(year: i32) -> String {
+    if year > 1911 {
+        (year - 1911).to_string()
+    } else {
+        year.to_string()
+    }
+}
+
+fn strip_leading_zero(value: String) -> String {
+    if value.is_empty() {
+        return value;
+    }
+
+    let trimmed = value.trim_start_matches('0');
+    if trimmed.is_empty() {
+        "0".to_string()
+    } else {
+        trimmed.to_string()
+    }
+}
+
+fn date_runs_from_chinese(text: &str) -> Vec<String> {
+    let mut runs = Vec::new();
+    for marker in ['年', '月', '日'] {
+        if let Some(pos) = text.find(marker) {
+            let before = &text[..pos];
+            let token = before
+                .chars()
+                .rev()
+                .take_while(|ch| is_chinese_date_char(*ch))
+                .collect::<Vec<_>>()
+                .into_iter()
+                .rev()
+                .collect::<String>();
+            if token.is_empty() {
+                runs.push(String::new());
+            } else {
+                runs.push(chinese_date_number(&token).map(|value| value.to_string()).unwrap_or_default());
+            }
+        }
+    }
+    runs
+}
+
+fn is_chinese_date_char(ch: char) -> bool {
+    matches!(ch, '〇' | '零' | '一' | '二' | '三' | '四' | '五' | '六' | '七' | '八' | '九' | '十' | '正' | '冬' | '臘' | '腊' | '初')
+}
+
+fn chinese_date_number(text: &str) -> Option<i32> {
+    let cleaned = text.trim_start_matches('初');
+    if cleaned.is_empty() {
+        return None;
+    }
+
+    if cleaned.chars().count() >= 3 {
+        let mut value = String::new();
+        for ch in cleaned.chars() {
+            value.push_str(&chinese_digit(ch)?.to_string());
+        }
+        return value.parse::<i32>().ok();
+    }
+
+    if cleaned == "十" {
+        return Some(10);
+    }
+    if let Some(suffix) = cleaned.strip_prefix('十') {
+        return Some(10 + chinese_digit(suffix.chars().next()?)?);
+    }
+    if let Some(prefix) = cleaned.strip_suffix('十') {
+        return Some(chinese_digit(prefix.chars().next()?)? * 10);
+    }
+    if let Some(index) = cleaned.find('十') {
+        let chars = cleaned.chars().collect::<Vec<_>>();
+        let tens = chinese_digit(chars[index.saturating_sub(1)])? * 10;
+        let ones = chars.get(index + 1).and_then(|ch| chinese_digit(*ch)).unwrap_or(0);
+        return Some(tens + ones);
+    }
+
+    cleaned.chars().next().and_then(chinese_digit)
+}
+
+fn chinese_digit(ch: char) -> Option<i32> {
+    match ch {
+        '〇' | '零' => Some(0),
+        '一' | '正' => Some(1),
+        '二' => Some(2),
+        '三' => Some(3),
+        '四' => Some(4),
+        '五' => Some(5),
+        '六' => Some(6),
+        '七' => Some(7),
+        '八' => Some(8),
+        '九' => Some(9),
+        '冬' => Some(11),
+        '臘' | '腊' => Some(12),
+        _ => None,
     }
 }
 

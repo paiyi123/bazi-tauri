@@ -103,6 +103,31 @@
             letter-spacing: 2px;
         }
 
+        .dayun-text {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 2px;
+            line-height: 1.1;
+        }
+
+        .dayun-text span {
+            display: block;
+        }
+
+        .annual-ganzhi {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.05;
+        }
+
+        .annual-ganzhi span {
+            display: block;
+        }
+
         /* 垂直緊湊文字 */
         .vertical-dense {
             writing-mode: vertical-rl;
@@ -121,6 +146,25 @@
         .label-text {
             font-size: 12pt;
             font-weight: normal;
+        }
+
+        .ten-god-grid {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            line-height: 1.15;
+        }
+
+        .ten-god-term {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ten-god-term span {
+            display: block;
         }
 
         /* ================= 巢狀表格 (流年表) ================= */
@@ -299,7 +343,7 @@
                     </table>
                 </td>
                 <td>{{大運1_歲}}</td>
-                <td colspan="2" class="vertical-text" style="font-size: 16pt;">{{大運1_干支}}</td>
+                <td colspan="2" style="font-size: 16pt;"><span class="dayun-text">{{大運1_干支}}</span></td>
             </tr>
 
             <!-- Row 7: 第2運 -->
@@ -311,7 +355,7 @@
                     </table>
                 </td>
                 <td>{{大運2_歲}}</td>
-                <td colspan="2" class="vertical-text" style="font-size: 16pt;">{{大運2_干支}}</td>
+                <td colspan="2" style="font-size: 16pt;"><span class="dayun-text">{{大運2_干支}}</span></td>
             </tr>
 
             <!-- Row 8: 第3運 -->
@@ -323,7 +367,7 @@
                     </table>
                 </td>
                 <td>{{大運3_歲}}</td>
-                <td colspan="2" class="vertical-text" style="font-size: 16pt;">{{大運3_干支}}</td>
+                <td colspan="2" style="font-size: 16pt;"><span class="dayun-text">{{大運3_干支}}</span></td>
                 <td rowspan="2" class="vertical-dense" style="font-size: 13pt;">{{出生地內容}}</td>
             </tr>
 
@@ -336,7 +380,7 @@
                     </table>
                 </td>
                 <td>{{大運4_歲}}</td>
-                <td colspan="2" class="vertical-text" style="font-size: 16pt;">{{大運4_干支}}</td>
+                <td colspan="2" style="font-size: 16pt;"><span class="dayun-text">{{大運4_干支}}</span></td>
             </tr>
 
             <!-- Row 10: 第5運 -->
@@ -348,7 +392,7 @@
                     </table>
                 </td>
                 <td>{{大運5_歲}}</td>
-                <td colspan="2" class="vertical-text" style="font-size: 16pt;">{{大運5_干支}}</td>
+                <td colspan="2" style="font-size: 16pt;"><span class="dayun-text">{{大運5_干支}}</span></td>
                 <td rowspan="4" class="vertical-dense" style="font-size: 13pt;">排盤日期<span class="tcy">{{排盤年}}</span>年<span class="tcy">{{排盤月}}</span>月<span class="tcy">{{排盤日}}</span>日</td>
                 <td colspan="2" rowspan="4" class="vertical-dense" style="font-size: 13pt; text-align: center;">{{區域時間}}</td>
                 <td rowspan="4" class="vertical-dense" style="font-size: 13pt;">{{經度欄}}</td>
@@ -363,7 +407,7 @@
                     </table>
                 </td>
                 <td>{{大運6_歲}}</td>
-                <td colspan="2" class="vertical-text" style="font-size: 16pt;">{{大運6_干支}}</td>
+                <td colspan="2" style="font-size: 16pt;"><span class="dayun-text">{{大運6_干支}}</span></td>
             </tr>
 
             <!-- Row 12: 第7運 -->
@@ -375,7 +419,7 @@
                     </table>
                 </td>
                 <td>{{大運7_歲}}</td>
-                <td colspan="2" class="vertical-text" style="font-size: 16pt;">{{大運7_干支}}</td>
+                <td colspan="2" style="font-size: 16pt;"><span class="dayun-text">{{大運7_干支}}</span></td>
             </tr>
 
             <!-- Row 13: 第8運 -->
@@ -387,7 +431,7 @@
                     </table>
                 </td>
                 <td>{{大運8_歲}}</td>
-                <td colspan="2" class="vertical-text" style="font-size: 16pt;">{{大運8_干支}}</td>
+                <td colspan="2" style="font-size: 16pt;"><span class="dayun-text">{{大運8_干支}}</span></td>
             </tr>
 
             <!-- 底部空白行 -->

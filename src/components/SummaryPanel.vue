@@ -33,12 +33,6 @@
       <el-descriptions-item v-if="directPillarYearSummary" label="可能西元年" :span="fullSpan">
         <span class="shen-sha-text">{{ directPillarYearSummary }}</span>
       </el-descriptions-item>
-      <el-descriptions-item v-if="shenShaSummary" label="四柱神煞" :span="fullSpan">
-        <span class="shen-sha-text">{{ shenShaSummary }}</span>
-      </el-descriptions-item>
-      <el-descriptions-item v-if="result.shenSha?.note" label="神煞說明" :span="fullSpan">
-        <span class="shen-sha-text">{{ result.shenSha.note }}</span>
-      </el-descriptions-item>
       <template v-if="hasExactLuckTiming">
         <el-descriptions-item label="起運日期">{{ luckStart?.startSolar }}</el-descriptions-item>
         <el-descriptions-item label="起運偏移" :span="fullSpan">
@@ -130,20 +124,6 @@ const directPillarYearSummary = computed(() => {
     parts.push(hint.note);
   }
   return parts.join("；");
-});
-const shenShaSummary = computed(() => {
-  const shenSha = props.result.shenSha;
-  if (!shenSha) {
-    return "";
-  }
-  return [
-    shenSha.year.length ? `年柱：${shenSha.year.join("、")}` : "",
-    shenSha.month.length ? `月柱：${shenSha.month.join("、")}` : "",
-    shenSha.day.length ? `日柱：${shenSha.day.join("、")}` : "",
-    shenSha.hour.length ? `時柱：${shenSha.hour.join("、")}` : "",
-  ]
-    .filter(Boolean)
-    .join("；");
 });
 
 const baziPillars = computed(() => {
