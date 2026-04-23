@@ -1,0 +1,4 @@
+storeFile=keystore/bazi-release.jks
+storePassword=replace-with-store-password
+keyAlias=bazi-release
+keyPassword=replace-with-key-password
