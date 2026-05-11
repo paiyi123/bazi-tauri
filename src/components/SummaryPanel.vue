@@ -154,7 +154,7 @@ const baziPillars = computed(() => {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0 0.16em;
-  font-size: 18px;
+  font-size: calc(18px * var(--app-font-scale));
   font-weight: 700;
   letter-spacing: 0.03em;
 }
@@ -197,7 +197,7 @@ const baziPillars = computed(() => {
 }
 
 .shen-sha-text {
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
   line-height: 1.6;
   color: #526071;
 }
@@ -205,7 +205,7 @@ const baziPillars = computed(() => {
 @media (max-width: 768px) {
   :deep(.el-descriptions__label),
   :deep(.el-descriptions__content) {
-    font-size: 12px;
+    font-size: calc(12px * var(--app-font-scale));
     line-height: 1.45;
   }
 
@@ -214,7 +214,7 @@ const baziPillars = computed(() => {
   }
 
   .bazi-colored {
-    font-size: 16px;
+    font-size: calc(16px * var(--app-font-scale));
     line-height: 1.35;
   }
 
@@ -229,7 +229,7 @@ const baziPillars = computed(() => {
   }
 
   .bazi-colored {
-    font-size: 15px;
+    font-size: calc(15px * var(--app-font-scale));
     gap: 0 0.1em;
   }
 }

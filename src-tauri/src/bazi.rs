@@ -81,6 +81,7 @@ pub struct PillarAnalyzeRequest {
     pub hour_pillar: String,
     pub gender: Option<Gender>,
     pub selected_gregorian_year: Option<i32>,
+    pub infer_gregorian_years: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -635,7 +636,11 @@ pub fn analyze_pillars(request: PillarAnalyzeRequest) -> Result<BaziResponse, St
         &natal_cycles,
         &da_yun,
     ));
-    let direct_pillar_year_hint = Some(resolve_recent_matching_solar_years(&request)?);
+    let direct_pillar_year_hint = if request.infer_gregorian_years.unwrap_or(false) {
+        Some(resolve_recent_matching_solar_years(&request)?)
+    } else {
+        None
+    };
 
     let year_hidden_stems = hidden_stems(year_cycle.get_earth_branch());
     let month_hidden_stems = hidden_stems(month_cycle.get_earth_branch());
@@ -960,6 +965,7 @@ mod tests {
             hour_pillar: "丁卯".to_string(),
             gender: Some(Gender::Female),
             selected_gregorian_year: None,
+            infer_gregorian_years: Some(true),
         })
         .expect("pillar analysis should succeed");
 

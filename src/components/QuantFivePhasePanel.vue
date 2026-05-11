@@ -62,24 +62,24 @@ defineProps<{
 
 .sub-title {
   margin: 12px 0 8px;
-  font-size: 16px;
+  font-size: calc(16px * var(--app-font-scale));
 }
 
 .hint {
   margin-top: 12px;
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
   color: var(--el-text-color-secondary);
 }
 
 @media (max-width: 768px) {
   :deep(.el-descriptions__label),
   :deep(.el-descriptions__content) {
-    font-size: 12px;
+    font-size: calc(12px * var(--app-font-scale));
     line-height: 1.45;
   }
 
   .sub-title {
-    font-size: 14px;
+    font-size: calc(14px * var(--app-font-scale));
   }
 }
 </style>

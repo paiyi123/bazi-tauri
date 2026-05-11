@@ -1286,7 +1286,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  font-size: 14px;
+  font-size: calc(14px * var(--app-font-scale));
   line-height: 1.2;
   color: var(--el-text-color-primary);
   padding: 4px 0;
@@ -1352,7 +1352,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 
 .relation-map-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: calc(16px * var(--app-font-scale));
 }
 
 .relation-legend {
@@ -1366,7 +1366,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
   color: var(--el-text-color-secondary);
 }
 
@@ -1401,7 +1401,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 }
 
 .relation-map-label {
-  font-size: 2.8px;
+  font-size: calc(2.8px * var(--app-font-scale));
   font-weight: 700;
   paint-order: stroke;
   stroke: rgba(255, 255, 255, 0.96);
@@ -1411,7 +1411,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 }
 
 .relation-map-label-祿 {
-  font-size: 2.6px;
+  font-size: calc(2.6px * var(--app-font-scale));
 }
 
 .relation-node {
@@ -1455,7 +1455,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 }
 
 .relation-node-label {
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
   color: var(--el-text-color-secondary);
   line-height: 1.1;
   letter-spacing: 0.08em;
@@ -1469,7 +1469,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   min-height: 20px;
   padding: 2px 8px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: calc(11px * var(--app-font-scale));
   font-weight: 700;
   line-height: 1.1;
   border: 1px solid transparent;
@@ -1487,7 +1487,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 
 .relation-node-stem,
 .relation-node-branch {
-  font-size: 28px;
+  font-size: calc(28px * var(--app-font-scale));
   font-weight: 700;
   line-height: 1;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.75);
@@ -1518,7 +1518,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 }
 
 .relation-node-hidden-stem {
-  font-size: 16px;
+  font-size: calc(16px * var(--app-font-scale));
   font-weight: 700;
   line-height: 1;
 }
@@ -1530,7 +1530,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   min-height: 18px;
   padding: 1px 6px;
   border-radius: 999px;
-  font-size: 10px;
+  font-size: calc(10px * var(--app-font-scale));
   font-weight: 700;
   line-height: 1.1;
   border: 1px solid transparent;
@@ -1594,17 +1594,17 @@ const relationLinks = computed<RelationLink[]>(() => {
 
 .interaction-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: calc(16px * var(--app-font-scale));
 }
 
 .interaction-count {
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
   color: var(--el-text-color-secondary);
 }
 
 .interaction-hint {
   margin: 0 0 12px;
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
   color: var(--el-text-color-secondary);
 }
 
@@ -1616,7 +1616,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 
 .interaction-group-title {
   margin-bottom: 10px;
-  font-size: 13px;
+  font-size: calc(13px * var(--app-font-scale));
   font-weight: 700;
   color: #6a4f1f;
 }
@@ -1647,7 +1647,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   border-radius: 999px;
   background: rgba(146, 64, 14, 0.12);
   color: #92400e;
-  font-size: 9px;
+  font-size: calc(9px * var(--app-font-scale));
   font-weight: 700;
   line-height: 1.1;
   white-space: nowrap;
@@ -1661,7 +1661,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   padding: 1px 6px;
   border-radius: 999px;
   margin-bottom: 6px;
-  font-size: 9px;
+  font-size: calc(9px * var(--app-font-scale));
   font-weight: 700;
   line-height: 1.1;
   border: 1px solid transparent;
@@ -1699,13 +1699,13 @@ const relationLinks = computed<RelationLink[]>(() => {
 
 .compact-score-label {
   color: var(--el-text-color-secondary);
-  font-size: 9px;
+  font-size: calc(9px * var(--app-font-scale));
   line-height: 1.2;
 }
 
 .compact-score-value {
   color: #0f172a;
-  font-size: 10px;
+  font-size: calc(10px * var(--app-font-scale));
   font-weight: 700;
   line-height: 1.1;
   white-space: nowrap;
@@ -1713,12 +1713,12 @@ const relationLinks = computed<RelationLink[]>(() => {
 
 .compact-line-label {
   color: var(--el-text-color-secondary);
-  font-size: 9px;
+  font-size: calc(9px * var(--app-font-scale));
   line-height: 1.2;
 }
 
 .compact-line-value {
-  font-size: 10px;
+  font-size: calc(10px * var(--app-font-scale));
   font-weight: 600;
   line-height: 1.25;
   word-break: break-word;
@@ -1738,7 +1738,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   padding-top: 5px;
   border-top: 1px solid rgba(188, 195, 211, 0.35);
   color: #6b7280;
-  font-size: 9px;
+  font-size: calc(9px * var(--app-font-scale));
   line-height: 1.2;
 }
 
@@ -1748,27 +1748,27 @@ const relationLinks = computed<RelationLink[]>(() => {
 
 .pillar-panel-compact .relation-map-header h3,
 .pillar-panel-compact .interaction-header h3 {
-  font-size: 14px;
+  font-size: calc(14px * var(--app-font-scale));
 }
 
 .pillar-panel-compact .relation-legend-item,
 .pillar-panel-compact .interaction-count,
 .pillar-panel-compact .interaction-hint,
 .pillar-panel-compact .interaction-group-title {
-  font-size: 11px;
+  font-size: calc(11px * var(--app-font-scale));
 }
 
 .pillar-panel-compact .relation-node-label {
-  font-size: 10px;
+  font-size: calc(10px * var(--app-font-scale));
 }
 
 .pillar-panel-compact .relation-node-ten-god,
 .pillar-panel-compact .relation-node-hidden-ten-god {
-  font-size: 9px;
+  font-size: calc(9px * var(--app-font-scale));
 }
 
 .pillar-panel-compact .relation-node-hidden-stem {
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
 }
 
 .pillar-panel-compact .relation-map {
@@ -1784,7 +1784,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 
 .pillar-panel-compact .relation-node-stem,
 .pillar-panel-compact .relation-node-branch {
-  font-size: 18px;
+  font-size: calc(18px * var(--app-font-scale));
 }
 
 .pillar-panel-compact .relation-node-hidden-stems {
@@ -1794,7 +1794,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 }
 
 .pillar-panel-compact :deep(.el-table .cell) {
-  font-size: 11px;
+  font-size: calc(11px * var(--app-font-scale));
   line-height: 1.35;
 }
 
@@ -1806,7 +1806,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 
 .pillar-box.is-compact .pillar-label {
   margin-bottom: 8px;
-  font-size: 13px;
+  font-size: calc(13px * var(--app-font-scale));
 }
 
 .pillar-box.is-compact .meta-row {
@@ -1815,11 +1815,11 @@ const relationLinks = computed<RelationLink[]>(() => {
 
 .pillar-box.is-compact .meta-label,
 .pillar-box.is-compact .pillar-main-label {
-  font-size: 10px;
+  font-size: calc(10px * var(--app-font-scale));
 }
 
 .pillar-box.is-compact .meta-value {
-  font-size: 13px;
+  font-size: calc(13px * var(--app-font-scale));
 }
 
 .pillar-box.is-compact .pillar-main {
@@ -1828,7 +1828,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 }
 
 .pillar-box.is-compact .pillar-main-value {
-  font-size: 20px;
+  font-size: calc(20px * var(--app-font-scale));
 }
 
 @media (max-width: 767px) {
@@ -1853,7 +1853,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 
   .relation-node-stem,
   .relation-node-branch {
-    font-size: 20px;
+    font-size: calc(20px * var(--app-font-scale));
   }
 
   .relation-node-hidden-stems {
@@ -1863,20 +1863,20 @@ const relationLinks = computed<RelationLink[]>(() => {
   }
 
   .relation-node-hidden-stem {
-    font-size: 13px;
+    font-size: calc(13px * var(--app-font-scale));
   }
 
   .relation-node-hidden-ten-god {
     padding: 1px 5px;
-    font-size: 9px;
+    font-size: calc(9px * var(--app-font-scale));
   }
 
   .meta-value {
-    font-size: 15px;
+    font-size: calc(15px * var(--app-font-scale));
   }
 
   .pillar-main-value {
-    font-size: 22px;
+    font-size: calc(22px * var(--app-font-scale));
   }
 
   .pillar-panel-compact :deep(.el-row) {
@@ -1884,7 +1884,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   }
 
   .pillar-box.is-compact .compact-line-value {
-    font-size: 10px;
+    font-size: calc(10px * var(--app-font-scale));
   }
 
   .pillar-panel-compact .relation-map {
@@ -1899,7 +1899,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 
   .pillar-panel-compact .relation-node-stem,
   .pillar-panel-compact .relation-node-branch {
-    font-size: 16px;
+    font-size: calc(16px * var(--app-font-scale));
   }
 }
 
@@ -1916,15 +1916,15 @@ const relationLinks = computed<RelationLink[]>(() => {
 
   .relation-node-stem,
   .relation-node-branch {
-    font-size: 18px;
+    font-size: calc(18px * var(--app-font-scale));
   }
 
   .meta-value {
-    font-size: 14px;
+    font-size: calc(14px * var(--app-font-scale));
   }
 
   .pillar-main-value {
-    font-size: 20px;
+    font-size: calc(20px * var(--app-font-scale));
   }
 
   .pillar-panel-compact :deep(.el-card__body) {
@@ -1936,15 +1936,15 @@ const relationLinks = computed<RelationLink[]>(() => {
   }
 
   .pillar-box.is-compact .pillar-label {
-    font-size: 11px;
+    font-size: calc(11px * var(--app-font-scale));
   }
 
   .pillar-box.is-compact .meta-value {
-    font-size: 12px;
+    font-size: calc(12px * var(--app-font-scale));
   }
 
   .pillar-box.is-compact .pillar-main-value {
-    font-size: 16px;
+    font-size: calc(16px * var(--app-font-scale));
   }
 
   .compact-score-chip,
@@ -1952,7 +1952,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   .compact-line-label,
   .compact-line-value,
   .compact-pillar-foot {
-    font-size: 9px;
+    font-size: calc(9px * var(--app-font-scale));
   }
 
   .compact-pillar-char-block {
@@ -1965,7 +1965,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 
   .pillar-panel-compact .relation-map-header h3,
   .pillar-panel-compact .interaction-header h3 {
-    font-size: 13px;
+    font-size: calc(13px * var(--app-font-scale));
   }
 
   .pillar-panel-compact .relation-legend-item,
@@ -1973,7 +1973,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   .pillar-panel-compact .interaction-hint,
   .pillar-panel-compact .interaction-group-title,
   .pillar-panel-compact :deep(.el-table .cell) {
-    font-size: 10px;
+    font-size: calc(10px * var(--app-font-scale));
   }
 
   .pillar-panel-compact .relation-map {
@@ -1988,7 +1988,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 
   .pillar-panel-compact .relation-node-stem,
   .pillar-panel-compact .relation-node-branch {
-    font-size: 14px;
+    font-size: calc(14px * var(--app-font-scale));
   }
 }
 
@@ -2005,17 +2005,17 @@ const relationLinks = computed<RelationLink[]>(() => {
 }
 
 .meta-label {
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
   color: var(--el-text-color-secondary);
 }
 
 .meta-value {
-  font-size: 18px;
+  font-size: calc(18px * var(--app-font-scale));
   font-weight: 600;
 }
 
 .meta-value-shen-sha {
-  font-size: 10px;
+  font-size: calc(10px * var(--app-font-scale));
   font-weight: 500;
   line-height: 1.5;
 }
@@ -2025,12 +2025,12 @@ const relationLinks = computed<RelationLink[]>(() => {
 }
 
 .pillar-main-label {
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
   color: var(--el-text-color-secondary);
 }
 
 .pillar-main-value {
-  font-size: 28px;
+  font-size: calc(28px * var(--app-font-scale));
   font-weight: 700;
 }
 

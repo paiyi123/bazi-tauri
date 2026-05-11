@@ -39,7 +39,7 @@
         </el-col>
 
         <el-col :span="12" class="save-button-wrap">
-          <el-space :direction="compact ? 'vertical' : 'horizontal'" :fill="compact" wrap class="save-button-group">
+          <el-space direction="horizontal" wrap class="save-button-group">
             <el-button :size="formSize" type="success" plain @click="onSaveRecord">新增儲存</el-button>
             <el-button :size="formSize" type="warning" plain :disabled="!selectedRecordId" @click="onUpdateRecord">
               更新所選
@@ -691,7 +691,7 @@ function onSubmit() {
 
 .storage-label {
   margin-top: 8px;
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
   color: var(--el-text-color-secondary);
 }
 
@@ -702,7 +702,7 @@ function onSubmit() {
 
   :deep(.el-form-item__label) {
     padding-bottom: 4px;
-    font-size: 12px;
+    font-size: calc(12px * var(--app-font-scale));
     line-height: 1.3;
   }
 
@@ -718,7 +718,7 @@ function onSubmit() {
   }
 
   :deep(.el-alert__title) {
-    font-size: 12px;
+    font-size: calc(12px * var(--app-font-scale));
     line-height: 1.4;
   }
 
@@ -735,13 +735,25 @@ function onSubmit() {
     align-items: stretch;
   }
 
+  .save-button-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .save-button-group :deep(.el-space__item) {
+    margin: 0 !important;
+    min-width: 0;
+  }
+
   .save-button-group :deep(.el-button) {
     width: 100%;
     justify-content: center;
+    margin: 0;
   }
 
   .storage-label {
-    font-size: 11px;
+    font-size: calc(11px * var(--app-font-scale));
   }
 }
 

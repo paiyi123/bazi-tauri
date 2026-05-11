@@ -38,6 +38,7 @@ export interface PillarAnalyzeRequest {
   hourPillar: string;
   gender?: Gender;
   selectedGregorianYear?: number | null;
+  inferGregorianYears?: boolean;
 }
 
 export interface Pillar {

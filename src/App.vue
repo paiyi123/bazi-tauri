@@ -1,5 +1,5 @@
 <template>
-  <div class="app-shell" :class="{ 'compact-layout': isCompactLayout }">
+  <div class="app-shell" :class="{ 'compact-layout': isCompactLayout }" :style="appFontStyle">
     <header class="app-header">
       <div>
         <p class="eyebrow">Tauri + tyme4rs</p>
@@ -12,11 +12,25 @@
 
     <main class="page-grid">
       <section class="left-column">
-        <el-card shadow="never" class="mode-card">
+        <el-card shadow="never" class="mode-card" @click="showInputPanel = true">
           <el-segmented v-model="inputMode" :options="modeOptions" block />
         </el-card>
+        <el-card shadow="never" class="font-size-card">
+          <div class="font-size-control">
+            <span class="font-size-label">字級</span>
+            <el-slider
+              v-model="fontScale"
+              :min="86"
+              :max="118"
+              :step="2"
+              :show-tooltip="false"
+              class="font-size-slider"
+            />
+            <span class="font-size-value">{{ fontScale }}%</span>
+          </div>
+        </el-card>
         <BirthForm
-          v-if="inputMode === 'birth'"
+          v-if="showInputPanel && inputMode === 'birth'"
           :compact="isCompactLayout"
           :loading="loading"
           :error="error"
@@ -25,7 +39,7 @@
           @submit="handleSubmit"
         />
         <PillarInputForm
-          v-else
+          v-else-if="showInputPanel"
           :compact="isCompactLayout"
           :loading="loading"
           :error="error"
@@ -49,7 +63,7 @@
         </div>
 
         <div v-else-if="result" class="compact-result-shell">
-          <el-tabs v-model="activeCompactTab" stretch class="compact-result-tabs">
+          <el-tabs v-model="activeCompactTab" class="compact-result-tabs">
             <el-tab-pane label="摘要" name="summary">
               <SummaryPanel :result="result" :compact="true" />
             </el-tab-pane>
@@ -128,7 +142,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import BirthForm from "./components/BirthForm.vue";
 import FiveElementStrengthPanel from "./components/FiveElementStrengthPanel.vue";
 import LuckCyclePanel from "./components/LuckCyclePanel.vue";
@@ -152,6 +166,9 @@ const error = ref("");
 const inputMode = ref<"birth" | "pillars">("birth");
 const focusedLuckPillars = ref<LuckPreviewPillar[]>([]);
 const isCompactLayout = ref(false);
+const showInputPanel = ref(true);
+const FONT_SCALE_STORAGE_KEY = "bazi:font-scale:v1";
+const fontScale = ref(loadFontScale());
 const activeCompactTab = ref<"summary" | "pillars" | "luck" | "quant" | "analysis">("summary");
 const prefillBirthDraft = ref<BaziRequest | null>(null);
 const printContext = ref<PrintContext | null>(null);
@@ -162,6 +179,22 @@ const modeOptions = [
   { label: "出生資料", value: "birth" },
   { label: "直接輸入四柱", value: "pillars" },
 ];
+const appFontStyle = computed(() => {
+  const scale = fontScale.value / 100;
+  return {
+    "--app-font-scale": String(scale),
+    "--app-font-size-base": `${16 * scale}px`,
+    "--el-font-size-extra-large": `${20 * scale}px`,
+    "--el-font-size-large": `${18 * scale}px`,
+    "--el-font-size-medium": `${16 * scale}px`,
+    "--el-font-size-base": `${14 * scale}px`,
+    "--el-font-size-small": `${13 * scale}px`,
+    "--el-font-size-extra-small": `${12 * scale}px`,
+  };
+});
+watch(fontScale, (value) => {
+  window.localStorage.setItem(FONT_SCALE_STORAGE_KEY, String(value));
+});
 
 watch(result, () => {
   focusedLuckPillars.value = [];
@@ -174,14 +207,31 @@ type LegacyMediaQueryList = MediaQueryList & {
   removeListener?: (listener: (event: MediaQueryListEvent) => void) => void;
 };
 
+function loadFontScale() {
+  if (typeof window === "undefined") {
+    return 100;
+  }
+  const raw = Number(window.localStorage.getItem(FONT_SCALE_STORAGE_KEY));
+  if (!Number.isFinite(raw)) {
+    return 100;
+  }
+  return Math.min(118, Math.max(86, Math.round(raw / 2) * 2));
+}
+
 function syncCompactLayout() {
   isCompactLayout.value =
     compactMediaQuery?.matches ??
     (typeof window !== "undefined" ? window.innerWidth <= 768 : false);
+  if (!isCompactLayout.value) {
+    showInputPanel.value = true;
+  }
 }
 
 function handleCompactLayoutChange(event: MediaQueryListEvent) {
   isCompactLayout.value = event.matches;
+  if (!event.matches) {
+    showInputPanel.value = true;
+  }
 }
 
 onMounted(() => {
@@ -249,6 +299,8 @@ async function handleSubmit(payload: BaziRequest) {
 
   try {
     result.value = await calculateBazi(payload);
+    showInputPanel.value = false;
+    await focusCompactResultTabs();
   } catch (err) {
     error.value = err instanceof Error ? err.message : "排盤失敗";
   } finally {
@@ -262,6 +314,8 @@ async function handleSubmitPillars(payload: PillarAnalyzeRequest) {
 
   try {
     result.value = await analyzePillars(payload);
+    showInputPanel.value = false;
+    await focusCompactResultTabs();
   } catch (err) {
     error.value = err instanceof Error ? err.message : "四柱分析失敗";
   } finally {
@@ -272,5 +326,16 @@ async function handleSubmitPillars(payload: PillarAnalyzeRequest) {
 function handleApplyBirthDraft(payload: BaziRequest) {
   prefillBirthDraft.value = { ...payload };
   inputMode.value = "birth";
+  showInputPanel.value = true;
+}
+
+async function focusCompactResultTabs() {
+  await nextTick();
+  requestAnimationFrame(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  });
 }
 </script>

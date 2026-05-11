@@ -413,12 +413,14 @@ export function browserFixtureAnalyzePillars(request: PillarAnalyzeRequest): Pro
         inputCalendarType: "四柱直輸",
         inputDateTime: `${request.yearPillar} ${request.monthPillar} ${request.dayPillar} ${request.hourPillar}`,
         baZi: `${request.yearPillar} ${request.monthPillar} ${request.dayPillar} ${request.hourPillar}`,
-        directPillarYearHint: {
-          candidateYears: candidates.map((candidate) => candidate.year),
-          selectedYear: request.selectedGregorianYear ?? null,
-          candidates,
-          note: "瀏覽器 debug fixture：回推最近兩個可能公曆生日時間。",
-        },
+        directPillarYearHint: request.inferGregorianYears
+          ? {
+              candidateYears: candidates.map((candidate) => candidate.year),
+              selectedYear: request.selectedGregorianYear ?? null,
+              candidates,
+              note: "瀏覽器 debug fixture：回推最近兩個可能公曆生日時間。",
+            }
+          : undefined,
         yearPillar: createPillar(request.yearPillar, "海中金", "木", "長生", "甲子", "子丑"),
         monthPillar: createPillar(request.monthPillar, "爐中火", "火", "帝旺", "甲子", "戌亥"),
         dayPillar: createPillar(request.dayPillar, "大林木", "土", "胎", "甲子", "午未"),

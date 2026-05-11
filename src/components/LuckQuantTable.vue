@@ -373,13 +373,13 @@ function handleLuckExpandChange(row: QuantLuckScore) {
 .luck-ganzhi {
   display: inline-flex;
   align-items: center;
-  font-size: 18px;
+  font-size: calc(18px * var(--app-font-scale));
   font-weight: 700;
   line-height: 1.2;
 }
 
 .luck-ganzhi-major {
-  font-size: 20px;
+  font-size: calc(20px * var(--app-font-scale));
 }
 
 .hidden-ten-gods {

@@ -187,6 +187,7 @@ async function inferGregorianYears() {
       dayPillar: getPillarValue("day"),
       hourPillar: getPillarValue("hour"),
       gender: form.gender,
+      inferGregorianYears: true,
     });
     inferredCandidates.value = response.directPillarYearHint?.candidates || [];
     inferredYearNote.value =
@@ -232,8 +233,7 @@ function onSubmit() {
   emit("printContext", {
     source: "pillars",
     gender: form.gender,
-    inputText: `四柱：${currentBaZi.value}${selectedCandidate.value ? `；候選西元生日：${selectedCandidate.value.label}` : ""}`,
-    note: selectedCandidate.value ? `候選西元年：${selectedCandidate.value.year}` : undefined,
+    inputText: `四柱：${currentBaZi.value}`,
   });
   emit("submit", {
     yearPillar: getPillarValue("year"),
@@ -241,7 +241,7 @@ function onSubmit() {
     dayPillar: getPillarValue("day"),
     hourPillar: getPillarValue("hour"),
     gender: form.gender,
-    selectedGregorianYear: selectedCandidate.value?.year ?? null,
+    selectedGregorianYear: null,
   });
 }
 
@@ -279,7 +279,7 @@ function resetSavedInput() {
 
 .year-hint-text {
   margin-top: 8px;
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
   line-height: 1.6;
   color: #526071;
 }
@@ -296,7 +296,7 @@ function resetSavedInput() {
 
   :deep(.el-form-item__label) {
     padding-bottom: 4px;
-    font-size: 12px;
+    font-size: calc(12px * var(--app-font-scale));
     line-height: 1.3;
   }
 
@@ -310,7 +310,7 @@ function resetSavedInput() {
   }
 
   :deep(.el-alert__title) {
-    font-size: 12px;
+    font-size: calc(12px * var(--app-font-scale));
     line-height: 1.4;
   }
 
@@ -324,7 +324,7 @@ function resetSavedInput() {
   }
 
   .pillar-row-title {
-    font-size: 13px;
+    font-size: calc(13px * var(--app-font-scale));
   }
 
   .action-row :deep(.el-button) {

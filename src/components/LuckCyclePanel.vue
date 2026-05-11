@@ -1162,7 +1162,7 @@ watch(expandMonthLane, (expanded) => {
 .luck-start-line {
   margin: 8px 0 0;
   color: #dc2626;
-  font-size: 14px;
+  font-size: calc(14px * var(--app-font-scale));
 }
 
 .compact-lane-toggle-bar {
@@ -1178,7 +1178,7 @@ watch(expandMonthLane, (expanded) => {
   color: #334155;
   border-radius: 999px;
   padding: 6px 12px;
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
   line-height: 1.1;
   cursor: pointer;
   transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
@@ -1208,7 +1208,7 @@ watch(expandMonthLane, (expanded) => {
   border-right: 1px solid rgba(203, 213, 225, 0.82);
   background: rgba(248, 250, 252, 0.96);
   color: #0f172a;
-  font-size: 20px;
+  font-size: calc(20px * var(--app-font-scale));
   line-height: 1.35;
 }
 
@@ -1292,7 +1292,7 @@ watch(expandMonthLane, (expanded) => {
 
 .fate-cell-year {
   color: #0f172a;
-  font-size: 14px;
+  font-size: calc(14px * var(--app-font-scale));
   min-height: 20px;
 }
 
@@ -1300,7 +1300,7 @@ watch(expandMonthLane, (expanded) => {
   display: grid;
   gap: 1px;
   color: #0f172a;
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
   line-height: 1.15;
   min-height: 30px;
 }
@@ -1349,28 +1349,28 @@ watch(expandMonthLane, (expanded) => {
 
 .fate-char-row .wuxing-char {
   min-width: 1em;
-  font-size: 22px;
+  font-size: calc(22px * var(--app-font-scale));
   font-weight: 700;
   line-height: 1;
 }
 
 .fate-cell-major .fate-char-row .wuxing-char {
-  font-size: 24px;
+  font-size: calc(24px * var(--app-font-scale));
 }
 
 .ten-god-text {
   color: #111827;
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
 }
 
 .hidden-ten-god-text {
   color: #475569;
-  font-size: 11px;
+  font-size: calc(11px * var(--app-font-scale));
 }
 
 .fate-cell-meta {
   color: #64748b;
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
   min-height: 18px;
   line-height: 18px;
   align-self: end;
@@ -1382,7 +1382,7 @@ watch(expandMonthLane, (expanded) => {
   gap: 10px 18px;
   padding-top: 4px;
   color: #475569;
-  font-size: 13px;
+  font-size: calc(13px * var(--app-font-scale));
 }
 
 .interaction-matrix-shell {
@@ -1409,7 +1409,7 @@ watch(expandMonthLane, (expanded) => {
   padding: 6px 10px;
   background: rgba(248, 250, 252, 0.96);
   color: #334155;
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -1425,7 +1425,7 @@ watch(expandMonthLane, (expanded) => {
 .interaction-summary-strip {
   min-height: 32px;
   padding: 6px 10px;
-  font-size: 14px;
+  font-size: calc(14px * var(--app-font-scale));
   line-height: 1.35;
 }
 
@@ -1474,7 +1474,7 @@ watch(expandMonthLane, (expanded) => {
 .interaction-pillar-label {
   margin-bottom: 8px;
   color: #0f172a;
-  font-size: 14px;
+  font-size: calc(14px * var(--app-font-scale));
 }
 
 .interaction-pillar-main {
@@ -1485,13 +1485,13 @@ watch(expandMonthLane, (expanded) => {
 }
 
 .interaction-pillar-main .wuxing-char {
-  font-size: 22px;
+  font-size: calc(22px * var(--app-font-scale));
   font-weight: 700;
   line-height: 1;
 }
 
 .interaction-pillar-main .ten-god-text {
-  font-size: 13px;
+  font-size: calc(13px * var(--app-font-scale));
 }
 
 .interaction-pillar-hidden-list {
@@ -1509,12 +1509,12 @@ watch(expandMonthLane, (expanded) => {
 }
 
 .interaction-pillar-hidden-item .wuxing-char {
-  font-size: 14px;
+  font-size: calc(14px * var(--app-font-scale));
   font-weight: 500;
 }
 
 .interaction-pillar-hidden-item .hidden-ten-god-text {
-  font-size: 10px;
+  font-size: calc(10px * var(--app-font-scale));
 }
 
 .wuxing-char {
@@ -1544,7 +1544,7 @@ watch(expandMonthLane, (expanded) => {
 }
 
 .luck-panel.is-compact .luck-start-line {
-  font-size: 10px;
+  font-size: calc(10px * var(--app-font-scale));
   line-height: 1.35;
 }
 
@@ -1557,7 +1557,7 @@ watch(expandMonthLane, (expanded) => {
 }
 
 .luck-panel.is-compact .lane-label {
-  font-size: 11px;
+  font-size: calc(11px * var(--app-font-scale));
   line-height: 1.2;
 }
 
@@ -1579,7 +1579,7 @@ watch(expandMonthLane, (expanded) => {
 }
 
 .luck-panel.is-compact .fate-cell-year {
-  font-size: 10px;
+  font-size: calc(10px * var(--app-font-scale));
   min-height: 28px;
   line-height: 1.15;
   white-space: pre-line;
@@ -1587,7 +1587,7 @@ watch(expandMonthLane, (expanded) => {
 
 .luck-panel.is-compact .fate-cell-topline,
 .luck-panel.is-compact .fate-cell-meta {
-  font-size: 9px;
+  font-size: calc(9px * var(--app-font-scale));
   line-height: 1.15;
 }
 
@@ -1604,19 +1604,19 @@ watch(expandMonthLane, (expanded) => {
 
 .luck-panel.is-compact .fate-char-row .wuxing-char,
 .luck-panel.is-compact .fate-cell-major .fate-char-row .wuxing-char {
-  font-size: 20px;
+  font-size: calc(20px * var(--app-font-scale));
   font-weight: 700;
   line-height: 1;
 }
 
 .luck-panel.is-compact .ten-god-text {
-  font-size: 11px;
+  font-size: calc(11px * var(--app-font-scale));
   line-height: 1.15;
   letter-spacing: 0;
 }
 
 .luck-panel.is-compact .hidden-ten-god-text {
-  font-size: 10px;
+  font-size: calc(10px * var(--app-font-scale));
   line-height: 1.15;
   letter-spacing: 0;
 }
@@ -1635,20 +1635,20 @@ watch(expandMonthLane, (expanded) => {
 }
 
 .luck-panel.is-compact .fate-hidden-item .wuxing-char {
-  font-size: 14px;
+  font-size: calc(14px * var(--app-font-scale));
   font-weight: 500;
   line-height: 1;
 }
 
 .luck-panel.is-compact .luck-detail-bar {
   gap: 6px 12px;
-  font-size: 10px;
+  font-size: calc(10px * var(--app-font-scale));
 }
 
 .luck-panel.is-compact .interaction-summary-title,
 .luck-panel.is-compact .interaction-summary-strip,
 .luck-panel.is-compact .interaction-pillar-label {
-  font-size: 10px;
+  font-size: calc(10px * var(--app-font-scale));
 }
 
 .luck-panel.is-compact .interaction-summary-strip {
@@ -1667,16 +1667,16 @@ watch(expandMonthLane, (expanded) => {
 }
 
 .luck-panel.is-compact .interaction-pillar-main .wuxing-char {
-  font-size: 15px;
+  font-size: calc(15px * var(--app-font-scale));
 }
 
 .luck-panel.is-compact .interaction-pillar-main .ten-god-text,
 .luck-panel.is-compact .interaction-pillar-hidden-item .wuxing-char {
-  font-size: 9px;
+  font-size: calc(9px * var(--app-font-scale));
 }
 
 .luck-panel.is-compact .interaction-pillar-hidden-item .hidden-ten-god-text {
-  font-size: 8px;
+  font-size: calc(8px * var(--app-font-scale));
 }
 
 @media (max-width: 960px) {
@@ -1685,7 +1685,7 @@ watch(expandMonthLane, (expanded) => {
   }
 
   .lane-label {
-    font-size: 16px;
+    font-size: calc(16px * var(--app-font-scale));
   }
 
   .lane-track {
@@ -1703,7 +1703,7 @@ watch(expandMonthLane, (expanded) => {
   }
 
   .interaction-summary-strip {
-    font-size: 13px;
+    font-size: calc(13px * var(--app-font-scale));
   }
 }
 
@@ -1740,25 +1740,25 @@ watch(expandMonthLane, (expanded) => {
   .luck-panel.is-compact .fate-char-row .wuxing-char,
   .luck-panel.is-compact .fate-cell-major .fate-char-row .wuxing-char,
   .luck-panel.is-compact .interaction-pillar-main .wuxing-char {
-    font-size: 18px;
+    font-size: calc(18px * var(--app-font-scale));
   }
 
   .luck-panel.is-compact .ten-god-text {
-    font-size: 10px;
+    font-size: calc(10px * var(--app-font-scale));
   }
 
   .luck-panel.is-compact .hidden-ten-god-text {
-    font-size: 9px;
+    font-size: calc(9px * var(--app-font-scale));
   }
 
   .luck-panel.is-compact .fate-hidden-item .wuxing-char {
-    font-size: 13px;
+    font-size: calc(13px * var(--app-font-scale));
   }
 
   .luck-panel.is-compact .interaction-summary-strip,
   .luck-panel.is-compact .interaction-pillar-label,
   .luck-panel.is-compact .interaction-summary-title {
-    font-size: 9px;
+    font-size: calc(9px * var(--app-font-scale));
   }
 }
 </style>

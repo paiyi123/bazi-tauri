@@ -131,13 +131,13 @@ function formatRatio(value?: number) {
 
 .branch-summary-label {
   color: var(--el-text-color-secondary);
-  font-size: 11px;
+  font-size: calc(11px * var(--app-font-scale));
   line-height: 1.2;
   white-space: nowrap;
 }
 
 .branch-summary-value {
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
   font-weight: 700;
   line-height: 1.25;
   word-break: break-word;
@@ -145,14 +145,14 @@ function formatRatio(value?: number) {
 
 @media (max-width: 768px) {
   .branch-title {
-    font-size: 13px;
+    font-size: calc(13px * var(--app-font-scale));
     line-height: 1.45;
   }
 
   :deep(.el-table .cell),
   :deep(.el-descriptions__label),
   :deep(.el-descriptions__content) {
-    font-size: 12px;
+    font-size: calc(12px * var(--app-font-scale));
     line-height: 1.4;
   }
 
@@ -165,11 +165,11 @@ function formatRatio(value?: number) {
   }
 
   .branch-summary-label {
-    font-size: 10px;
+    font-size: calc(10px * var(--app-font-scale));
   }
 
   .branch-summary-value {
-    font-size: 11px;
+    font-size: calc(11px * var(--app-font-scale));
   }
 }
 </style>

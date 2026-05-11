@@ -1,6 +1,6 @@
 [package]
 name = "bazi-desktop"
-version = "1.0.0"
+version = "1.0.1"
 description = "Windows desktop BaZi calculator built with Tauri, Vue, and tyme4rs"
 authors = ["paiyi123"]
 edition = "2021"

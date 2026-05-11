@@ -174,7 +174,7 @@ const shaYin = computed(() => props.result.quantModel?.shaYin);
 .subsection-title {
   margin-top: 18px;
   font-weight: 700;
-  font-size: 16px;
+  font-size: calc(16px * var(--app-font-scale));
 }
 
 .tag-list {
@@ -186,7 +186,7 @@ const shaYin = computed(() => props.result.quantModel?.shaYin);
 .subline {
   margin-top: 8px;
   color: var(--el-text-color-secondary);
-  font-size: 13px;
+  font-size: calc(13px * var(--app-font-scale));
 }
 
 </style>

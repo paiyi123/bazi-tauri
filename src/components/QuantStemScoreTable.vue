@@ -54,7 +54,7 @@ function formatMaybe(value?: number) {
 }
 
 .sub-row {
-  font-size: 12px;
+  font-size: calc(12px * var(--app-font-scale));
   color: var(--el-text-color-regular);
 }
 
@@ -66,7 +66,7 @@ function formatMaybe(value?: number) {
 
 @media (max-width: 768px) {
   :deep(.el-table .cell) {
-    font-size: 12px;
+    font-size: calc(12px * var(--app-font-scale));
     line-height: 1.35;
   }
 }
