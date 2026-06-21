@@ -947,6 +947,33 @@ mod tests {
     }
 
     #[test]
+    fn ad_0071_11_22_luck_starts_at_virtual_age_11() {
+        let response = calculate_bazi(BaziRequest {
+            calendar_type: CalendarType::Solar,
+            gender: Gender::Female,
+            year: 71,
+            year_era: YearEra::Ad,
+            month: 11,
+            day: 22,
+            hour: 11,
+            minute: 0,
+            second: 0,
+            bazi_sect: 2,
+            yun_sect: 1,
+            leap_month: false,
+        })
+        .expect("chart should build");
+
+        let starts = response
+            .da_yun
+            .iter()
+            .take(2)
+            .map(|row| row.start_age)
+            .collect::<Vec<_>>();
+        assert_eq!(starts, vec![Some(11), Some(21)]);
+    }
+
+    #[test]
     fn calculated_chart_uses_ge_ju_analyzer() {
         let response = calculate_bazi(sample_request()).expect("sample chart should build");
 
@@ -1316,8 +1343,9 @@ fn build_da_yun(
     }
 
     let info = child_limit_info(request.yun_sect, birth_time, term)?;
-    let first_start_year = info.get_end_time().get_year() as i32;
-    let first_start_age = first_start_year - birth_time.get_year() as i32 + 1;
+    let first_start_time = info.get_end_time();
+    let first_start_year = first_start_time.get_year() as i32;
+    let first_start_age = display_luck_start_age(virtual_age_at(first_start_time, birth_time));
 
     let mut cycles = Vec::new();
     for index in 0..9 {
@@ -1375,6 +1403,17 @@ fn build_da_yun(
     }
 
     Ok(cycles)
+}
+
+fn virtual_age_at(target_time: SolarTime, birth_time: SolarTime) -> i32 {
+    target_time.get_year() as i32 - birth_time.get_year() as i32 + 1
+}
+
+fn display_luck_start_age(raw_start_age: i32) -> i32 {
+    if raw_start_age <= 0 {
+        return raw_start_age;
+    }
+    ((raw_start_age - 1) / 10 + 1) * 10 + 1
 }
 
 fn build_direct_da_yun(

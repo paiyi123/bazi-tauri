@@ -56,6 +56,7 @@
         <div v-if="result && !isCompactLayout" class="result-stack">
           <SummaryPanel :result="result" :compact="false" />
           <PillarPanel :result="result" :preview-pillars="focusedLuckPillars" :compact="false" />
+          <FiveElementFlowPanel :result="result" :compact="false" />
           <LuckCyclePanel :result="result" :compact="false" @preview-change="handlePreviewChange" />
           <FiveElementStrengthPanel :result="result" />
           <QuantFivePhasePanel :result="result" :compact="false" @preview-change="handlePreviewChange" />
@@ -92,6 +93,9 @@
                   :show-interaction-section="true"
                 />
               </div>
+            </el-tab-pane>
+            <el-tab-pane label="流通" name="flow" lazy>
+              <FiveElementFlowPanel v-if="activeCompactTab === 'flow'" :result="result" :compact="true" />
             </el-tab-pane>
             <el-tab-pane label="量化" name="quant" lazy>
               <QuantFivePhasePanel :result="result" :compact="true" @preview-change="handlePreviewChange" />
@@ -143,6 +147,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import FiveElementFlowPanel from "./components/FiveElementFlowPanel.vue";
 import BirthForm from "./components/BirthForm.vue";
 import FiveElementStrengthPanel from "./components/FiveElementStrengthPanel.vue";
 import LuckCyclePanel from "./components/LuckCyclePanel.vue";
@@ -169,7 +174,7 @@ const isCompactLayout = ref(false);
 const showInputPanel = ref(true);
 const FONT_SCALE_STORAGE_KEY = "bazi:font-scale:v1";
 const fontScale = ref(loadFontScale());
-const activeCompactTab = ref<"summary" | "pillars" | "luck" | "quant" | "analysis">("summary");
+const activeCompactTab = ref<"summary" | "pillars" | "luck" | "flow" | "quant" | "analysis">("summary");
 const prefillBirthDraft = ref<BaziRequest | null>(null);
 const printContext = ref<PrintContext | null>(null);
 const showPrintPreview = ref(false);
