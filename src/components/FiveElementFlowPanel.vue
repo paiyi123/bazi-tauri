@@ -7,8 +7,8 @@
       </div>
     </template>
 
-    <div class="flow-scroll">
-      <div class="flow-board">
+    <div ref="flowScrollRef" class="flow-scroll" :style="flowScrollStyle">
+      <div class="flow-board" :style="flowBoardStyle">
         <div
           v-for="node in stemNodes"
           :key="node.key"
@@ -78,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import type { BaziResponse, Pillar, QuantModelInteraction } from "../types/bazi";
 import ltChImg from "../assets/images/ganzhi/lt_ch.png";
 import ltCsImg from "../assets/images/ganzhi/lt_cs.png";
@@ -136,10 +136,64 @@ const props = withDefaults(
 const pillarXs = [112, 330, 548, 766];
 const stemY = 104;
 const branchY = 306;
+const boardWidth = 878;
+const boardHeight = 440;
 const horizontalLinkWidth = 146;
 const horizontalLinkHeight = 35;
 const verticalLinkHeight = branchY - stemY;
 const verticalLinkWidth = 42;
+
+const flowScrollRef = ref<HTMLElement | null>(null);
+const flowScale = ref(1);
+let flowResizeObserver: ResizeObserver | null = null;
+
+const flowScrollStyle = computed(() => {
+  if (!props.compact) {
+    return undefined;
+  }
+  return {
+    height: `${boardHeight * flowScale.value}px`,
+  };
+});
+
+const flowBoardStyle = computed(() => {
+  if (!props.compact) {
+    return undefined;
+  }
+  return {
+    transform: `scale(${flowScale.value})`,
+  };
+});
+
+function updateFlowScale() {
+  if (!props.compact) {
+    flowScale.value = 1;
+    return;
+  }
+  const width = flowScrollRef.value?.clientWidth || boardWidth;
+  flowScale.value = Math.min(1, width / boardWidth);
+}
+
+onMounted(() => {
+  flowResizeObserver = new ResizeObserver(updateFlowScale);
+  if (flowScrollRef.value) {
+    flowResizeObserver.observe(flowScrollRef.value);
+  }
+  updateFlowScale();
+});
+
+onBeforeUnmount(() => {
+  flowResizeObserver?.disconnect();
+  flowResizeObserver = null;
+});
+
+watch(
+  () => props.compact,
+  async () => {
+    await nextTick();
+    updateFlowScale();
+  },
+);
 
 const STEM_ELEMENTS: Record<string, ElementKey> = {
   甲: "wood",
@@ -664,6 +718,11 @@ function dedupeBadges(badges: FloatingBadge[]) {
 
 .flow-panel-compact .flow-board {
   margin: 0;
+  transform-origin: top left;
+}
+
+.flow-panel-compact .flow-scroll {
+  overflow: hidden;
 }
 
 @media (max-width: 720px) {
@@ -673,7 +732,17 @@ function dedupeBadges(badges: FloatingBadge[]) {
   }
 
   .flow-legend {
-    min-width: 760px;
+    max-width: 100%;
+    font-size: 15px;
+  }
+
+  .legend-row {
+    gap: 8px;
+  }
+
+  .legend-icon {
+    width: 28px;
+    height: 28px;
   }
 }
 </style>

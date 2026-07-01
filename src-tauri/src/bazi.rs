@@ -947,12 +947,12 @@ mod tests {
     }
 
     #[test]
-    fn ad_0071_11_22_luck_starts_at_virtual_age_11() {
+    fn roc_0071_11_22_luck_starts_at_virtual_age_6() {
         let response = calculate_bazi(BaziRequest {
             calendar_type: CalendarType::Solar,
             gender: Gender::Female,
             year: 71,
-            year_era: YearEra::Ad,
+            year_era: YearEra::Roc,
             month: 11,
             day: 22,
             hour: 11,
@@ -970,7 +970,40 @@ mod tests {
             .take(2)
             .map(|row| row.start_age)
             .collect::<Vec<_>>();
-        assert_eq!(starts, vec![Some(11), Some(21)]);
+        assert_eq!(starts, vec![Some(6), Some(16)]);
+    }
+
+    #[test]
+    fn roc_0088_02_12_male_luck_starts_at_virtual_age_3() {
+        let response = calculate_bazi(BaziRequest {
+            calendar_type: CalendarType::Solar,
+            gender: Gender::Male,
+            year: 88,
+            year_era: YearEra::Roc,
+            month: 2,
+            day: 12,
+            hour: 20,
+            minute: 0,
+            second: 0,
+            bazi_sect: 2,
+            yun_sect: 1,
+            leap_month: false,
+        })
+        .expect("chart should build");
+
+        assert_eq!(response.luck_start.forward, Some(false));
+        assert_eq!(response.luck_start.start_solar.as_deref(), Some("2001-11-12 20:00:00"));
+        assert_eq!(response.luck_start.start_year, Some(2));
+        assert_eq!(response.luck_start.start_month, Some(9));
+        assert_eq!(response.luck_start.start_day, Some(0));
+
+        let starts = response
+            .da_yun
+            .iter()
+            .take(2)
+            .map(|row| row.start_age)
+            .collect::<Vec<_>>();
+        assert_eq!(starts, vec![Some(3), Some(13)]);
     }
 
     #[test]
@@ -1410,10 +1443,7 @@ fn virtual_age_at(target_time: SolarTime, birth_time: SolarTime) -> i32 {
 }
 
 fn display_luck_start_age(raw_start_age: i32) -> i32 {
-    if raw_start_age <= 0 {
-        return raw_start_age;
-    }
-    ((raw_start_age - 1) / 10 + 1) * 10 + 1
+    raw_start_age
 }
 
 fn build_direct_da_yun(
