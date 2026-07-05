@@ -77,10 +77,10 @@
 
       <div v-if="showAnnualLane" class="luck-lane">
         <div class="lane-label">流<br />年</div>
-        <el-scrollbar v-if="selectedLuckRow?.liuNian?.length" class="lane-scrollbar" always>
+        <el-scrollbar v-if="displayedAnnualRows.length" class="lane-scrollbar" always>
           <div class="lane-track">
             <button
-              v-for="annual in selectedLuckRow.liuNian"
+              v-for="annual in displayedAnnualRows"
               :key="`annual-${selectedLuckRow.index}-${annual.year}`"
               type="button"
               :class="[
@@ -130,10 +130,10 @@
 
       <div v-if="showMonthLane" class="luck-lane">
         <div class="lane-label">流<br />月</div>
-        <el-scrollbar v-if="selectedAnnualRow?.liuYue?.length" class="lane-scrollbar" always>
+        <el-scrollbar v-if="displayedMonthRows.length" class="lane-scrollbar" always>
           <div class="lane-track">
             <button
-              v-for="month in selectedAnnualRow.liuYue"
+              v-for="month in displayedMonthRows"
               :key="`month-${selectedAnnualRow.year}-${month.index}`"
               type="button"
               :class="[
@@ -451,6 +451,10 @@ function displayCellHiddenTenGodPairs(hiddenStems?: string[], tenGods?: string[]
   return hiddenTenGodPairs(hiddenStems, tenGods);
 }
 
+function descendingDisplayRows<T>(items?: T[]) {
+  return [...(items ?? [])].reverse();
+}
+
 function formatLuckRangeLabel(row: DisplayDaYun) {
   return props.compact ? `${row.ageRange}歲\n${row.yearRange}` : row.rangeLabel;
 }
@@ -599,12 +603,14 @@ function emitMonthPreview(luckRow: DaYun, annualRow: LiuNian, monthRow: LiuYue) 
 }
 
 const rows = computed<DisplayDaYun[]>(() =>
-  props.result.daYun.map((item) => ({
-    ...item,
-    ageRange: formatAgeRange(item.startAge, item.endAge),
-    yearRange: formatRange(item.startYear, item.endYear),
-    rangeLabel: `（${formatAgeRange(item.startAge, item.endAge)}歲 / ${formatRange(item.startYear, item.endYear)}）`,
-  })),
+  props.result.daYun
+    .map((item) => ({
+      ...item,
+      ageRange: formatAgeRange(item.startAge, item.endAge),
+      yearRange: formatRange(item.startYear, item.endYear),
+      rangeLabel: `（${formatAgeRange(item.startAge, item.endAge)}歲 / ${formatRange(item.startYear, item.endYear)}）`,
+    }))
+    .reverse(),
 );
 
 const natalItems = computed<InteractionPillarItem[]>(() => [
@@ -658,7 +664,7 @@ const selectedAnnualRow = computed(
   () =>
     selectedLuckRow.value?.liuNian?.find((annual) => annual.year === selectedAnnualYear.value) ??
     selectedLuckRow.value?.liuNian?.find((annual) => isCurrentAnnualRow(annual)) ??
-    selectedLuckRow.value?.liuNian?.[0] ??
+    descendingDisplayRows(selectedLuckRow.value?.liuNian)[0] ??
     null,
 );
 
@@ -666,10 +672,14 @@ const selectedMonthRow = computed(
   () =>
     (showMonthLane.value
       ? selectedAnnualRow.value?.liuYue?.find((month) => month.index === selectedMonthIndex.value) ??
-        selectedAnnualRow.value?.liuYue?.[0]
+        descendingDisplayRows(selectedAnnualRow.value?.liuYue)[0]
       : null) ??
     null,
 );
+
+const displayedAnnualRows = computed(() => descendingDisplayRows(selectedLuckRow.value?.liuNian));
+
+const displayedMonthRows = computed(() => descendingDisplayRows(selectedAnnualRow.value?.liuYue));
 
 const showAnnualLane = computed(() => expandAnnualLane.value);
 const showMonthLane = computed(() => expandMonthLane.value);
@@ -1049,31 +1059,28 @@ function summaryStripStyle(item: InteractionSummary) {
 
 function initializeSelection() {
   const defaultLuck = rows.value.find((row) => isCurrentLuckRow(row)) ?? rows.value[0] ?? null;
+  const defaultAnnuals = descendingDisplayRows(defaultLuck?.liuNian);
+  const defaultAnnual =
+    defaultLuck?.liuNian?.find((annual) => isCurrentAnnualRow(annual)) ?? defaultAnnuals[0] ?? null;
+  const defaultMonths = descendingDisplayRows(defaultAnnual?.liuYue);
   selectedLuckIndex.value = defaultLuck?.index ?? null;
-  selectedAnnualYear.value =
-    defaultLuck?.liuNian?.find((annual) => isCurrentAnnualRow(annual))?.year ??
-    defaultLuck?.liuNian?.[0]?.year ??
-    null;
-  selectedMonthIndex.value =
-    defaultLuck?.liuNian?.find((annual) => annual.year === selectedAnnualYear.value)?.liuYue?.[0]?.index ??
-    defaultLuck?.liuNian?.[0]?.liuYue?.[0]?.index ??
-    null;
+  selectedAnnualYear.value = defaultAnnual?.year ?? null;
+  selectedMonthIndex.value = defaultMonths[0]?.index ?? null;
 }
 
 function selectLuckRow(row: DisplayDaYun) {
+  const defaultAnnuals = descendingDisplayRows(row.liuNian);
+  const defaultAnnual = row.liuNian?.find((annual) => isCurrentAnnualRow(annual)) ?? defaultAnnuals[0] ?? null;
+  const defaultMonths = descendingDisplayRows(defaultAnnual?.liuYue);
   selectedLuckIndex.value = row.index;
-  selectedAnnualYear.value =
-    row.liuNian?.find((annual) => isCurrentAnnualRow(annual))?.year ?? row.liuNian?.[0]?.year ?? null;
-  selectedMonthIndex.value =
-    row.liuNian?.find((annual) => annual.year === selectedAnnualYear.value)?.liuYue?.[0]?.index ??
-    row.liuNian?.[0]?.liuYue?.[0]?.index ??
-    null;
+  selectedAnnualYear.value = defaultAnnual?.year ?? null;
+  selectedMonthIndex.value = defaultMonths[0]?.index ?? null;
   emitLuckPreview(row);
 }
 
 function selectAnnualRow(row: LiuNian) {
   selectedAnnualYear.value = row.year;
-  selectedMonthIndex.value = row.liuYue?.[0]?.index ?? null;
+  selectedMonthIndex.value = descendingDisplayRows(row.liuYue)[0]?.index ?? null;
   if (selectedLuckRow.value) {
     emitAnnualPreview(selectedLuckRow.value, row);
   }
@@ -1102,7 +1109,9 @@ watch(selectedLuckRow, (row) => {
   }
   if (!row.liuNian?.some((annual) => annual.year === selectedAnnualYear.value)) {
     selectedAnnualYear.value =
-      row.liuNian?.find((annual) => isCurrentAnnualRow(annual))?.year ?? row.liuNian?.[0]?.year ?? null;
+      row.liuNian?.find((annual) => isCurrentAnnualRow(annual))?.year ??
+      descendingDisplayRows(row.liuNian)[0]?.year ??
+      null;
   }
 });
 
@@ -1112,7 +1121,7 @@ watch(selectedAnnualRow, (row) => {
     return;
   }
   if (!row.liuYue?.some((month) => month.index === selectedMonthIndex.value)) {
-    selectedMonthIndex.value = row.liuYue?.[0]?.index ?? null;
+    selectedMonthIndex.value = descendingDisplayRows(row.liuYue)[0]?.index ?? null;
   }
 });
 

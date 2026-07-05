@@ -244,24 +244,24 @@ const BRANCH_SIX_COMBINATIONS = new Set(["子丑", "寅亥", "卯戌", "辰酉",
 const BRANCH_HALF_COMBINATIONS = new Set(["寅午", "午戌", "亥卯", "卯未", "申子", "子辰", "巳酉", "酉丑"]);
 
 const pillars = computed(() => [
-  props.result.yearPillar,
-  props.result.monthPillar,
-  props.result.dayPillar,
   props.result.hourPillar,
+  props.result.dayPillar,
+  props.result.monthPillar,
+  props.result.yearPillar,
 ]);
 
 const stemTenGods = computed(() => [
-  props.result.yearStemTenGod,
-  props.result.monthStemTenGod,
-  props.result.dayStemTenGod || "日主",
   props.result.hourStemTenGod,
+  props.result.dayStemTenGod || "日主",
+  props.result.monthStemTenGod,
+  props.result.yearStemTenGod,
 ]);
 
 const branchTenGods = computed(() => [
-  props.result.yearBranchTenGods?.[0] || "",
-  props.result.monthBranchTenGods?.[0] || "",
-  props.result.dayBranchTenGods?.[0] || "",
   props.result.hourBranchTenGods?.[0] || "",
+  props.result.dayBranchTenGods?.[0] || "",
+  props.result.monthBranchTenGods?.[0] || "",
+  props.result.yearBranchTenGods?.[0] || "",
 ]);
 
 const stemNodes = computed(() =>
