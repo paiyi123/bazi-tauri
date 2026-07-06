@@ -1770,4 +1770,82 @@ watch(expandMonthLane, (expanded) => {
     font-size: calc(9px * var(--app-font-scale));
   }
 }
+
+
+.compact-lane-toggle {
+  border-color: var(--bazi-border);
+  background: rgba(255, 253, 248, 0.94);
+  color: var(--bazi-primary);
+  font-weight: 800;
+}
+
+.compact-lane-toggle:hover,
+.compact-lane-toggle:focus-visible {
+  border-color: var(--bazi-border-strong);
+  box-shadow: 0 0 0 3px var(--bazi-ring);
+}
+
+.compact-lane-toggle.is-active {
+  background: var(--bazi-primary);
+  border-color: var(--bazi-primary);
+  color: #fffaf0;
+}
+
+.luck-lane {
+  border-color: var(--bazi-border);
+  border-radius: 18px;
+  background: rgba(255, 253, 248, 0.78);
+  overflow: hidden;
+}
+
+.lane-label {
+  border-right-color: var(--bazi-border);
+  background: linear-gradient(180deg, #fff6e8, #f5dfbd);
+  color: var(--bazi-primary);
+  font-family: "Noto Serif TC", "PMingLiU", "MingLiU", serif;
+  font-weight: 800;
+}
+
+.fate-cell {
+  border-right-color: rgba(174, 128, 72, 0.2);
+  background: rgba(255, 253, 248, 0.88);
+  transition: background var(--bazi-transition), box-shadow var(--bazi-transition), transform var(--bazi-transition);
+}
+
+.fate-cell:hover {
+  background: #fff5e3;
+  box-shadow: inset 0 0 0 1px rgba(180, 83, 9, 0.16);
+}
+
+.fate-cell.is-selected {
+  background: linear-gradient(180deg, #f8e7bc, #fff7e8);
+  box-shadow: inset 0 0 0 2px var(--bazi-gold);
+}
+
+.fate-cell.is-current:not(.is-selected) {
+  box-shadow: inset 0 -3px 0 var(--bazi-accent);
+}
+
+.fate-cell-year,
+.fate-cell-topline {
+  color: var(--bazi-primary-strong);
+  font-weight: 800;
+}
+
+.ten-god-text {
+  color: var(--bazi-text);
+  font-weight: 700;
+}
+
+.hidden-ten-god-text,
+.fate-cell-meta,
+.lane-empty {
+  color: var(--bazi-text-muted);
+}
+
+.luck-detail-bar,
+.interaction-matrix-shell {
+  border-color: var(--bazi-border);
+  background: rgba(255, 250, 243, 0.82);
+}
 </style>

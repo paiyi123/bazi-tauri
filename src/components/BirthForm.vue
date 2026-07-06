@@ -777,4 +777,22 @@ function onSubmit() {
     margin-top: -2px;
   }
 }
+
+
+.form-card :deep(.el-card__header) {
+  background: linear-gradient(180deg, rgba(255, 247, 234, 0.92), rgba(255, 247, 234, 0));
+}
+
+.form-card :deep(.el-form-item__label) {
+  color: var(--bazi-primary);
+  font-weight: 800;
+}
+
+.storage-label {
+  color: var(--bazi-text-muted);
+}
+
+.save-button-group :deep(.el-button) {
+  min-height: 38px;
+}
 </style>

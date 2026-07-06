@@ -2063,4 +2063,46 @@ const relationLinks = computed<RelationLink[]>(() => {
 .wuxing-water {
   color: #1565c0;
 }
+
+
+.score-band,
+.score-band-bottom {
+  border-color: rgba(174, 128, 72, 0.22);
+}
+
+.score-band-label,
+.relation-legend-item,
+.interaction-hint {
+  color: var(--bazi-text-muted);
+}
+
+.score-band-value,
+.relation-map-header h3,
+.interaction-header h3,
+.interaction-group-title {
+  color: var(--bazi-primary);
+  font-weight: 800;
+}
+
+.pillar-box {
+  border-color: var(--bazi-border);
+  border-radius: var(--bazi-radius-md);
+  background: linear-gradient(180deg, rgba(255, 253, 248, 0.98), rgba(255, 248, 236, 0.94));
+  box-shadow: var(--bazi-shadow-sm);
+}
+
+.pillar-box.is-preview {
+  border-color: rgba(217, 164, 65, 0.65);
+  background: linear-gradient(180deg, rgba(255, 247, 229, 0.98), rgba(249, 233, 191, 0.86));
+}
+
+.pillar-box.is-current-year-preview {
+  border-color: var(--bazi-accent);
+  box-shadow: 0 0 0 1px rgba(180, 83, 9, 0.14), 0 12px 24px rgba(180, 83, 9, 0.14);
+}
+
+.relation-map-section,
+.interaction-section {
+  border-radius: 18px;
+}
 </style>

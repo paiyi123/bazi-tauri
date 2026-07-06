@@ -82,4 +82,26 @@ defineProps<{
     font-size: calc(14px * var(--app-font-scale));
   }
 }
+
+
+.sub-title {
+  color: var(--bazi-primary);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.sub-title::before {
+  content: "";
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  margin-right: 0.45em;
+  border-radius: 999px;
+  background: var(--bazi-gold);
+  vertical-align: 0.05em;
+}
+
+.hint {
+  color: var(--bazi-text-muted);
+}
 </style>

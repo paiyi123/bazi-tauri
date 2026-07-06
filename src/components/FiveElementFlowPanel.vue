@@ -745,4 +745,35 @@ function dedupeBadges(badges: FloatingBadge[]) {
     height: 28px;
   }
 }
+
+
+.flow-subtitle {
+  color: var(--bazi-text-muted);
+}
+
+.flow-scroll {
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 251, 245, 0.92), rgba(247, 234, 215, 0.74));
+  border: 1px solid var(--bazi-border);
+}
+
+.flow-board {
+  background:
+    linear-gradient(rgba(174, 128, 72, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(174, 128, 72, 0.05) 1px, transparent 1px),
+    rgba(255, 253, 248, 0.96);
+  background-size: 28px 28px;
+}
+
+.flow-node-char {
+  text-shadow: 0 2px 8px rgba(84, 45, 18, 0.1);
+}
+
+.flow-floating-badge {
+  box-shadow: var(--bazi-shadow-sm);
+}
+
+.flow-legend {
+  color: var(--bazi-text-muted);
+}
 </style>

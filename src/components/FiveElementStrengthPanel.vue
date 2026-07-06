@@ -189,4 +189,19 @@ const shaYin = computed(() => props.result.quantModel?.shaYin);
   font-size: calc(13px * var(--app-font-scale));
 }
 
+
+
+.subsection-title {
+  color: var(--bazi-primary);
+  letter-spacing: 0.03em;
+}
+
+.analysis-box {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.subline {
+  color: var(--bazi-text-muted);
+}
 </style>

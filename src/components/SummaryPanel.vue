@@ -233,4 +233,17 @@ const baziPillars = computed(() => {
     gap: 0 0.1em;
   }
 }
+
+
+:deep(.el-card__header) {
+  background: linear-gradient(180deg, rgba(255, 247, 234, 0.92), rgba(255, 247, 234, 0));
+}
+
+.pillar-prefix {
+  color: var(--bazi-primary-strong);
+}
+
+.shen-sha-text {
+  color: var(--bazi-text-muted);
+}
 </style>

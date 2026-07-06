@@ -356,4 +356,24 @@ function resetSavedInput() {
     min-height: 32px;
   }
 }
+
+
+.pillar-row-title {
+  color: var(--bazi-primary);
+  letter-spacing: 0.04em;
+}
+
+.action-row :deep(.el-button),
+.year-hint-row :deep(.el-button) {
+  min-height: 38px;
+}
+
+.year-hint-text {
+  color: var(--bazi-text-muted);
+}
+
+.candidate-date-text {
+  color: var(--bazi-primary-strong);
+  font-weight: 800;
+}
 </style>
