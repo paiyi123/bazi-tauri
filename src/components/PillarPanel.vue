@@ -40,15 +40,11 @@
             <div class="compact-pillar-line">
               <span class="compact-line-label">藏干</span>
               <span class="compact-line-value compact-hidden-stems">
-                <template v-for="(hiddenStem, idx) in item.hiddenStems" :key="`${hiddenStem}-${idx}`">
-                  <span :class="['wuxing-char', `wuxing-${stemElement(hiddenStem)}`]">{{ hiddenStem }}</span>
-                  <span v-if="idx < item.hiddenStems.length - 1" class="hidden-sep">、</span>
+                <template v-for="(pair, idx) in hiddenStemTenGodPairs(item)" :key="`${pair.stem}-${pair.tenGod}-${idx}`">
+                  <span :class="['wuxing-char', `wuxing-${stemElement(pair.stem)}`]">{{ pair.stem }}</span><span>({{ pair.tenGod }})</span>
+                  <span v-if="idx < hiddenStemTenGodPairs(item).length - 1" class="hidden-sep">、</span>
                 </template>
               </span>
-            </div>
-            <div class="compact-pillar-line">
-              <span class="compact-line-label">支神</span>
-              <span class="compact-line-value">{{ item.branchTenGods.join('、') }}</span>
             </div>
             <div class="compact-pillar-line">
               <span class="compact-line-label">神煞</span>
@@ -86,15 +82,11 @@
             <div class="meta-row">
               <div class="meta-label">地支藏干</div>
               <div class="meta-value">
-                <template v-for="(hiddenStem, idx) in item.hiddenStems" :key="`${hiddenStem}-${idx}`">
-                  <span :class="['wuxing-char', `wuxing-${stemElement(hiddenStem)}`]">{{ hiddenStem }}</span>
-                  <span v-if="idx < item.hiddenStems.length - 1" class="hidden-sep">、</span>
+                <template v-for="(pair, idx) in hiddenStemTenGodPairs(item)" :key="`${pair.stem}-${pair.tenGod}-${idx}`">
+                  <span :class="['wuxing-char', `wuxing-${stemElement(pair.stem)}`]">{{ pair.stem }}</span><span>({{ pair.tenGod }})</span>
+                  <span v-if="idx < hiddenStemTenGodPairs(item).length - 1" class="hidden-sep">、</span>
                 </template>
               </div>
-            </div>
-            <div class="meta-row">
-              <div class="meta-label">地支十神</div>
-              <div class="meta-value">{{ item.branchTenGods.join('、') }}</div>
             </div>
             <div class="meta-row">
               <div class="meta-label">神煞</div>
@@ -512,6 +504,22 @@ function findStemScore(pillar: string): number | undefined {
 
 function findBranchScore(pillar: string): number | undefined {
   return props.result.quantModel?.branchScores.find((item) => item.pillar === pillar)?.finalScore
+}
+
+function centerMainQi<T>(items: T[]): T[] {
+  if (items.length < 3) {
+    return items
+  }
+  return [items[1], items[0], ...items.slice(2)]
+}
+
+function hiddenStemTenGodPairs(item: DisplayPillarItem) {
+  return centerMainQi(
+    item.hiddenStems.map((stem, index) => ({
+      stem,
+      tenGod: item.branchTenGods[index] || '-'
+    }))
+  )
 }
 
 function createPlaceholderPillar(ganZhi: string, xun?: string, xunKong?: string): Pillar {

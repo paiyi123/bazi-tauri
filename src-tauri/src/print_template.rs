@@ -31,7 +31,10 @@ pub fn render_print_html(result: Value, context: Option<PrintContext>) -> Result
     Ok(html)
 }
 
-fn build_template_values(result: &Value, context: Option<&PrintContext>) -> HashMap<String, String> {
+fn build_template_values(
+    result: &Value,
+    context: Option<&PrintContext>,
+) -> HashMap<String, String> {
     let mut values = HashMap::new();
     let mut put = |key: &str, value: String| {
         values.insert(key.to_string(), value);
@@ -66,10 +69,30 @@ fn build_template_values(result: &Value, context: Option<&PrintContext>) -> Hash
     put("造2", chart_type_parts[1].clone());
 
     let pillars = [
-        PillarPrintData::from_value(result.get("hourPillar"), result.get("hourStemTenGod"), result.get("hourHiddenStems"), result.get("hourBranchTenGods")),
-        PillarPrintData::from_value(result.get("dayPillar"), Some(&Value::String("日主".to_string())), result.get("dayHiddenStems"), result.get("dayBranchTenGods")),
-        PillarPrintData::from_value(result.get("monthPillar"), result.get("monthStemTenGod"), result.get("monthHiddenStems"), result.get("monthBranchTenGods")),
-        PillarPrintData::from_value(result.get("yearPillar"), result.get("yearStemTenGod"), result.get("yearHiddenStems"), result.get("yearBranchTenGods")),
+        PillarPrintData::from_value(
+            result.get("hourPillar"),
+            result.get("hourStemTenGod"),
+            result.get("hourHiddenStems"),
+            result.get("hourBranchTenGods"),
+        ),
+        PillarPrintData::from_value(
+            result.get("dayPillar"),
+            Some(&Value::String("日主".to_string())),
+            result.get("dayHiddenStems"),
+            result.get("dayBranchTenGods"),
+        ),
+        PillarPrintData::from_value(
+            result.get("monthPillar"),
+            result.get("monthStemTenGod"),
+            result.get("monthHiddenStems"),
+            result.get("monthBranchTenGods"),
+        ),
+        PillarPrintData::from_value(
+            result.get("yearPillar"),
+            result.get("yearStemTenGod"),
+            result.get("yearHiddenStems"),
+            result.get("yearBranchTenGods"),
+        ),
     ];
 
     for (prefix, pillar) in [
@@ -85,8 +108,14 @@ fn build_template_values(result: &Value, context: Option<&PrintContext>) -> Hash
         }
         put(&format!("{prefix}柱天干"), escape_html(&pillar.stem));
         put(&format!("{prefix}柱地支"), escape_html(&pillar.branch));
-        put(&format!("{prefix}支藏干"), escape_html(&join_reversed(&pillar.hidden_stems, "　")));
-        put(&format!("{prefix}支藏干十神"), ten_god_grid_html(&pillar.branch_ten_gods));
+        put(
+            &format!("{prefix}支藏干"),
+            escape_html(&join_reversed(&pillar.hidden_stems, "　")),
+        );
+        put(
+            &format!("{prefix}支藏干十神"),
+            ten_god_grid_html(&pillar.branch_ten_gods),
+        );
     }
 
     let luck_start = result.get("luckStart").unwrap_or(&Value::Null);
@@ -105,7 +134,10 @@ fn build_template_values(result: &Value, context: Option<&PrintContext>) -> Hash
         .map(|value| value.to_string())
         .unwrap_or_default();
     let virtual_age = first_luck_start_age(result).unwrap_or_default();
-    put("出生節氣", escape_html(&value_string(luck_start, "birthJieName")));
+    put(
+        "出生節氣",
+        escape_html(&value_string(luck_start, "birthJieName")),
+    );
     put("出生節氣後天數", birth_jie_after_days);
     put("起運年", start_offset.years);
     put("起運月", start_offset.months);
@@ -118,12 +150,25 @@ fn build_template_values(result: &Value, context: Option<&PrintContext>) -> Hash
     put("國曆月", solar.month);
     put("國曆日", solar.day);
     put("農曆年", lunar.year);
-    put("農曆閏月", if value_string(result, "lunarDateTime").contains('閏') { "閏".to_string() } else { String::new() });
+    put(
+        "農曆閏月",
+        if value_string(result, "lunarDateTime").contains('閏') {
+            "閏".to_string()
+        } else {
+            String::new()
+        },
+    );
     put("農曆月", lunar.month);
     put("農曆日", lunar.day);
     put("出生時", solar.hour);
     put("出生分", solar.minute);
-    put("時辰", parse_shi_chen(context.and_then(|item| item.time_label.as_deref()), &pillars[0].branch));
+    put(
+        "時辰",
+        parse_shi_chen(
+            context.and_then(|item| item.time_label.as_deref()),
+            &pillars[0].branch,
+        ),
+    );
 
     let now = chrono::Local::now();
     put("排盤年", (now.year() - 1911).to_string());
@@ -133,10 +178,22 @@ fn build_template_values(result: &Value, context: Option<&PrintContext>) -> Hash
     let luck_rows = build_luck_rows(result.get("daYun"));
     for index in 0..8 {
         let row = luck_rows.get(index).cloned().unwrap_or_default();
-        put(&format!("大運{}_歲", index + 1), row.start_age.map(|age| age.to_string()).unwrap_or_default());
-        put(&format!("大運{}_干支", index + 1), vertical_chars_html(&row.gan_zhi));
-        put(&format!("流年{}_干支", index + 1), build_annual_cells(&row.annuals, true));
-        put(&format!("流年{}_歲數", index + 1), build_annual_cells(&row.annuals, false));
+        put(
+            &format!("大運{}_歲", index + 1),
+            row.start_age.map(|age| age.to_string()).unwrap_or_default(),
+        );
+        put(
+            &format!("大運{}_干支", index + 1),
+            vertical_chars_html(&row.gan_zhi),
+        );
+        put(
+            &format!("流年{}_干支", index + 1),
+            build_annual_cells(&row.annuals, true),
+        );
+        put(
+            &format!("流年{}_歲數", index + 1),
+            build_annual_cells(&row.annuals, false),
+        );
     }
 
     values
@@ -159,9 +216,20 @@ impl PillarPrintData {
         branch_ten_gods: Option<&Value>,
     ) -> Self {
         Self {
-            ten_god: ten_god.and_then(Value::as_str).unwrap_or_default().to_string(),
-            stem: pillar.and_then(|value| value.get("stem")).and_then(Value::as_str).unwrap_or_default().to_string(),
-            branch: pillar.and_then(|value| value.get("branch")).and_then(Value::as_str).unwrap_or_default().to_string(),
+            ten_god: ten_god
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_string(),
+            stem: pillar
+                .and_then(|value| value.get("stem"))
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_string(),
+            branch: pillar
+                .and_then(|value| value.get("branch"))
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_string(),
             hidden_stems: string_array(hidden_stems),
             branch_ten_gods: string_array(branch_ten_gods),
         }
@@ -195,10 +263,16 @@ fn build_luck_rows(value: Option<&Value>) -> Vec<LuckPrintRow> {
                 .flatten()
                 .map(|annual| AnnualPrintData {
                     gan_zhi: value_string(annual, "ganZhi"),
-                    age: annual.get("age").and_then(Value::as_i64).unwrap_or_default() as i32,
+                    age: annual
+                        .get("age")
+                        .and_then(Value::as_i64)
+                        .unwrap_or_default() as i32,
                 })
                 .collect::<Vec<_>>();
-            let start_age = row.get("startAge").and_then(Value::as_i64).map(|age| age as i32);
+            let start_age = row
+                .get("startAge")
+                .and_then(Value::as_i64)
+                .map(|age| age as i32);
             annuals = normalize_annuals(annuals, start_age);
 
             LuckPrintRow {
@@ -210,7 +284,10 @@ fn build_luck_rows(value: Option<&Value>) -> Vec<LuckPrintRow> {
         .collect()
 }
 
-fn normalize_annuals(mut annuals: Vec<AnnualPrintData>, start_age: Option<i32>) -> Vec<AnnualPrintData> {
+fn normalize_annuals(
+    mut annuals: Vec<AnnualPrintData>,
+    start_age: Option<i32>,
+) -> Vec<AnnualPrintData> {
     let Some(start_age) = start_age else {
         annuals.sort_by(|left, right| right.age.cmp(&left.age));
         annuals.truncate(10);
@@ -244,7 +321,9 @@ fn normalize_annuals(mut annuals: Vec<AnnualPrintData>, start_age: Option<i32>) 
 
 fn previous_gan_zhi(value: &str) -> Option<String> {
     const STEMS: [&str; 10] = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
-    const BRANCHES: [&str; 12] = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+    const BRANCHES: [&str; 12] = [
+        "子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥",
+    ];
 
     let mut chars = value.chars();
     let stem = chars.next()?.to_string();
@@ -263,7 +342,10 @@ fn build_annual_cells(items: &[AnnualPrintData], use_gan_zhi: bool) -> String {
         .take(10)
         .map(|item| {
             if use_gan_zhi {
-                format!("<td><span class=\"annual-ganzhi\">{}</span></td>", vertical_chars_html(&item.gan_zhi))
+                format!(
+                    "<td><span class=\"annual-ganzhi\">{}</span></td>",
+                    vertical_chars_html(&item.gan_zhi)
+                )
             } else {
                 format!("<td>{}</td>", item.age)
             }
@@ -288,7 +370,12 @@ fn ten_god_grid_html(items: &[String]) -> String {
     let terms = items
         .iter()
         .rev()
-        .map(|item| format!("<span class=\"ten-god-term\">{}</span>", vertical_chars_html(item)))
+        .map(|item| {
+            format!(
+                "<span class=\"ten-god-term\">{}</span>",
+                vertical_chars_html(item)
+            )
+        })
         .collect::<Vec<_>>();
 
     if terms.is_empty() {
@@ -322,10 +409,7 @@ struct LuckStartOffset {
 }
 
 fn parse_luck_start_offset(text: &str) -> LuckStartOffset {
-    let after_birth = text
-        .split("出生後")
-        .last()
-        .unwrap_or(text);
+    let after_birth = text.split("出生後").last().unwrap_or(text);
     let days = {
         let value = number_before_marker(after_birth, '日');
         if value.is_empty() {
@@ -526,7 +610,11 @@ fn date_runs_from_chinese(text: &str) -> Vec<String> {
             if token.is_empty() {
                 runs.push(String::new());
             } else {
-                runs.push(chinese_date_number(&token).map(|value| value.to_string()).unwrap_or_default());
+                runs.push(
+                    chinese_date_number(&token)
+                        .map(|value| value.to_string())
+                        .unwrap_or_default(),
+                );
             }
         }
     }
@@ -534,7 +622,25 @@ fn date_runs_from_chinese(text: &str) -> Vec<String> {
 }
 
 fn is_chinese_date_char(ch: char) -> bool {
-    matches!(ch, '〇' | '零' | '一' | '二' | '三' | '四' | '五' | '六' | '七' | '八' | '九' | '十' | '正' | '冬' | '臘' | '腊' | '初')
+    matches!(
+        ch,
+        '〇' | '零'
+            | '一'
+            | '二'
+            | '三'
+            | '四'
+            | '五'
+            | '六'
+            | '七'
+            | '八'
+            | '九'
+            | '十'
+            | '正'
+            | '冬'
+            | '臘'
+            | '腊'
+            | '初'
+    )
 }
 
 fn chinese_date_number(text: &str) -> Option<i32> {
@@ -563,7 +669,10 @@ fn chinese_date_number(text: &str) -> Option<i32> {
     if let Some(index) = cleaned.find('十') {
         let chars = cleaned.chars().collect::<Vec<_>>();
         let tens = chinese_digit(chars[index.saturating_sub(1)])? * 10;
-        let ones = chars.get(index + 1).and_then(|ch| chinese_digit(*ch)).unwrap_or(0);
+        let ones = chars
+            .get(index + 1)
+            .and_then(|ch| chinese_digit(*ch))
+            .unwrap_or(0);
         return Some(tens + ones);
     }
 
@@ -590,7 +699,11 @@ fn chinese_digit(ch: char) -> Option<i32> {
 
 fn parse_shi_chen(time_label: Option<&str>, hour_branch: &str) -> String {
     time_label
-        .and_then(|label| label.chars().find(|ch| "子丑寅卯辰巳午未申酉戌亥".contains(*ch)))
+        .and_then(|label| {
+            label
+                .chars()
+                .find(|ch| "子丑寅卯辰巳午未申酉戌亥".contains(*ch))
+        })
         .or_else(|| hour_branch.chars().next())
         .map(|ch| ch.to_string())
         .unwrap_or_default()

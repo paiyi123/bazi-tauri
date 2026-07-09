@@ -457,7 +457,8 @@ pub fn analyze_shen_sha(response: &BaziResponse) -> FourPillarShenShaDto {
         "陰差陽錯",
         response,
         &[
-            "丙子", "丁丑", "戊寅", "辛卯", "壬辰", "癸巳", "丙午", "丁未", "戊申", "辛酉", "壬戌", "癸亥",
+            "丙子", "丁丑", "戊寅", "辛卯", "壬辰", "癸巳", "丙午", "丁未", "戊申", "辛酉", "壬戌",
+            "癸亥",
         ],
         &mut aggregated_matches,
         &mut pillar_matches,
@@ -518,7 +519,8 @@ fn record_match(
     aggregated_matches: &mut Vec<MutableMatch>,
     pillar_matches: &mut PillarMatches,
 ) {
-    let entry = if let Some(existing) = aggregated_matches.iter_mut().find(|item| item.name == name) {
+    let entry = if let Some(existing) = aggregated_matches.iter_mut().find(|item| item.name == name)
+    {
         existing
     } else {
         aggregated_matches.push(MutableMatch {
@@ -594,7 +596,13 @@ fn add_mixed_month_rule(
     let matched_pillars: Vec<&str> = PILLAR_ORDER
         .iter()
         .copied()
-        .filter(|pillar| matches_mixed_target(target, get_stem(stems, pillar), get_branch(branches, pillar)))
+        .filter(|pillar| {
+            matches_mixed_target(
+                target,
+                get_stem(stems, pillar),
+                get_branch(branches, pillar),
+            )
+        })
         .collect();
     if matched_pillars.is_empty() {
         return;
@@ -860,11 +868,16 @@ fn add_fixed_day_pillar_rule(
 }
 
 fn matches_mixed_target(target: &str, stem: &str, branch: &str) -> bool {
-    is_stem(target).then_some(stem == target).unwrap_or(branch == target)
+    is_stem(target)
+        .then_some(stem == target)
+        .unwrap_or(branch == target)
 }
 
 fn is_stem(target: &str) -> bool {
-    matches!(target, "甲" | "乙" | "丙" | "丁" | "戊" | "己" | "庚" | "辛" | "壬" | "癸")
+    matches!(
+        target,
+        "甲" | "乙" | "丙" | "丁" | "戊" | "己" | "庚" | "辛" | "壬" | "癸"
+    )
 }
 
 fn resolve_kong_wang_branches(gan_zhi: &str) -> Vec<String> {
@@ -906,7 +919,9 @@ fn stem_index(stem: &str) -> Option<i32> {
 }
 
 fn branch_sequence() -> &'static [&'static str] {
-    &["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
+    &[
+        "子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥",
+    ]
 }
 
 fn five_combination_partner(stem: &str) -> Option<&'static str> {

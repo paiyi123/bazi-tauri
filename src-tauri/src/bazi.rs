@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use chrono::{Datelike, Local, NaiveDate};
+use serde::{Deserialize, Serialize};
 use tyme4rs::tyme::culture::Element;
 use tyme4rs::tyme::eightchar::provider::{
     ChildLimitProvider, DefaultEightCharProvider, EightCharProvider, LunarSect1ChildLimitProvider,
@@ -456,6 +456,34 @@ struct GeJuResult {
     basis: String,
 }
 
+#[derive(Debug, Clone, Copy)]
+struct VisibleStemTenGod<'a> {
+    pillar_label: &'static str,
+    stem: &'a str,
+    branch: &'a str,
+    ten_god: &'a str,
+}
+
+impl<'a> VisibleStemTenGod<'a> {
+    fn new(pillar_label: &'static str, stem: &'a str, branch: &'a str, ten_god: &'a str) -> Self {
+        Self {
+            pillar_label,
+            stem,
+            branch,
+            ten_god,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct GeJuCandidate<'a> {
+    hidden_index: usize,
+    stem: &'a str,
+    ten_god: &'a str,
+    chart_element_score: i32,
+    transparent_stems: Vec<VisibleStemTenGod<'a>>,
+}
+
 #[tauri::command]
 pub fn get_lunar_year_options(
     request: LunarYearOptionsQuery,
@@ -544,19 +572,51 @@ pub fn calculate_bazi(request: BaziRequest) -> Result<BaziResponse, String> {
         hidden_ten_gods(day_master.clone(), eight_char.get_day().get_earth_branch());
     let hour_branch_ten_gods =
         hidden_ten_gods(day_master.clone(), eight_char.get_hour().get_earth_branch());
-    let year_stem_ten_god = ten_god_name(day_master.clone(), eight_char.get_year().get_heaven_stem());
+    let year_stem_ten_god =
+        ten_god_name(day_master.clone(), eight_char.get_year().get_heaven_stem());
     let month_stem_ten_god =
         ten_god_name(day_master.clone(), eight_char.get_month().get_heaven_stem());
     let day_stem_analysis_ten_god = ten_god_name(day_master.clone(), day_master.clone());
-    let hour_stem_ten_god = ten_god_name(day_master.clone(), eight_char.get_hour().get_heaven_stem());
+    let hour_stem_ten_god =
+        ten_god_name(day_master.clone(), eight_char.get_hour().get_heaven_stem());
+    let year_stem_name = trad(&eight_char.get_year().get_heaven_stem().get_name());
+    let month_stem_name = trad(&eight_char.get_month().get_heaven_stem().get_name());
+    let day_stem_name = trad(&day_master.get_name());
+    let hour_stem_name = trad(&eight_char.get_hour().get_heaven_stem().get_name());
+    let year_branch_name = trad(&eight_char.get_year().get_earth_branch().get_name());
+    let month_pillar_branch_name = trad(&eight_char.get_month().get_earth_branch().get_name());
+    let day_branch_name = trad(&eight_char.get_day().get_earth_branch().get_name());
+    let hour_branch_name = trad(&eight_char.get_hour().get_earth_branch().get_name());
+    let month_branch_name = trad(&eight_char.get_month().get_earth_branch().get_name());
     let ge_ju_result = analyze_ge_ju(
-        &month_stem_ten_god,
+        &month_branch_name,
+        &month_hidden_stems,
         &month_branch_ten_gods,
         [
-            &year_stem_ten_god,
-            &month_stem_ten_god,
-            &day_stem_analysis_ten_god,
-            &hour_stem_ten_god,
+            VisibleStemTenGod::new(
+                "年干",
+                &year_stem_name,
+                &year_branch_name,
+                &year_stem_ten_god,
+            ),
+            VisibleStemTenGod::new(
+                "月干",
+                &month_stem_name,
+                &month_pillar_branch_name,
+                &month_stem_ten_god,
+            ),
+            VisibleStemTenGod::new(
+                "日干",
+                &day_stem_name,
+                &day_branch_name,
+                &day_stem_analysis_ten_god,
+            ),
+            VisibleStemTenGod::new(
+                "時干",
+                &hour_stem_name,
+                &hour_branch_name,
+                &hour_stem_ten_god,
+            ),
         ],
     );
 
@@ -752,7 +812,8 @@ fn resolve_recent_matching_solar_years(
     let note = if candidates.is_empty() {
         "未在最近 180 年內找到四柱完全吻合的公曆年份。".to_string()
     } else {
-        "依四柱完整匹配回推最近兩個可能公曆生日時間；若生日落在立春前後，年份可能落在前後一年邊界。".to_string()
+        "依四柱完整匹配回推最近兩個可能公曆生日時間；若生日落在立春前後，年份可能落在前後一年邊界。"
+            .to_string()
     };
 
     Ok(DirectPillarYearHintDto {
@@ -765,7 +826,10 @@ fn resolve_recent_matching_solar_years(
 
 fn build_candidate_gregorian_years(year_pillar: &str, current_year: i32) -> Vec<i32> {
     let normalized = year_pillar.trim();
-    let Some(cycle_index) = SIXTY_CYCLE_NAMES.iter().position(|item| *item == normalized) else {
+    let Some(cycle_index) = SIXTY_CYCLE_NAMES
+        .iter()
+        .position(|item| *item == normalized)
+    else {
         return vec![];
     };
 
@@ -820,7 +884,15 @@ fn matches_four_pillars(
     hour: u32,
     request: &PillarAnalyzeRequest,
 ) -> Option<DirectPillarBirthCandidateDto> {
-    let solar_time = SolarTime::new(year as isize, month as usize, day as usize, hour as usize, 30, 0).ok()?;
+    let solar_time = SolarTime::new(
+        year as isize,
+        month as usize,
+        day as usize,
+        hour as usize,
+        30,
+        0,
+    )
+    .ok()?;
     let eight_char = create_eight_char(2, solar_time.get_lunar_hour());
 
     if trad(&eight_char.get_year().get_name()) == request.year_pillar
@@ -908,24 +980,19 @@ mod tests {
 
         assert_eq!(android_size, full_size);
         assert!(!android_response.da_yun.is_empty());
-        assert!(android_response
-            .da_yun
+        assert!(android_response.da_yun.iter().any(|luck| luck
+            .liu_nian
             .iter()
-            .any(|luck| luck
-                .liu_nian
-                .iter()
-                .any(|annual| !annual.liu_yue.is_empty())));
+            .any(|annual| !annual.liu_yue.is_empty())));
         assert!(android_response.quant_model.is_some());
         assert!(android_response
             .quant_model
             .as_ref()
             .and_then(|quant_model| quant_model.luck_scores.as_ref())
-            .is_some_and(|luck_scores| luck_scores
-                .iter()
-                .any(|score| score
-                    .annual_scores
-                    .as_ref()
-                    .is_some_and(|annual_scores| !annual_scores.is_empty()))));
+            .is_some_and(|luck_scores| luck_scores.iter().any(|score| score
+                .annual_scores
+                .as_ref()
+                .is_some_and(|annual_scores| !annual_scores.is_empty()))));
         let quant_model = android_response
             .quant_model
             .as_ref()
@@ -938,7 +1005,8 @@ mod tests {
 
     #[test]
     fn reported_lunar_chart_builds() {
-        let response = calculate_bazi(reported_lunar_request()).expect("reported lunar chart should build");
+        let response =
+            calculate_bazi(reported_lunar_request()).expect("reported lunar chart should build");
         let bytes = serde_json::to_vec(&response)
             .expect("response should serialize")
             .len();
@@ -992,7 +1060,10 @@ mod tests {
         .expect("chart should build");
 
         assert_eq!(response.luck_start.forward, Some(false));
-        assert_eq!(response.luck_start.start_solar.as_deref(), Some("2001-11-12 20:00:00"));
+        assert_eq!(
+            response.luck_start.start_solar.as_deref(),
+            Some("2001-11-12 20:00:00")
+        );
         assert_eq!(response.luck_start.start_year, Some(2));
         assert_eq!(response.luck_start.start_month, Some(9));
         assert_eq!(response.luck_start.start_day, Some(0));
@@ -1014,6 +1085,102 @@ mod tests {
         assert!(!response.ge_ju.is_empty());
         assert!(response.ge_ju.ends_with('格'));
         assert!(response.ge_ju_basis.contains("以月令十神"));
+    }
+
+    #[test]
+    fn ge_ju_prefers_month_hidden_ten_god_that_appears_in_stems() {
+        let response = calculate_bazi(BaziRequest {
+            calendar_type: CalendarType::Solar,
+            gender: Gender::Female,
+            year: 1997,
+            year_era: YearEra::Ad,
+            month: 10,
+            day: 28,
+            hour: 18,
+            minute: 0,
+            second: 0,
+            bazi_sect: 2,
+            yun_sect: 1,
+            leap_month: false,
+        })
+        .expect("chart should build");
+
+        assert_eq!(response.ba_zi, "丁丑 庚戌 癸卯 辛酉");
+        assert_eq!(response.month_branch_ten_gods, vec!["正官", "偏印", "偏財"]);
+        assert_eq!(response.hour_stem_ten_god, "偏印");
+        assert_eq!(response.ge_ju, "偏印格");
+        assert!(response
+            .ge_ju_basis
+            .contains("月支戌藏戊(正官)、辛(偏印)、丁(偏財)"));
+        assert!(response.ge_ju_basis.contains("辛金透於時干"));
+        assert!(response.ge_ju_basis.contains("丁火透於年干"));
+        assert!(response.ge_ju_basis.contains("戊土未透"));
+        assert!(response.ge_ju_basis.contains("辛金坐酉祿，得祿有根"));
+        assert!(response.ge_ju_basis.contains("丁火坐丑濕土，火氣受晦"));
+        assert!(response.ge_ju_basis.contains("辛金偏印較丁火偏財有力"));
+        assert!(response.ge_ju_basis.contains("取較強之「偏印」為格"));
+    }
+
+    #[test]
+    fn ge_ju_explains_multiple_transparent_month_hidden_candidates_by_strength() {
+        let result = analyze_ge_ju(
+            "戌",
+            &["戊".to_string(), "辛".to_string(), "丁".to_string()],
+            &["正官".to_string(), "偏印".to_string(), "偏財".to_string()],
+            [
+                VisibleStemTenGod::new("年干", "辛", "酉", "偏印"),
+                VisibleStemTenGod::new("月干", "丁", "丑", "偏財"),
+                VisibleStemTenGod::new("日干", "癸", "卯", "日元"),
+                VisibleStemTenGod::new("時干", "乙", "未", "食神"),
+            ],
+        );
+
+        assert_eq!(result.ge_ju, "偏印格");
+        assert!(result.basis.contains("辛金透於年干、丁火透於月干"));
+        assert!(result.basis.contains("辛金坐酉祿，得祿有根"));
+        assert!(result.basis.contains("丁火坐丑濕土，火氣受晦"));
+        assert!(result.basis.contains("辛金偏印較丁火偏財有力"));
+    }
+
+    #[test]
+    fn ge_ju_can_choose_lower_layer_candidate_when_whole_chart_element_is_stronger() {
+        let result = analyze_ge_ju(
+            "戌",
+            &["戊".to_string(), "辛".to_string(), "丁".to_string()],
+            &["正官".to_string(), "偏印".to_string(), "偏財".to_string()],
+            [
+                VisibleStemTenGod::new("年干", "丁", "午", "偏財"),
+                VisibleStemTenGod::new("月干", "丙", "午", "正財"),
+                VisibleStemTenGod::new("日干", "癸", "巳", "日元"),
+                VisibleStemTenGod::new("時干", "辛", "亥", "偏印"),
+            ],
+        );
+
+        assert_eq!(result.ge_ju, "偏財格");
+        assert!(result.basis.contains("丁火透於年干"));
+        assert!(result.basis.contains("辛金透於時干"));
+        assert!(result.basis.contains("丁火偏財較辛金偏印有力"));
+        assert!(!result.basis.contains("若全盤火勢旺"));
+        assert!(!result.basis.contains("也可能"));
+    }
+
+    #[test]
+    fn ge_ju_strength_rules_are_general_not_single_case() {
+        assert_eq!(stem_branch_root_score("丙", "辰"), -10);
+        assert_eq!(stem_branch_root_score("丁", "丑"), -10);
+        assert!(stem_branch_strength_description("丙", "辰").contains("丙火坐辰濕土"));
+        assert!(stem_branch_strength_description("丁", "丑").contains("丁火坐丑濕土"));
+
+        let visible_stems = [
+            VisibleStemTenGod::new("年干", "丁", "午", "偏財"),
+            VisibleStemTenGod::new("月干", "丙", "午", "正財"),
+            VisibleStemTenGod::new("日干", "癸", "巳", "日元"),
+            VisibleStemTenGod::new("時干", "辛", "亥", "偏印"),
+        ];
+        assert!(
+            chart_element_strength_score('火', &visible_stems)
+                > chart_element_strength_score('金', &visible_stems)
+        );
     }
 
     #[test]
@@ -1138,30 +1305,22 @@ fn ten_god_name(day_master: HeavenStem, target: HeavenStem) -> String {
 }
 
 fn analyze_ge_ju(
-    month_stem_ten_god: &str,
+    month_branch: &str,
+    month_hidden_stems: &[String],
     month_branch_ten_gods: &[String],
-    stem_ten_gods: [&str; 4],
+    visible_stems: [VisibleStemTenGod; 4],
 ) -> GeJuResult {
-    let dominant_ten_god = pick_dominant_ge_ju_ten_god(month_branch_ten_gods, month_stem_ten_god);
-    let Some(dominant_ten_god) = dominant_ten_god else {
+    let candidates =
+        build_ge_ju_candidates(month_hidden_stems, month_branch_ten_gods, visible_stems);
+    let Some(dominant_candidate) = pick_dominant_ge_ju_candidate(&candidates) else {
         return GeJuResult {
             ge_ju: "未定格".to_string(),
             basis: "無法從月令十神取得有效資料".to_string(),
         };
     };
 
-    let pattern = ge_ju_pattern_name(dominant_ten_god);
-    let visible_in_stems = stem_ten_gods.into_iter().any(|item| item == dominant_ten_god);
-    let basis = format!(
-        "以月令十神「{}」判為「{}」，{}",
-        dominant_ten_god,
-        pattern,
-        if visible_in_stems {
-            "且同類十神透干"
-        } else {
-            "但同類十神未透干"
-        }
-    );
+    let pattern = ge_ju_pattern_name(dominant_candidate.ten_god);
+    let basis = build_ge_ju_basis(month_branch, &candidates, dominant_candidate, pattern);
 
     GeJuResult {
         ge_ju: pattern.to_string(),
@@ -1169,22 +1328,376 @@ fn analyze_ge_ju(
     }
 }
 
-fn pick_dominant_ge_ju_ten_god<'a>(
+fn build_ge_ju_candidates<'a>(
+    month_hidden_stems: &'a [String],
     month_branch_ten_gods: &'a [String],
-    month_stem_ten_god: &'a str,
-) -> Option<&'a str> {
-    month_branch_ten_gods
+    visible_stems: [VisibleStemTenGod<'a>; 4],
+) -> Vec<GeJuCandidate<'a>> {
+    month_hidden_stems
         .iter()
-        .map(String::as_str)
-        .find(|item| is_supported_ge_ju_ten_god(item))
-        .or_else(|| {
-            let item = month_stem_ten_god;
-            if is_supported_ge_ju_ten_god(item) {
-                Some(item)
-            } else {
-                None
+        .zip(month_branch_ten_gods.iter())
+        .enumerate()
+        .filter_map(|(hidden_index, (stem, ten_god))| {
+            if !is_supported_ge_ju_ten_god(ten_god) {
+                return None;
             }
+
+            let transparent_stems = visible_stems
+                .iter()
+                .copied()
+                .filter(|visible| {
+                    visible.pillar_label != "日干"
+                        && visible.stem == stem.as_str()
+                        && visible.ten_god == ten_god.as_str()
+                })
+                .collect::<Vec<_>>();
+
+            Some(GeJuCandidate {
+                hidden_index,
+                stem,
+                ten_god,
+                chart_element_score: stem_element(stem)
+                    .map(|element| chart_element_strength_score(element, &visible_stems))
+                    .unwrap_or(0),
+                transparent_stems,
+            })
         })
+        .collect()
+}
+
+fn pick_dominant_ge_ju_candidate<'a>(
+    candidates: &'a [GeJuCandidate<'a>],
+) -> Option<&'a GeJuCandidate<'a>> {
+    candidates
+        .iter()
+        .filter(|candidate| !candidate.transparent_stems.is_empty())
+        .max_by_key(|candidate| {
+            (
+                ge_ju_candidate_strength_score(candidate),
+                -(candidate.hidden_index as i32),
+                -candidate
+                    .transparent_stems
+                    .iter()
+                    .map(|visible| stem_pillar_rank(visible.pillar_label) as i32)
+                    .min()
+                    .unwrap_or(99),
+            )
+        })
+        .or_else(|| {
+            candidates
+                .iter()
+                .min_by_key(|candidate| candidate.hidden_index)
+        })
+}
+
+fn build_ge_ju_basis(
+    month_branch: &str,
+    candidates: &[GeJuCandidate],
+    dominant_candidate: &GeJuCandidate,
+    pattern: &str,
+) -> String {
+    let hidden_summary = candidates
+        .iter()
+        .map(|candidate| format!("{}({})", candidate.stem, candidate.ten_god))
+        .collect::<Vec<_>>()
+        .join("、");
+    let transparent_candidates = candidates
+        .iter()
+        .filter(|candidate| !candidate.transparent_stems.is_empty())
+        .collect::<Vec<_>>();
+    let transparent_summary = transparent_candidates
+        .iter()
+        .map(|candidate| {
+            let positions = candidate
+                .transparent_stems
+                .iter()
+                .map(|visible| visible.pillar_label)
+                .collect::<Vec<_>>()
+                .join("、");
+            format!("{}透於{}", stem_with_element(candidate.stem), positions)
+        })
+        .collect::<Vec<_>>()
+        .join("、");
+    let non_transparent_summary = {
+        let non_transparent = candidates
+            .iter()
+            .filter(|candidate| candidate.transparent_stems.is_empty())
+            .map(|candidate| stem_with_element(candidate.stem))
+            .collect::<Vec<_>>();
+        if non_transparent.is_empty() {
+            "其餘月令藏干皆有透出".to_string()
+        } else {
+            format!("{}未透", non_transparent.join("、"))
+        }
+    };
+    let decision = if transparent_candidates.is_empty() {
+        format!(
+            "月令藏干皆未透，故回取{}「{}」為主，判為「{}」",
+            qi_layer_name(dominant_candidate.hidden_index),
+            dominant_candidate.ten_god,
+            pattern
+        )
+    } else if transparent_candidates.len() == 1 {
+        format!(
+            "故取透干之「{}」為格，判為「{}」",
+            dominant_candidate.ten_god, pattern
+        )
+    } else {
+        let strength_reason = build_multiple_transparency_strength_reason(
+            dominant_candidate,
+            &transparent_candidates,
+        );
+        format!(
+            "月令藏干有多個透干，{}，故取較強之「{}」為格，判為「{}」",
+            strength_reason, dominant_candidate.ten_god, pattern
+        )
+    };
+
+    if transparent_candidates.is_empty() {
+        format!(
+            "以月令十神分析：月支{}藏{}。{}。",
+            month_branch, hidden_summary, decision
+        )
+    } else {
+        format!(
+            "以月令十神分析：月支{}藏{}。其中{}，{}，{}。",
+            month_branch, hidden_summary, transparent_summary, non_transparent_summary, decision
+        )
+    }
+}
+
+fn build_multiple_transparency_strength_reason(
+    dominant_candidate: &GeJuCandidate,
+    transparent_candidates: &[&GeJuCandidate],
+) -> String {
+    let weaker_transparent = transparent_candidates
+        .iter()
+        .filter(|candidate| candidate.ten_god != dominant_candidate.ten_god)
+        .map(|candidate| {
+            format!(
+                "{}，{}",
+                strongest_transparency_strength_description(candidate),
+                candidate_with_ten_god(candidate)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("；");
+
+    if weaker_transparent.is_empty() {
+        return format!(
+            "{}，透出位置與根氣較有力",
+            strongest_transparency_strength_description(dominant_candidate)
+        );
+    }
+
+    format!(
+        "{}；{}；{}較{}有力",
+        strongest_transparency_strength_description(dominant_candidate),
+        weaker_transparent
+            .split('；')
+            .collect::<Vec<_>>()
+            .join("；"),
+        candidate_with_ten_god(dominant_candidate),
+        transparent_candidates
+            .iter()
+            .filter(|candidate| candidate.ten_god != dominant_candidate.ten_god)
+            .map(|candidate| candidate_with_ten_god(candidate))
+            .collect::<Vec<_>>()
+            .join("、")
+    )
+}
+
+fn ge_ju_candidate_strength_score(candidate: &GeJuCandidate) -> i32 {
+    let strongest_root_score = candidate
+        .transparent_stems
+        .iter()
+        .map(|visible| stem_branch_root_score(visible.stem, visible.branch))
+        .max()
+        .unwrap_or(0);
+    let qi_score = match candidate.hidden_index {
+        0 => 12,
+        1 => 8,
+        _ => 4,
+    };
+    let position_score = candidate
+        .transparent_stems
+        .iter()
+        .map(|visible| match visible.pillar_label {
+            "月干" => 6,
+            "時干" => 4,
+            "年干" => 2,
+            _ => 0,
+        })
+        .max()
+        .unwrap_or(0);
+
+    strongest_root_score + qi_score + position_score + candidate.chart_element_score
+}
+
+fn strongest_transparency_strength_description(candidate: &GeJuCandidate) -> String {
+    candidate
+        .transparent_stems
+        .iter()
+        .max_by_key(|visible| stem_branch_root_score(visible.stem, visible.branch))
+        .map(|visible| stem_branch_strength_description(visible.stem, visible.branch))
+        .unwrap_or_else(|| format!("{}未見明顯根氣", stem_with_element(candidate.stem)))
+}
+
+fn candidate_with_ten_god(candidate: &GeJuCandidate) -> String {
+    format!("{}{}", stem_with_element(candidate.stem), candidate.ten_god)
+}
+
+fn stem_branch_root_score(stem: &str, branch: &str) -> i32 {
+    if is_stem_lu_branch(stem, branch) {
+        return 60;
+    }
+    if stem_element(stem) == Some('火') && is_wet_earth_branch(branch) {
+        return -10;
+    }
+    if branch_hidden_stems(branch).contains(&stem) {
+        return 36;
+    }
+    if stem_element(stem) == branch_main_element(branch) {
+        return 22;
+    }
+    0
+}
+
+fn stem_branch_strength_description(stem: &str, branch: &str) -> String {
+    if is_stem_lu_branch(stem, branch) {
+        return format!("{}坐{}祿，得祿有根", stem_with_element(stem), branch);
+    }
+    if stem_element(stem) == Some('火') && is_wet_earth_branch(branch) {
+        return format!("{}坐{}濕土，火氣受晦", stem_with_element(stem), branch);
+    }
+    if branch_hidden_stems(branch).contains(&stem) {
+        return format!("{}坐{}，地支藏根", stem_with_element(stem), branch);
+    }
+    if stem_element(stem) == branch_main_element(branch) {
+        return format!("{}坐{}，同氣有根", stem_with_element(stem), branch);
+    }
+    format!("{}坐{}，根氣較平", stem_with_element(stem), branch)
+}
+
+fn chart_element_strength_score(element: char, visible_stems: &[VisibleStemTenGod]) -> i32 {
+    visible_stems
+        .iter()
+        .map(|visible| {
+            let stem_score = if stem_element(visible.stem) == Some(element) {
+                10
+            } else {
+                0
+            };
+            let branch_score = if branch_main_element(visible.branch) == Some(element) {
+                8
+            } else if branch_hidden_stems(visible.branch)
+                .iter()
+                .any(|hidden| stem_element(hidden) == Some(element))
+            {
+                4
+            } else {
+                0
+            };
+            stem_score + branch_score
+        })
+        .sum()
+}
+
+fn is_wet_earth_branch(branch: &str) -> bool {
+    matches!(branch, "丑" | "辰")
+}
+
+fn branch_hidden_stems(branch: &str) -> &'static [&'static str] {
+    match branch {
+        "子" => &["癸"],
+        "丑" => &["己", "癸", "辛"],
+        "寅" => &["甲", "丙", "戊"],
+        "卯" => &["乙"],
+        "辰" => &["戊", "乙", "癸"],
+        "巳" => &["丙", "戊", "庚"],
+        "午" => &["丁", "己"],
+        "未" => &["己", "丁", "乙"],
+        "申" => &["庚", "壬", "戊"],
+        "酉" => &["辛"],
+        "戌" => &["戊", "辛", "丁"],
+        "亥" => &["壬", "甲"],
+        _ => &[],
+    }
+}
+
+fn is_stem_lu_branch(stem: &str, branch: &str) -> bool {
+    matches!(
+        (stem, branch),
+        ("甲", "寅")
+            | ("乙", "卯")
+            | ("丙", "巳")
+            | ("丁", "午")
+            | ("戊", "巳")
+            | ("己", "午")
+            | ("庚", "申")
+            | ("辛", "酉")
+            | ("壬", "亥")
+            | ("癸", "子")
+    )
+}
+
+fn stem_element(stem: &str) -> Option<char> {
+    stem.chars().next().and_then(|item| match item {
+        '甲' | '乙' => Some('木'),
+        '丙' | '丁' => Some('火'),
+        '戊' | '己' => Some('土'),
+        '庚' | '辛' => Some('金'),
+        '壬' | '癸' => Some('水'),
+        _ => None,
+    })
+}
+
+fn branch_main_element(branch: &str) -> Option<char> {
+    branch.chars().next().and_then(|item| match item {
+        '寅' | '卯' => Some('木'),
+        '巳' | '午' => Some('火'),
+        '辰' | '戌' | '丑' | '未' => Some('土'),
+        '申' | '酉' => Some('金'),
+        '亥' | '子' => Some('水'),
+        _ => None,
+    })
+}
+
+fn stem_pillar_rank(pillar_label: &str) -> u8 {
+    match pillar_label {
+        "月干" => 0,
+        "時干" => 1,
+        "年干" => 2,
+        _ => 9,
+    }
+}
+
+fn qi_layer_name(hidden_index: usize) -> &'static str {
+    match hidden_index {
+        0 => "本氣",
+        1 => "中氣",
+        _ => "餘氣",
+    }
+}
+
+fn stem_with_element(stem: &str) -> String {
+    let element = stem
+        .chars()
+        .next()
+        .and_then(stem_element_name)
+        .unwrap_or("");
+    format!("{}{}", stem, element)
+}
+
+fn stem_element_name(stem: char) -> Option<&'static str> {
+    match stem {
+        '甲' | '乙' => Some("木"),
+        '丙' | '丁' => Some("火"),
+        '戊' | '己' => Some("土"),
+        '庚' | '辛' => Some("金"),
+        '壬' | '癸' => Some("水"),
+        _ => None,
+    }
 }
 
 fn is_supported_ge_ju_ten_god(ten_god: &str) -> bool {
@@ -1612,7 +2125,12 @@ fn format_month_day(time: SolarTime) -> String {
 }
 
 fn format_month_day_with_hour(time: SolarTime) -> String {
-    format!("{}/{} {}", time.get_month(), time.get_day(), hour_branch_label(time.get_hour() as i32))
+    format!(
+        "{}/{} {}",
+        time.get_month(),
+        time.get_day(),
+        hour_branch_label(time.get_hour() as i32)
+    )
 }
 
 fn hour_branch_label(hour: i32) -> &'static str {

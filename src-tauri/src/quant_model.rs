@@ -5,8 +5,8 @@ use crate::bazi::{
 };
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap};
-use tyme4rs::tyme::Culture;
 use tyme4rs::tyme::sixtycycle::{EarthBranch, HeavenStem, SixtyCycle};
+use tyme4rs::tyme::Culture;
 
 #[derive(Debug, Clone)]
 struct CalculationInputs {
@@ -328,14 +328,23 @@ pub(crate) fn build_quant_model_response(
     let inputs = build_natal_inputs(natal_cycles);
     let bundle = score_resolved_chart(&day_master_name, &inputs);
     let stem_total = round1(bundle.stem_scores.iter().map(|item| item.final_score).sum());
-    let branch_total = round1(bundle.branch_scores.iter().map(|item| item.final_score).sum());
+    let branch_total = round1(
+        bundle
+            .branch_scores
+            .iter()
+            .map(|item| item.final_score)
+            .sum(),
+    );
     let total = round1(stem_total + branch_total);
     let strength_label = if total >= 0.0 {
         "偏強".to_string()
     } else {
         "偏弱".to_string()
     };
-    let summary = format!("量化五行力（Phase 2.1）總分 {:.1}，判定為{}。", total, strength_label);
+    let summary = format!(
+        "量化五行力（Phase 2.1）總分 {:.1}，判定為{}。",
+        total, strength_label
+    );
     let note = "已改為較貼近《量化五行力》的逐項計分：先沖合耗損，再依表計算得根與透干；根氣與透干一律以五行為準，不再分陰陽。仍屬工程化重建版，未完整覆蓋全書所有特例。".to_string();
     let yong_shen = Some(analyze_yong_shen(
         &day_master_name,
@@ -359,12 +368,7 @@ pub(crate) fn build_quant_model_response(
         &bundle.resolved_state,
         &bundle.branch_scores,
     ));
-    let luck_scores = Some(build_luck_scores(
-        &day_master_name,
-        total,
-        &inputs,
-        da_yun,
-    ));
+    let luck_scores = Some(build_luck_scores(&day_master_name, total, &inputs, da_yun));
 
     QuantModelResponse {
         day_master: day_master_name,
@@ -562,8 +566,10 @@ fn score_stems(day_master: &str, state: &ResolvedChartState) -> Vec<QuantModelPi
                 if root.level == RootLevel::None {
                     continue;
                 }
-                let mut multiplier = root_multiplier(root.level, distance(input.position_index, branch.position_index))
-                    * root.qi_multiplier;
+                let mut multiplier = root_multiplier(
+                    root.level,
+                    distance(input.position_index, branch.position_index),
+                ) * root.qi_multiplier;
                 let mut extra_reason = String::new();
                 if let Some(effect) = state.six_combination_effects.get(&branch.position_index) {
                     multiplier *= effect.remainder;
@@ -835,10 +841,16 @@ fn build_natural_branch_qi_slices(
         .enumerate()
         .map(|(index, hidden_stem)| {
             let ten_god = resolve_ten_god(day_master, hidden_stem);
-            let raw_score = resolve_branch_hidden_stem_score(day_master, &input.branch, hidden_stem, &ten_god);
-            let qi_multiplier =
-                branch_score_qi_multiplier(input, hidden_stem, branch_interaction, branch_qi_modifier);
-            let adjusted_raw = raw_score * ratios[index] * branch_interaction.multiplier * qi_multiplier;
+            let raw_score =
+                resolve_branch_hidden_stem_score(day_master, &input.branch, hidden_stem, &ten_god);
+            let qi_multiplier = branch_score_qi_multiplier(
+                input,
+                hidden_stem,
+                branch_interaction,
+                branch_qi_modifier,
+            );
+            let adjusted_raw =
+                raw_score * ratios[index] * branch_interaction.multiplier * qi_multiplier;
             let position_adjusted = round1(adjusted_raw / 100.0 * weight);
             BranchQiSlice {
                 display_stem: hidden_stem.clone(),
@@ -914,8 +926,12 @@ fn build_transformed_branch_qi_slices(
                 }
             } else {
                 let ten_god = resolve_ten_god(day_master, &slice.display_stem);
-                let original_raw =
-                    resolve_branch_hidden_stem_score(day_master, &input.branch, &slice.display_stem, &ten_god);
+                let original_raw = resolve_branch_hidden_stem_score(
+                    day_master,
+                    &input.branch,
+                    &slice.display_stem,
+                    &ten_god,
+                );
                 let raw_residual = original_raw * slice.ratio * slice.factor;
                 let position_adjusted = round1(raw_residual / 100.0 * weight);
                 BranchQiSlice {
@@ -956,13 +972,20 @@ fn build_luck_scores(
         .iter()
         .filter_map(|item| {
             let (luck_stem, luck_branch) = split_gan_zhi(&item.gan_zhi)?;
-            let extended_inputs =
-                build_extended_inputs(natal_inputs, Some(&luck_stem), Some(&luck_branch), None, None);
+            let extended_inputs = build_extended_inputs(
+                natal_inputs,
+                Some(&luck_stem),
+                Some(&luck_branch),
+                None,
+                None,
+            );
             let bundle = score_resolved_chart(day_master, &extended_inputs);
             let luck_stem_pillar = resolve_pillar_score(&bundle.stem_scores, "運干");
             let luck_branch_pillar = resolve_pillar_score(&bundle.branch_scores, "運支");
             let stem_score = luck_stem_pillar.map(|item| item.final_score).unwrap_or(0.0);
-            let branch_score = luck_branch_pillar.map(|item| item.final_score).unwrap_or(0.0);
+            let branch_score = luck_branch_pillar
+                .map(|item| item.final_score)
+                .unwrap_or(0.0);
             let total_score = round1(stem_score + branch_score);
             let impact_ratio = ratio(total_score, natal_total);
             let effective_natal_score = round1(natal_total + total_score);
@@ -1002,7 +1025,10 @@ fn build_luck_scores(
                     format!("R值：{:.2}", impact_ratio),
                     format!("作用後命局：{:.1}", effective_natal_score),
                 ]),
-                interaction_lines: Some(build_pillar_detail_lines(luck_stem_pillar, luck_branch_pillar)),
+                interaction_lines: Some(build_pillar_detail_lines(
+                    luck_stem_pillar,
+                    luck_branch_pillar,
+                )),
                 scoring_lines: Some(vec![
                     format!("運干列分：{:.1}", stem_score),
                     format!("運支列分：{:.1}", branch_score),
@@ -1029,7 +1055,16 @@ fn build_annual_scores(
     da_yun
         .liu_nian
         .iter()
-        .filter_map(|item| build_annual_score(day_master, natal_total, natal_inputs, &luck_stem, &luck_branch, item))
+        .filter_map(|item| {
+            build_annual_score(
+                day_master,
+                natal_total,
+                natal_inputs,
+                &luck_stem,
+                &luck_branch,
+                item,
+            )
+        })
         .collect()
 }
 
@@ -1054,12 +1089,18 @@ fn build_annual_score(
     let annual_branch_pillar = resolve_pillar_score(&bundle.branch_scores, "流年支");
     let luck_stem_pillar = resolve_pillar_score(&bundle.stem_scores, "運干");
     let luck_branch_pillar = resolve_pillar_score(&bundle.branch_scores, "運支");
-    let annual_stem_score = annual_stem_pillar.map(|item| item.final_score).unwrap_or(0.0);
-    let annual_branch_score = annual_branch_pillar.map(|item| item.final_score).unwrap_or(0.0);
+    let annual_stem_score = annual_stem_pillar
+        .map(|item| item.final_score)
+        .unwrap_or(0.0);
+    let annual_branch_score = annual_branch_pillar
+        .map(|item| item.final_score)
+        .unwrap_or(0.0);
     let annual_total_score = round1(annual_stem_score + annual_branch_score);
     let full_luck_score = round1(
         luck_stem_pillar.map(|item| item.final_score).unwrap_or(0.0)
-            + luck_branch_pillar.map(|item| item.final_score).unwrap_or(0.0),
+            + luck_branch_pillar
+                .map(|item| item.final_score)
+                .unwrap_or(0.0),
     );
     let first_half = item.index < 5;
     let active_luck_label = if first_half {
@@ -1070,7 +1111,9 @@ fn build_annual_score(
     let active_luck_score = if first_half {
         luck_stem_pillar.map(|item| item.final_score).unwrap_or(0.0)
     } else {
-        luck_branch_pillar.map(|item| item.final_score).unwrap_or(0.0)
+        luck_branch_pillar
+            .map(|item| item.final_score)
+            .unwrap_or(0.0)
     };
     let combined_score = round1(active_luck_score + annual_total_score);
     let full_combined_score = round1(full_luck_score + annual_total_score);
@@ -1259,11 +1302,7 @@ fn analyze_yong_shen(
             .copied()
             .unwrap_or(0.0)
             .abs();
-        let generator_magnitude = family_scores
-            .get(generator)
-            .copied()
-            .unwrap_or(0.0)
-            .abs();
+        let generator_magnitude = family_scores.get(generator).copied().unwrap_or(0.0).abs();
         if favorable.contains(&generator)
             && dominant_magnitude >= 35.0
             && dominant_magnitude >= generator_magnitude * 1.2
@@ -1301,14 +1340,54 @@ fn analyze_yong_shen(
         }
     }
 
-    let favorable_ten_gods = favorable.iter().map(|item| family_label(item).to_string()).collect::<Vec<_>>();
-    let conditional_ten_gods = conditional.iter().map(|item| family_label(item).to_string()).collect::<Vec<_>>();
-    let unfavorable_ten_gods = unfavorable.iter().map(|item| family_label(item).to_string()).collect::<Vec<_>>();
-    let caution_ten_gods = caution.iter().map(|item| family_label(item).to_string()).collect::<Vec<_>>();
-    let favorable_elements = family_elements(&favorable, &peer_element, &print_element, &output_element, &wealth_element, &officer_element);
-    let conditional_elements = family_elements(&conditional, &peer_element, &print_element, &output_element, &wealth_element, &officer_element);
-    let unfavorable_elements = family_elements(&unfavorable, &peer_element, &print_element, &output_element, &wealth_element, &officer_element);
-    let caution_elements = family_elements(&caution, &peer_element, &print_element, &output_element, &wealth_element, &officer_element);
+    let favorable_ten_gods = favorable
+        .iter()
+        .map(|item| family_label(item).to_string())
+        .collect::<Vec<_>>();
+    let conditional_ten_gods = conditional
+        .iter()
+        .map(|item| family_label(item).to_string())
+        .collect::<Vec<_>>();
+    let unfavorable_ten_gods = unfavorable
+        .iter()
+        .map(|item| family_label(item).to_string())
+        .collect::<Vec<_>>();
+    let caution_ten_gods = caution
+        .iter()
+        .map(|item| family_label(item).to_string())
+        .collect::<Vec<_>>();
+    let favorable_elements = family_elements(
+        &favorable,
+        &peer_element,
+        &print_element,
+        &output_element,
+        &wealth_element,
+        &officer_element,
+    );
+    let conditional_elements = family_elements(
+        &conditional,
+        &peer_element,
+        &print_element,
+        &output_element,
+        &wealth_element,
+        &officer_element,
+    );
+    let unfavorable_elements = family_elements(
+        &unfavorable,
+        &peer_element,
+        &print_element,
+        &output_element,
+        &wealth_element,
+        &officer_element,
+    );
+    let caution_elements = family_elements(
+        &caution,
+        &peer_element,
+        &print_element,
+        &output_element,
+        &wealth_element,
+        &officer_element,
+    );
 
     let mut process = format!(
         "命局總分 {:.1}，先判為{}；{}；{}",
@@ -1327,7 +1406,10 @@ fn analyze_yong_shen(
         join_chinese(&unfavorable_elements)
     );
     if !conditional_elements.is_empty() {
-        conclusion.push_str(&format!("；{}可作輔助", join_chinese(&conditional_elements)));
+        conclusion.push_str(&format!(
+            "；{}可作輔助",
+            join_chinese(&conditional_elements)
+        ));
     }
     if !caution_elements.is_empty() {
         conclusion.push_str(&format!("；慎用{}", join_chinese(&caution_elements)));
@@ -1358,18 +1440,25 @@ fn analyze_cong_pattern(
 ) -> QuantCongPattern {
     const BOUNDARY_SCORE: f64 = 210.0;
     const TRUE_BOUNDARY_SCORE: f64 = 260.0;
-    let (positive_totals, negative_totals) = aggregate_cong_family_scores(stem_scores, branch_scores);
+    let (positive_totals, negative_totals) =
+        aggregate_cong_family_scores(stem_scores, branch_scores);
     if total_score >= BOUNDARY_SCORE {
         let seal_peer = positive_totals.get("印").copied().unwrap_or(0.0)
             + positive_totals.get("比劫").copied().unwrap_or(0.0);
         let positive_total: f64 = positive_totals.values().sum();
         let seal_peer_dominant = seal_peer >= positive_total * 0.6;
         let true_follow = total_score >= TRUE_BOUNDARY_SCORE;
-        let subtype = if seal_peer_dominant { "專旺印比" } else { "從強" };
+        let subtype = if seal_peer_dominant {
+            "專旺印比"
+        } else {
+            "從強"
+        };
         let dominant = if seal_peer_dominant {
             "印比".to_string()
         } else {
-            dominant_map_key(&positive_totals).unwrap_or("比劫").to_string()
+            dominant_map_key(&positive_totals)
+                .unwrap_or("比劫")
+                .to_string()
         };
         return QuantCongPattern {
             method_summary: "第十篇〈從格〉：先看命局是否跨過 ±210 臨界，再以 ±260 區分真從 / 假從，並依主導十神家族判別從強、專旺、從弱子類與可用神。".to_string(),
@@ -1493,7 +1582,9 @@ fn analyze_sha_yin(
     let stem_pattern = resolve_stem_sha_yin_pattern(&day_element, total_score, stem_scores);
     let branch_pattern = resolve_branch_sha_yin_pattern(&day_element, total_score, branch_scores);
     QuantShaYin {
-        method_summary: "第九篇殺印相生：先看年干殺、月干印、日元是否成鏈，再看印能否承受殺；地支只接受純氣鏈。".to_string(),
+        method_summary:
+            "第九篇殺印相生：先看年干殺、月干印、日元是否成鏈，再看印能否承受殺；地支只接受純氣鏈。"
+                .to_string(),
         stem_pattern_found: stem_pattern.found,
         stem_transformed: stem_pattern.transformed,
         stem_chain: stem_pattern.chain.clone(),
@@ -1554,7 +1645,10 @@ fn resolve_stem_sha_yin_pattern(
         return ShaYinPattern {
             found: false,
             transformed: false,
-            chain: Some(format!("{}，不符合年干殺、月干印、月印生日元的鏈條。", chain)),
+            chain: Some(format!(
+                "{}，不符合年干殺、月干印、月印生日元的鏈條。",
+                chain
+            )),
             source_negative_score: None,
             seal_support_score: None,
             adjusted_total_score: None,
@@ -1598,9 +1692,15 @@ fn resolve_branch_sha_yin_pattern(
         };
     };
     let (chain, valid_chain) = if year.target == "酉" && month.target == "子" {
-        ("年支酉 -> 月支子 -> 木日元".to_string(), day_element == "木")
+        (
+            "年支酉 -> 月支子 -> 木日元".to_string(),
+            day_element == "木",
+        )
     } else if year.target == "子" && month.target == "卯" {
-        ("年支子 -> 月支卯 -> 火日元".to_string(), day_element == "火")
+        (
+            "年支子 -> 月支卯 -> 火日元".to_string(),
+            day_element == "火",
+        )
     } else {
         (
             "地支鏈不屬於第九篇允許的純氣殺印相生型。".to_string(),
@@ -1673,7 +1773,10 @@ fn build_sha_yin_process(
     builder
 }
 
-fn build_sha_yin_conclusion(stem_pattern: &ShaYinPattern, branch_pattern: &ShaYinPattern) -> String {
+fn build_sha_yin_conclusion(
+    stem_pattern: &ShaYinPattern,
+    branch_pattern: &ShaYinPattern,
+) -> String {
     if stem_pattern.transformed && branch_pattern.transformed {
         "天干與地支兩路殺印相生皆成立，命局負能可雙重轉正。".to_string()
     } else if stem_pattern.transformed {
@@ -1829,10 +1932,18 @@ fn add_half_combination_rows(rows: &mut Vec<QuantModelInteraction>, state: &Reso
         }
         if !candidate.transforms
             && (has_any_transform(state, &indexes)
-                || state.six_combination_effects.contains_key(&candidate.left_index)
-                || state.six_combination_effects.contains_key(&candidate.right_index)
-                || state.branch_prune_effects.contains_key(&candidate.left_index)
-                || state.branch_prune_effects.contains_key(&candidate.right_index))
+                || state
+                    .six_combination_effects
+                    .contains_key(&candidate.left_index)
+                || state
+                    .six_combination_effects
+                    .contains_key(&candidate.right_index)
+                || state
+                    .branch_prune_effects
+                    .contains_key(&candidate.left_index)
+                || state
+                    .branch_prune_effects
+                    .contains_key(&candidate.right_index))
         {
             continue;
         }
@@ -1843,13 +1954,21 @@ fn add_half_combination_rows(rows: &mut Vec<QuantModelInteraction>, state: &Reso
             } else {
                 "半合".to_string()
             },
-            target: join_pair_branches(&state.branches, candidate.left_index, candidate.right_index),
+            target: join_pair_branches(
+                &state.branches,
+                candidate.left_index,
+                candidate.right_index,
+            ),
             outcome: if candidate.transforms {
                 format!("化{}", candidate.element)
             } else {
                 "不化".to_string()
             },
-            pillars: join_pair_pillars(&state.branches, candidate.left_index, candidate.right_index),
+            pillars: join_pair_pillars(
+                &state.branches,
+                candidate.left_index,
+                candidate.right_index,
+            ),
             detail: if candidate.transforms {
                 format!("量化模型裁決為地支半合化{}", candidate.element)
             } else {
@@ -1920,7 +2039,10 @@ fn add_six_combination_rows(rows: &mut Vec<QuantModelInteraction>, state: &Resol
     }
 }
 
-fn add_static_six_combination_rows(rows: &mut Vec<QuantModelInteraction>, branches: &[BranchInput]) {
+fn add_static_six_combination_rows(
+    rows: &mut Vec<QuantModelInteraction>,
+    branches: &[BranchInput],
+) {
     for i in 0..branches.len() {
         for j in (i + 1)..branches.len() {
             let left = &branches[i];
@@ -1965,7 +2087,11 @@ fn add_stem_clash_rows(rows: &mut Vec<QuantModelInteraction>, stems: &[StemInput
                 target: format!("{}{}", left.stem, right.stem),
                 outcome: "-".to_string(),
                 pillars: join_stem_pillars(stems, &[left.position_index, right.position_index]),
-                detail: format!("量化模型裁決為天干{}，保留餘力 {}", note, round3_string(remainder)),
+                detail: format!(
+                    "量化模型裁決為天干{}，保留餘力 {}",
+                    note,
+                    round3_string(remainder)
+                ),
             });
         }
     }
@@ -1992,7 +2118,9 @@ fn add_branch_clash_rows(
         };
         details
             .entry(pair_key(left.position_index, right.position_index))
-            .or_insert_with(|| resolve_clash_detail(state, left.position_index, right.position_index, score));
+            .or_insert_with(|| {
+                resolve_clash_detail(state, left.position_index, right.position_index, score)
+            });
     }
     for (key, detail) in details {
         let (left_index, right_index) = parse_pair_key(&key);
@@ -2007,10 +2135,7 @@ fn add_branch_clash_rows(
     }
 }
 
-fn add_informational_pair_rows(
-    rows: &mut Vec<QuantModelInteraction>,
-    branches: &[BranchInput],
-) {
+fn add_informational_pair_rows(rows: &mut Vec<QuantModelInteraction>, branches: &[BranchInput]) {
     const INFO_PAIR_RULES: [(&str, &str, &str, &str); 13] = [
         ("子", "卯", "刑", "子卯相刑(無禮之刑)"),
         ("寅", "巳", "刑", "寅巳申三刑(無恩之刑)"),
@@ -2084,9 +2209,12 @@ fn has_category(
     category: &BranchTransformCategory,
     indexes: &[usize],
 ) -> bool {
-    indexes
-        .iter()
-        .all(|index| state.branch_transforms.get(index).is_some_and(|t| &t.category == category))
+    indexes.iter().all(|index| {
+        state
+            .branch_transforms
+            .get(index)
+            .is_some_and(|t| &t.category == category)
+    })
 }
 
 fn has_any_transform(state: &ResolvedChartState, indexes: &[usize]) -> bool {
@@ -2193,7 +2321,9 @@ fn join_stem_pillars(stems: &[StemInput], indexes: &[usize]) -> String {
 }
 
 fn resolve_branch_by_index(branches: &[BranchInput], index: usize) -> Option<&BranchInput> {
-    branches.iter().find(|branch| branch.position_index == index)
+    branches
+        .iter()
+        .find(|branch| branch.position_index == index)
 }
 
 fn resolve_stem_by_index(stems: &[StemInput], index: usize) -> Option<&StemInput> {
@@ -2213,7 +2343,11 @@ fn to_display_pillar(pillar: &str) -> String {
 }
 
 fn pair_key(left_index: usize, right_index: usize) -> String {
-    format!("{}-{}", left_index.min(right_index), left_index.max(right_index))
+    format!(
+        "{}-{}",
+        left_index.min(right_index),
+        left_index.max(right_index)
+    )
 }
 
 fn parse_pair_key(key: &str) -> (usize, usize) {
@@ -2237,14 +2371,19 @@ fn matches_pair(left: &str, right: &str, expected_left: &str, expected_right: &s
 fn dedupe_and_sort_interactions(rows: Vec<QuantModelInteraction>) -> Vec<QuantModelInteraction> {
     let mut unique = HashMap::<String, QuantModelInteraction>::new();
     for row in rows {
-        let key = format!("{}|{}|{}|{}", row.scope, row.r#type, row.target, row.pillars);
+        let key = format!(
+            "{}|{}|{}|{}",
+            row.scope, row.r#type, row.target, row.pillars
+        );
         unique.entry(key).or_insert(row);
     }
     let mut values = unique.into_values().collect::<Vec<_>>();
     values.sort_by(|a, b| {
         interaction_type_priority(&a.r#type)
             .cmp(&interaction_type_priority(&b.r#type))
-            .then_with(|| interaction_scope_priority(&a.scope).cmp(&interaction_scope_priority(&b.scope)))
+            .then_with(|| {
+                interaction_scope_priority(&a.scope).cmp(&interaction_scope_priority(&b.scope))
+            })
             .then_with(|| a.target.cmp(&b.target))
     });
     values
@@ -2284,11 +2423,17 @@ fn resolve_three_meeting_candidates(
     for i in 0..branches.len() {
         for j in (i + 1)..branches.len() {
             for k in (j + 1)..branches.len() {
-                if let Some((element, label)) =
-                    resolve_three_meeting(&branches[i].branch, &branches[j].branch, &branches[k].branch)
-                {
-                    let transforms =
-                        should_transform_branch_combination(&element, month_branch, stems, day_master);
+                if let Some((element, label)) = resolve_three_meeting(
+                    &branches[i].branch,
+                    &branches[j].branch,
+                    &branches[k].branch,
+                ) {
+                    let transforms = should_transform_branch_combination(
+                        &element,
+                        month_branch,
+                        stems,
+                        day_master,
+                    );
                     candidates.push(ThreeMeetingCandidate {
                         first_index: branches[i].position_index,
                         second_index: branches[j].position_index,
@@ -2314,11 +2459,17 @@ fn resolve_three_combination_candidates(
     for i in 0..branches.len() {
         for j in (i + 1)..branches.len() {
             for k in (j + 1)..branches.len() {
-                if let Some((element, label)) =
-                    resolve_three_combination(&branches[i].branch, &branches[j].branch, &branches[k].branch)
-                {
-                    let transforms =
-                        should_transform_branch_combination(&element, month_branch, stems, day_master);
+                if let Some((element, label)) = resolve_three_combination(
+                    &branches[i].branch,
+                    &branches[j].branch,
+                    &branches[k].branch,
+                ) {
+                    let transforms = should_transform_branch_combination(
+                        &element,
+                        month_branch,
+                        stems,
+                        day_master,
+                    );
                     candidates.push(ThreeCombinationCandidate {
                         first_index: branches[i].position_index,
                         second_index: branches[j].position_index,
@@ -2372,7 +2523,11 @@ fn resolve_three_meeting_transforms(
 ) -> HashMap<usize, BranchTransform> {
     let mut transforms = HashMap::new();
     for candidate in candidates.iter().filter(|item| item.transforms) {
-        for index in [candidate.first_index, candidate.second_index, candidate.third_index] {
+        for index in [
+            candidate.first_index,
+            candidate.second_index,
+            candidate.third_index,
+        ] {
             let branch = &branches[index];
             transforms.insert(
                 index,
@@ -2382,8 +2537,14 @@ fn resolve_three_meeting_transforms(
                     &candidate.element,
                     &format!("三會化{}", candidate.element),
                     &format!("三會化{}@meeting", candidate.element),
-                    resolve_three_meeting_factor(&candidate.label, branch_role(&candidate.label, &branch.branch)),
-                    resolve_three_meeting_residual_factor(&candidate.label, branch_role(&candidate.label, &branch.branch)),
+                    resolve_three_meeting_factor(
+                        &candidate.label,
+                        branch_role(&candidate.label, &branch.branch),
+                    ),
+                    resolve_three_meeting_residual_factor(
+                        &candidate.label,
+                        branch_role(&candidate.label, &branch.branch),
+                    ),
                     branch,
                 ),
             );
@@ -2406,7 +2567,11 @@ fn resolve_three_combination_transforms(
         }) {
             continue;
         }
-        for index in [candidate.first_index, candidate.second_index, candidate.third_index] {
+        for index in [
+            candidate.first_index,
+            candidate.second_index,
+            candidate.third_index,
+        ] {
             let branch = &branches[index];
             let role = branch_role(&candidate.label, &branch.branch);
             transforms.insert(
@@ -2437,8 +2602,12 @@ fn resolve_half_combination_transforms(
     for candidate in candidates.iter().filter(|item| item.transforms) {
         if is_suppressed_by_direct_clashed_specialist(candidate, branches)
             || is_suppressed_by_stacked_six_combination(candidate, branches)
-            || three_combination_candidates.iter().any(|item| item.involves(candidate.left_index) && item.involves(candidate.right_index))
-            || three_meeting_candidates.iter().any(|item| item.involves(candidate.left_index) && item.involves(candidate.right_index))
+            || three_combination_candidates.iter().any(|item| {
+                item.involves(candidate.left_index) && item.involves(candidate.right_index)
+            })
+            || three_meeting_candidates.iter().any(|item| {
+                item.involves(candidate.left_index) && item.involves(candidate.right_index)
+            })
         {
             continue;
         }
@@ -2484,15 +2653,30 @@ fn resolve_six_combination_transforms(
         for j in (i + 1)..branches.len() {
             let left = &branches[i];
             let right = &branches[j];
-            if distance(left.position_index, right.position_index) != 1 || !is_six_combination(&left.branch, &right.branch) {
+            if distance(left.position_index, right.position_index) != 1
+                || !is_six_combination(&left.branch, &right.branch)
+            {
                 continue;
             }
             let element = resolve_six_combination_element(&left.branch, &right.branch);
-            if existing_transforms.get(&left.position_index).is_some_and(|item| !can_participate_in_second_transform(&left.branch, item, &element))
-                || existing_transforms.get(&right.position_index).is_some_and(|item| !can_participate_in_second_transform(&right.branch, item, &element))
+            if existing_transforms
+                .get(&left.position_index)
+                .is_some_and(|item| {
+                    !can_participate_in_second_transform(&left.branch, item, &element)
+                })
+                || existing_transforms
+                    .get(&right.position_index)
+                    .is_some_and(|item| {
+                        !can_participate_in_second_transform(&right.branch, item, &element)
+                    })
                 || has_stronger_three_combination(left, right, three_combination_candidates)
                 || has_stronger_three_meeting(left, right, three_meeting_candidates)
-                || has_active_stronger_half_combination(left, right, branches, half_combination_candidates)
+                || has_active_stronger_half_combination(
+                    left,
+                    right,
+                    branches,
+                    half_combination_candidates,
+                )
                 || !should_transform_branch_combination(&element, month_branch, stems, day_master)
             {
                 continue;
@@ -2578,7 +2762,9 @@ fn resolve_branch_prune_effects(branches: &[BranchInput]) -> HashMap<usize, Bran
         for j in (i + 1)..branches.len() {
             let left = &branches[i];
             let right = &branches[j];
-            if is_chen_xu_pair(&left.branch, &right.branch) && distance(left.position_index, right.position_index) == 1 {
+            if is_chen_xu_pair(&left.branch, &right.branch)
+                && distance(left.position_index, right.position_index) == 1
+            {
                 effects.insert(
                     left.position_index,
                     BranchPruneEffect {
@@ -2630,7 +2816,12 @@ fn resolve_branch_qi_modifiers(
             if !is_direct_clash(&left.branch, &right.branch)
                 || dist > 2
                 || should_suppress_clash_by_six_combination(left, right, six_combination_effects)
-                || should_suppress_clash_by_three_meeting(left, right, dist, three_meeting_candidates)
+                || should_suppress_clash_by_three_meeting(
+                    left,
+                    right,
+                    dist,
+                    three_meeting_candidates,
+                )
             {
                 continue;
             }
@@ -2639,12 +2830,24 @@ fn resolve_branch_qi_modifiers(
             merge_branch_qi_modifier_into(
                 &mut modifiers,
                 left.position_index,
-                build_branch_clash_qi_modifier(&left.branch, &right.branch, clash_type, affected_multiplier, dist),
+                build_branch_clash_qi_modifier(
+                    &left.branch,
+                    &right.branch,
+                    clash_type,
+                    affected_multiplier,
+                    dist,
+                ),
             );
             merge_branch_qi_modifier_into(
                 &mut modifiers,
                 right.position_index,
-                build_branch_clash_qi_modifier(&right.branch, &left.branch, clash_type, affected_multiplier, dist),
+                build_branch_clash_qi_modifier(
+                    &right.branch,
+                    &left.branch,
+                    clash_type,
+                    affected_multiplier,
+                    dist,
+                ),
             );
         }
     }
@@ -2681,10 +2884,12 @@ fn resolve_stem_combination_effects(
             if distance(left.position_index, right.position_index) > 1 {
                 continue;
             }
-            let Some((pair, target_element)) = resolve_stem_combination(&left.stem, &right.stem) else {
+            let Some((pair, target_element)) = resolve_stem_combination(&left.stem, &right.stem)
+            else {
                 continue;
             };
-            let month_element = resolve_stem_combination_month_element(month_branch, month_transform);
+            let month_element =
+                resolve_stem_combination_month_element(month_branch, month_transform);
             let transforms = month_element == target_element;
             let effect = StemCombinationEffect {
                 pair: pair.clone(),
@@ -2858,7 +3063,11 @@ fn resolve_natural_stem_root(
             best = stronger_root(
                 best,
                 RootApplication {
-                    level: if index == 0 { RootLevel::Middle } else { RootLevel::Minor },
+                    level: if index == 0 {
+                        RootLevel::Middle
+                    } else {
+                        RootLevel::Minor
+                    },
                     support_stem: hidden_stem.clone(),
                     reason: if index == 0 {
                         "藏干同干（主氣）".to_string()
@@ -2915,7 +3124,10 @@ fn resolve_branch_transparencies(
     let hidden_element = stem_element(hidden_stem);
     let mut matches = Vec::new();
     for stem in stems {
-        if branch_prune_blocks_stem(branch_prune_effects.get(&branch.position_index), hidden_stem) {
+        if branch_prune_blocks_stem(
+            branch_prune_effects.get(&branch.position_index),
+            hidden_stem,
+        ) {
             break;
         }
         let visible_element = stem_element(&stem.stem);
@@ -2992,7 +3204,10 @@ fn resolve_transformed_branch_transparencies(
     matches
 }
 
-fn resolve_branch_interaction(input: &BranchInput, state: &ResolvedChartState) -> BranchInteraction {
+fn resolve_branch_interaction(
+    input: &BranchInput,
+    state: &ResolvedChartState,
+) -> BranchInteraction {
     if state.branch_transforms.contains_key(&input.position_index) {
         return BranchInteraction::none();
     }
@@ -3015,15 +3230,21 @@ fn resolve_branch_interaction(input: &BranchInput, state: &ResolvedChartState) -
             if is_chen_xu_pair(&input.branch, &other.branch) && dist >= 2 {
                 continue;
             }
-            if should_suppress_clash_by_six_combination(input, other, &state.six_combination_effects)
-                || should_suppress_clash_by_three_meeting(
-                    input,
-                    other,
-                    dist,
-                    &state.three_meeting_candidates,
-                )
-                || state.branch_prune_effects.contains_key(&input.position_index)
-                || state.branch_prune_effects.contains_key(&other.position_index)
+            if should_suppress_clash_by_six_combination(
+                input,
+                other,
+                &state.six_combination_effects,
+            ) || should_suppress_clash_by_three_meeting(
+                input,
+                other,
+                dist,
+                &state.three_meeting_candidates,
+            ) || state
+                .branch_prune_effects
+                .contains_key(&input.position_index)
+                || state
+                    .branch_prune_effects
+                    .contains_key(&other.position_index)
             {
                 continue;
             }
@@ -3062,7 +3283,10 @@ fn resolve_branch_interaction(input: &BranchInput, state: &ResolvedChartState) -
     best
 }
 
-fn stronger_interaction(current: BranchInteraction, candidate: BranchInteraction) -> BranchInteraction {
+fn stronger_interaction(
+    current: BranchInteraction,
+    candidate: BranchInteraction,
+) -> BranchInteraction {
     if candidate.priority > current.priority {
         candidate
     } else {
@@ -3092,9 +3316,15 @@ fn should_transform_branch_combination(
     !controls(&month_element, target_element)
 }
 
-fn has_visible_transforming_stem(target_element: &str, stems: &[StemInput], day_master: &str) -> bool {
+fn has_visible_transforming_stem(
+    target_element: &str,
+    stems: &[StemInput],
+    day_master: &str,
+) -> bool {
     stem_element(day_master) == target_element
-        || stems.iter().any(|item| stem_element(&item.stem) == target_element)
+        || stems
+            .iter()
+            .any(|item| stem_element(&item.stem) == target_element)
 }
 
 fn create_branch_transform(
@@ -3120,7 +3350,9 @@ fn create_branch_transform(
         interaction: note.to_string(),
         factor,
         transparency_base_factor: factor,
-        root_factor: if category == BranchTransformCategory::SixCombination && residual_factor <= 0.0 {
+        root_factor: if category == BranchTransformCategory::SixCombination
+            && residual_factor <= 0.0
+        {
             1.0
         } else {
             factor
@@ -3287,7 +3519,8 @@ fn is_suppressed_by_stacked_six_combination(
 ) -> bool {
     let left = &branches[candidate.left_index];
     let right = &branches[candidate.right_index];
-    stacked_six_combination_power_for_pair(left, right, branches) > half_combination_power(candidate)
+    stacked_six_combination_power_for_pair(left, right, branches)
+        > half_combination_power(candidate)
 }
 
 fn has_active_stronger_half_combination(
@@ -3298,7 +3531,8 @@ fn has_active_stronger_half_combination(
 ) -> bool {
     half_combination_candidates.iter().any(|candidate| {
         (candidate.involves(left.position_index) || candidate.involves(right.position_index))
-            && !(candidate.involves(left.position_index) && candidate.involves(right.position_index))
+            && !(candidate.involves(left.position_index)
+                && candidate.involves(right.position_index))
             && stacked_six_combination_power_for_pair(left, right, branches)
                 < half_combination_power(candidate)
             && (candidate.distance <= 1 || candidate.transforms)
@@ -3313,7 +3547,8 @@ fn has_stronger_half_combination(
 ) -> bool {
     candidates.iter().any(|candidate| {
         (candidate.involves(input.position_index) || candidate.involves(other.position_index))
-            && !(candidate.involves(input.position_index) && candidate.involves(other.position_index))
+            && !(candidate.involves(input.position_index)
+                && candidate.involves(other.position_index))
             && stacked_six_combination_power_for_pair(input, other, branches)
                 < half_combination_power(candidate)
             && (candidate.distance <= 1 || candidate.transforms)
@@ -3327,7 +3562,8 @@ fn has_stronger_three_combination(
 ) -> bool {
     candidates.iter().any(|candidate| {
         (candidate.involves(input.position_index) || candidate.involves(other.position_index))
-            && !(candidate.involves(input.position_index) && candidate.involves(other.position_index))
+            && !(candidate.involves(input.position_index)
+                && candidate.involves(other.position_index))
     })
 }
 
@@ -3338,7 +3574,8 @@ fn has_stronger_three_meeting(
 ) -> bool {
     candidates.iter().any(|candidate| {
         (candidate.involves(input.position_index) || candidate.involves(other.position_index))
-            && !(candidate.involves(input.position_index) && candidate.involves(other.position_index))
+            && !(candidate.involves(input.position_index)
+                && candidate.involves(other.position_index))
     })
 }
 
@@ -3348,7 +3585,8 @@ fn should_suppress_clash_by_six_combination(
     effects: &HashMap<usize, SixCombinationEffect>,
 ) -> bool {
     distance(input.position_index, other.position_index) > 1
-        && (effects.contains_key(&input.position_index) || effects.contains_key(&other.position_index))
+        && (effects.contains_key(&input.position_index)
+            || effects.contains_key(&other.position_index))
 }
 
 fn should_suppress_clash_by_three_meeting(
@@ -3361,7 +3599,9 @@ fn should_suppress_clash_by_three_meeting(
         && candidates
             .iter()
             .filter(|candidate| !candidate.transforms)
-            .any(|candidate| candidate.involves(input.position_index) || candidate.involves(other.position_index))
+            .any(|candidate| {
+                candidate.involves(input.position_index) || candidate.involves(other.position_index)
+            })
 }
 
 fn is_protected_by_non_transform_three_meeting(
@@ -3414,7 +3654,10 @@ fn merge_branch_qi_modifier_into(
     target.insert(index, merged);
 }
 
-fn merge_branch_qi_modifier(current: &BranchQiModifier, incoming: &BranchQiModifier) -> BranchQiModifier {
+fn merge_branch_qi_modifier(
+    current: &BranchQiModifier,
+    incoming: &BranchQiModifier,
+) -> BranchQiModifier {
     let mut stem_multipliers = current.stem_multipliers.clone();
     for (key, value) in &incoming.stem_multipliers {
         let merged = stem_multipliers.get(key).copied().unwrap_or(1.0) * value;
@@ -3451,19 +3694,43 @@ fn build_branch_clash_qi_modifier(
             .map(|stem| (stem, affected_multiplier))
             .collect(),
         BranchClashType::Growth => match branch {
-            "寅" => vec![("甲".to_string(), affected_multiplier), ("丙".to_string(), affected_multiplier)],
-            "申" => vec![("庚".to_string(), affected_multiplier), ("壬".to_string(), affected_multiplier)],
-            "巳" => vec![("丙".to_string(), affected_multiplier), ("庚".to_string(), affected_multiplier)],
-            "亥" => vec![("壬".to_string(), affected_multiplier), ("甲".to_string(), affected_multiplier)],
+            "寅" => vec![
+                ("甲".to_string(), affected_multiplier),
+                ("丙".to_string(), affected_multiplier),
+            ],
+            "申" => vec![
+                ("庚".to_string(), affected_multiplier),
+                ("壬".to_string(), affected_multiplier),
+            ],
+            "巳" => vec![
+                ("丙".to_string(), affected_multiplier),
+                ("庚".to_string(), affected_multiplier),
+            ],
+            "亥" => vec![
+                ("壬".to_string(), affected_multiplier),
+                ("甲".to_string(), affected_multiplier),
+            ],
             _ => Vec::new(),
         }
         .into_iter()
         .collect(),
         BranchClashType::Storage => match branch {
-            "辰" => vec![("乙".to_string(), affected_multiplier), ("癸".to_string(), affected_multiplier)],
-            "戌" => vec![("辛".to_string(), affected_multiplier), ("丁".to_string(), affected_multiplier)],
-            "丑" => vec![("癸".to_string(), affected_multiplier), ("辛".to_string(), affected_multiplier)],
-            "未" => vec![("丁".to_string(), affected_multiplier), ("乙".to_string(), affected_multiplier)],
+            "辰" => vec![
+                ("乙".to_string(), affected_multiplier),
+                ("癸".to_string(), affected_multiplier),
+            ],
+            "戌" => vec![
+                ("辛".to_string(), affected_multiplier),
+                ("丁".to_string(), affected_multiplier),
+            ],
+            "丑" => vec![
+                ("癸".to_string(), affected_multiplier),
+                ("辛".to_string(), affected_multiplier),
+            ],
+            "未" => vec![
+                ("丁".to_string(), affected_multiplier),
+                ("乙".to_string(), affected_multiplier),
+            ],
             _ => Vec::new(),
         }
         .into_iter()
@@ -3480,7 +3747,9 @@ fn build_branch_clash_qi_modifier(
         HashMap::new()
     };
     let note = match clash_type {
-        BranchClashType::Specialist => clash_type_distance_note("專氣相沖", dist, affected_multiplier),
+        BranchClashType::Specialist => {
+            clash_type_distance_note("專氣相沖", dist, affected_multiplier)
+        }
         BranchClashType::Growth => clash_type_distance_note("長生相沖", dist, affected_multiplier),
         BranchClashType::Storage => clash_type_distance_note("墓庫相沖", dist, affected_multiplier),
     };
@@ -3538,7 +3807,8 @@ fn aggregate_family_scores(
             for row in rows {
                 if let Some(ten_god) = &row.ten_god {
                     if let Some(family) = family_of(ten_god) {
-                        *totals.entry(family).or_insert(0.0) += row.final_contribution.unwrap_or(0.0);
+                        *totals.entry(family).or_insert(0.0) +=
+                            row.final_contribution.unwrap_or(0.0);
                     }
                 }
             }
@@ -3818,10 +4088,26 @@ fn split_gan_zhi(value: &str) -> Option<(String, String)> {
 
 fn resolve_half_combination(a: &str, b: &str) -> Option<(String, String, String)> {
     match sorted_pair(a, b).as_str() {
-        "午寅" | "午戌" => Some(("火".to_string(), "半合化火".to_string(), "半合化火".to_string())),
-        "亥卯" | "卯未" => Some(("木".to_string(), "半合化木".to_string(), "半合化木".to_string())),
-        "子申" | "子辰" => Some(("水".to_string(), "半合化水".to_string(), "半合化水".to_string())),
-        "丑酉" | "巳酉" => Some(("金".to_string(), "半合化金".to_string(), "半合化金".to_string())),
+        "午寅" | "午戌" => Some((
+            "火".to_string(),
+            "半合化火".to_string(),
+            "半合化火".to_string(),
+        )),
+        "亥卯" | "卯未" => Some((
+            "木".to_string(),
+            "半合化木".to_string(),
+            "半合化木".to_string(),
+        )),
+        "子申" | "子辰" => Some((
+            "水".to_string(),
+            "半合化水".to_string(),
+            "半合化水".to_string(),
+        )),
+        "丑酉" | "巳酉" => Some((
+            "金".to_string(),
+            "半合化金".to_string(),
+            "半合化金".to_string(),
+        )),
         _ => None,
     }
 }
@@ -3940,15 +4226,35 @@ fn resolve_ten_god(day_master_stem: &str, other_stem: &str) -> String {
     let other = stem_element(other_stem);
     let same_polarity = same_polarity(day_master_stem, other_stem);
     if dm == other {
-        if same_polarity { "比肩" } else { "劫財" }
+        if same_polarity {
+            "比肩"
+        } else {
+            "劫財"
+        }
     } else if generates(&other, &dm) {
-        if same_polarity { "偏印" } else { "正印" }
+        if same_polarity {
+            "偏印"
+        } else {
+            "正印"
+        }
     } else if generates(&dm, &other) {
-        if same_polarity { "食神" } else { "傷官" }
+        if same_polarity {
+            "食神"
+        } else {
+            "傷官"
+        }
     } else if controls(&dm, &other) {
-        if same_polarity { "偏財" } else { "正財" }
+        if same_polarity {
+            "偏財"
+        } else {
+            "正財"
+        }
     } else if controls(&other, &dm) {
-        if same_polarity { "七殺" } else { "正官" }
+        if same_polarity {
+            "七殺"
+        } else {
+            "正官"
+        }
     } else {
         "未知"
     }
@@ -3999,11 +4305,41 @@ fn resolve_branch_hidden_stem_score(
 
 fn stem_for_element(element: &str, yang: bool) -> String {
     match element {
-        "木" => if yang { "甲" } else { "乙" },
-        "火" => if yang { "丙" } else { "丁" },
-        "土" => if yang { "戊" } else { "己" },
-        "金" => if yang { "庚" } else { "辛" },
-        "水" => if yang { "壬" } else { "癸" },
+        "木" => {
+            if yang {
+                "甲"
+            } else {
+                "乙"
+            }
+        }
+        "火" => {
+            if yang {
+                "丙"
+            } else {
+                "丁"
+            }
+        }
+        "土" => {
+            if yang {
+                "戊"
+            } else {
+                "己"
+            }
+        }
+        "金" => {
+            if yang {
+                "庚"
+            } else {
+                "辛"
+            }
+        }
+        "水" => {
+            if yang {
+                "壬"
+            } else {
+                "癸"
+            }
+        }
         _ => "",
     }
     .to_string()
@@ -4095,7 +4431,10 @@ fn resolve_six_combination_residual_factor(branch: &BranchInput, element: &str) 
     }
 }
 
-fn resolve_half_combination_factor(candidate: &HalfCombinationCandidate, branch: &BranchInput) -> f64 {
+fn resolve_half_combination_factor(
+    candidate: &HalfCombinationCandidate,
+    branch: &BranchInput,
+) -> f64 {
     if is_half_combination_specialist(&branch.branch, &candidate.element) {
         match normalize_distance(candidate.distance) {
             1 => 1.2,
@@ -4134,10 +4473,7 @@ fn resolve_three_combination_factor(_label: &str, role: CombinationBranchRole) -
     }
 }
 
-fn resolve_three_combination_residual_factor(
-    _label: &str,
-    role: CombinationBranchRole,
-) -> f64 {
+fn resolve_three_combination_residual_factor(_label: &str, role: CombinationBranchRole) -> f64 {
     if role == CombinationBranchRole::Specialist {
         0.0
     } else {
@@ -4153,10 +4489,7 @@ fn resolve_three_meeting_factor(_label: &str, role: CombinationBranchRole) -> f6
     }
 }
 
-fn resolve_three_meeting_residual_factor(
-    _label: &str,
-    role: CombinationBranchRole,
-) -> f64 {
+fn resolve_three_meeting_residual_factor(_label: &str, role: CombinationBranchRole) -> f64 {
     if role == CombinationBranchRole::Storage {
         0.2
     } else {
@@ -4192,7 +4525,10 @@ fn is_stem_clash(a: &str, b: &str) -> bool {
 
 fn is_supported_stem_clash_distance(left: &StemInput, right: &StemInput, dist: usize) -> bool {
     dist == 1
-        || (dist == 2 && left.pillar == "月干" && right.pillar == "時干" && sorted_pair(&left.stem, &right.stem) == "庚甲")
+        || (dist == 2
+            && left.pillar == "月干"
+            && right.pillar == "時干"
+            && sorted_pair(&left.stem, &right.stem) == "庚甲")
 }
 
 fn stem_clash_remainder(dist: usize) -> f64 {
@@ -4222,9 +4558,15 @@ fn is_direct_clash(a: &str, b: &str) -> bool {
 }
 
 fn classify_branch_clash(a: &str, b: &str) -> BranchClashType {
-    if matches!((a, b), ("子", "午") | ("午", "子") | ("卯", "酉") | ("酉", "卯")) {
+    if matches!(
+        (a, b),
+        ("子", "午") | ("午", "子") | ("卯", "酉") | ("酉", "卯")
+    ) {
         BranchClashType::Specialist
-    } else if matches!((a, b), ("寅", "申") | ("申", "寅") | ("巳", "亥") | ("亥", "巳")) {
+    } else if matches!(
+        (a, b),
+        ("寅", "申") | ("申", "寅") | ("巳", "亥") | ("亥", "巳")
+    ) {
         BranchClashType::Growth
     } else {
         BranchClashType::Storage
@@ -4395,7 +4737,11 @@ fn resolve_month_main_stem(month_branch: &BranchInput) -> String {
             .next()
             .unwrap_or_default()
     } else {
-        month_branch.hidden_stems.first().cloned().unwrap_or_default()
+        month_branch
+            .hidden_stems
+            .first()
+            .cloned()
+            .unwrap_or_default()
     }
 }
 
@@ -4532,7 +4878,10 @@ fn ratio(delta: f64, natal_total: f64) -> f64 {
     }
 }
 
-fn element_relation_score(day_element: tyme4rs::tyme::culture::Element, target_element: tyme4rs::tyme::culture::Element) -> f64 {
+fn element_relation_score(
+    day_element: tyme4rs::tyme::culture::Element,
+    target_element: tyme4rs::tyme::culture::Element,
+) -> f64 {
     if day_element == target_element {
         1.0
     } else if (target_element.get_index() + 1) % 5 == day_element.get_index() {
