@@ -26,6 +26,10 @@
       </el-descriptions-item>
       <el-descriptions-item label="日主">{{ result.dayMaster }}</el-descriptions-item>
       <el-descriptions-item label="格局">{{ result.geJu }}</el-descriptions-item>
+      <el-descriptions-item label="特殊格局">{{ specialPatternSummary }}</el-descriptions-item>
+      <el-descriptions-item v-if="specialPatternBasis" label="特殊格局取格" :span="fullSpan">
+        {{ specialPatternBasis }}
+      </el-descriptions-item>
       <el-descriptions-item label="格局依據">{{ result.geJuBasis }}</el-descriptions-item>
       <el-descriptions-item label="胎元">{{ result.taiYuan }}</el-descriptions-item>
       <el-descriptions-item label="命宮">{{ result.mingGong }}</el-descriptions-item>
@@ -97,6 +101,24 @@ const BRANCH_WUXING: Record<string, WuXing> = {
 const luckStart = computed(() => props.result.luckStart);
 const descriptionColumns = computed(() => (props.compact ? 1 : 2));
 const fullSpan = computed(() => (props.compact ? 1 : 2));
+const specialPatternSummary = computed(() => {
+  const special = props.result.quantModel?.specialPattern;
+  const normal = `正格：${props.result.geJu}`;
+  if (!special?.primaryPattern) {
+    return `${normal}；特殊格：未成`;
+  }
+  return `${normal}；特殊格：${special.primaryPattern}`;
+});
+const specialPatternBasis = computed(() => {
+  const special = props.result.quantModel?.specialPattern;
+  if (!special) {
+    return "";
+  }
+  if (special.primaryPattern || !special.rejectionReasons.length) {
+    return special.process;
+  }
+  return `${special.process} 未成原因：${special.rejectionReasons.join("；")}`;
+});
 const hasExactLuckTiming = computed(
   () =>
     !!luckStart.value &&

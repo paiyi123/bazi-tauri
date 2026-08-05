@@ -265,6 +265,18 @@ export interface QuantCongPattern {
   conclusion: string;
 }
 
+export interface QuantSpecialPattern {
+  primaryPattern?: string | null;
+  category: string;
+  authenticity: string;
+  normalPatternReference: string;
+  specialUseGods: string[];
+  specialAvoidGods: string[];
+  process: string;
+  conclusion: string;
+  rejectionReasons: string[];
+}
+
 export interface QuantShaYin {
   methodSummary: string;
   stemPatternFound: boolean;
@@ -293,6 +305,7 @@ export interface QuantModelResponse {
   strengthLabel: string;
   yongShen?: QuantYongShen;
   congPattern?: QuantCongPattern;
+  specialPattern?: QuantSpecialPattern;
   shaYin?: QuantShaYin;
   interactions?: QuantModelInteraction[];
   stemScores: QuantModelPillarScore[];

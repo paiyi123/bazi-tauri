@@ -119,6 +119,41 @@
         </el-descriptions-item>
       </el-descriptions>
 
+      <div v-if="specialPattern" class="subsection-title">特殊格局用神</div>
+      <el-descriptions v-if="specialPattern" :column="1" border class="analysis-box">
+        <el-descriptions-item label="正格參照">
+          {{ specialPattern.normalPatternReference }}
+        </el-descriptions-item>
+        <el-descriptions-item label="特殊格局">
+          {{ specialPattern.primaryPattern || "未成" }}；{{ specialPattern.category }}；{{ specialPattern.authenticity }}
+        </el-descriptions-item>
+        <el-descriptions-item v-if="specialPattern.specialUseGods.length" label="特殊格可用">
+          <div class="tag-list">
+            <el-tag v-for="item in specialPattern.specialUseGods" :key="`special-use-${item}`" type="success">
+              {{ item }}
+            </el-tag>
+          </div>
+        </el-descriptions-item>
+        <el-descriptions-item v-if="specialPattern.specialAvoidGods.length" label="特殊格忌神">
+          <div class="tag-list">
+            <el-tag v-for="item in specialPattern.specialAvoidGods" :key="`special-avoid-${item}`" type="danger">
+              {{ item }}
+            </el-tag>
+          </div>
+        </el-descriptions-item>
+        <el-descriptions-item label="判斷過程">
+          {{ specialPattern.process }}
+        </el-descriptions-item>
+        <el-descriptions-item v-if="specialPattern.rejectionReasons.length" label="未成原因">
+          <ul class="reason-list">
+            <li v-for="reason in specialPattern.rejectionReasons" :key="reason">{{ reason }}</li>
+          </ul>
+        </el-descriptions-item>
+        <el-descriptions-item label="結論">
+          {{ specialPattern.conclusion }}
+        </el-descriptions-item>
+      </el-descriptions>
+
       <div v-if="shaYin" class="subsection-title">殺印相生分析</div>
       <el-descriptions v-if="shaYin" :column="1" border class="analysis-box">
         <el-descriptions-item label="方法">
@@ -163,6 +198,7 @@ const props = defineProps<{
 
 const yongShen = computed(() => props.result.quantModel?.yongShen);
 const congPattern = computed(() => props.result.quantModel?.congPattern);
+const specialPattern = computed(() => props.result.quantModel?.specialPattern);
 const shaYin = computed(() => props.result.quantModel?.shaYin);
 </script>
 
@@ -187,6 +223,11 @@ const shaYin = computed(() => props.result.quantModel?.shaYin);
   margin-top: 8px;
   color: var(--el-text-color-secondary);
   font-size: calc(13px * var(--app-font-scale));
+}
+
+.reason-list {
+  margin: 0;
+  padding-left: 18px;
 }
 
 

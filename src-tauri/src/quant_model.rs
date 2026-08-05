@@ -1,7 +1,7 @@
 use crate::bazi::{
     DaYunDto, LiuNianDto, QuantAnnualLuckScore, QuantCongPattern, QuantLuckScore,
     QuantModelInteraction, QuantModelPillarScore, QuantModelResponse, QuantModelSubScore,
-    QuantShaYin, QuantYongShen,
+    QuantShaYin, QuantSpecialPattern, QuantYongShen,
 };
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap};
@@ -323,6 +323,7 @@ pub(crate) fn build_quant_model_response(
     day_master: HeavenStem,
     natal_cycles: &[SixtyCycle; 4],
     da_yun: &[DaYunDto],
+    normal_pattern_reference: &str,
 ) -> QuantModelResponse {
     let day_master_name = stem_name(day_master.clone());
     let inputs = build_natal_inputs(natal_cycles);
@@ -358,6 +359,12 @@ pub(crate) fn build_quant_model_response(
         &bundle.stem_scores,
         &bundle.branch_scores,
     ));
+    let special_pattern = Some(analyze_special_pattern(
+        normal_pattern_reference,
+        total,
+        &bundle,
+        cong_pattern.as_ref().expect("cong pattern should exist"),
+    ));
     let sha_yin = Some(analyze_sha_yin(
         &day_master_name,
         total,
@@ -380,6 +387,7 @@ pub(crate) fn build_quant_model_response(
         strength_label,
         yong_shen,
         cong_pattern,
+        special_pattern,
         sha_yin,
         interactions,
         stem_scores: bundle.stem_scores,
@@ -1570,6 +1578,211 @@ fn analyze_cong_pattern(
         ),
         conclusion: format!("此局屬不從，應回到{}的正格判法。", if total_score >= 0.0 { "身強" } else { "身弱" }),
     }
+}
+
+fn analyze_special_pattern(
+    normal_pattern_reference: &str,
+    total_score: f64,
+    bundle: &ResolvedScoreBundle,
+    cong_pattern: &QuantCongPattern,
+) -> QuantSpecialPattern {
+    let mut rejection_reasons = Vec::new();
+    if cong_pattern.pattern != "不從" {
+        let primary_pattern = if cong_pattern.pattern == "從弱" {
+            cong_pattern.subtype.clone()
+        } else {
+            cong_pattern.authenticity.clone()
+        };
+        return QuantSpecialPattern {
+            primary_pattern: Some(primary_pattern.clone()),
+            category: "從格/專旺".to_string(),
+            authenticity: cong_pattern.authenticity.clone(),
+            normal_pattern_reference: normal_pattern_reference.to_string(),
+            special_use_gods: cong_pattern
+                .primary_use_gods
+                .iter()
+                .chain(cong_pattern.secondary_use_gods.iter())
+                .cloned()
+                .collect(),
+            special_avoid_gods: cong_pattern.avoid_gods.clone(),
+            process: format!(
+                "先以月令正格「{}」作參照；命局總分 {:.1}，{}，故特殊格局採{}。",
+                normal_pattern_reference, total_score, cong_pattern.process, primary_pattern
+            ),
+            conclusion: format!(
+                "特殊格成立：{}。正格用神保留參考，特殊格用神另以順勢為主。",
+                primary_pattern
+            ),
+            rejection_reasons,
+        };
+    }
+
+    rejection_reasons.push(format!("從格/專旺未成立：{}", cong_pattern.process));
+
+    if let Some(pattern) =
+        analyze_transformation_pattern(normal_pattern_reference, &bundle.resolved_state, bundle)
+    {
+        return pattern;
+    }
+    rejection_reasons.extend(transformation_rejection_reasons(&bundle.resolved_state));
+
+    if let Some(pattern) = analyze_two_element_pattern(normal_pattern_reference, bundle) {
+        return pattern;
+    }
+    rejection_reasons
+        .push("兩神成象未成立：五行分布未達兩行高度集中，或其餘五行仍有破局力量。".to_string());
+
+    QuantSpecialPattern {
+        primary_pattern: None,
+        category: "未成".to_string(),
+        authenticity: "不成立".to_string(),
+        normal_pattern_reference: normal_pattern_reference.to_string(),
+        special_use_gods: Vec::new(),
+        special_avoid_gods: Vec::new(),
+        process: format!(
+            "以月令正格「{}」作參照，依序檢查從格/專旺、化氣格、兩神成象，皆未達嚴格成格門檻。",
+            normal_pattern_reference
+        ),
+        conclusion: "特殊格局未成，仍以正格與既有用神分析為主。".to_string(),
+        rejection_reasons,
+    }
+}
+
+fn transformation_rejection_reasons(state: &ResolvedChartState) -> Vec<String> {
+    let mut reasons = Vec::new();
+    let mut seen_pairs = BTreeSet::new();
+    for effect in state.stem_combination_effects.values() {
+        if !seen_pairs.insert(effect.pair.clone()) {
+            continue;
+        }
+        if effect.transforms {
+            reasons.push(format!(
+                "化氣格未成立：{}已得化氣條件，但化神未達全局明顯占優門檻。",
+                effect.pair
+            ));
+        } else {
+            reasons.push(format!(
+                "化氣格未成立：{}合而不化，不能判作{}化{}格。",
+                effect.pair, effect.pair, effect.target_element
+            ));
+        }
+    }
+    if reasons.is_empty() {
+        reasons.push("化氣格未成立：未見天干五合得月令或地支化局支援且化神明顯占優。".to_string());
+    }
+    reasons
+}
+
+fn analyze_transformation_pattern(
+    normal_pattern_reference: &str,
+    state: &ResolvedChartState,
+    bundle: &ResolvedScoreBundle,
+) -> Option<QuantSpecialPattern> {
+    let element_scores =
+        aggregate_element_magnitude_scores(&bundle.stem_scores, &bundle.branch_scores);
+    let total_magnitude: f64 = element_scores.values().sum();
+    if total_magnitude < 0.1 {
+        return None;
+    }
+
+    let mut seen_pairs = BTreeSet::new();
+    for effect in state.stem_combination_effects.values() {
+        if !seen_pairs.insert(effect.pair.clone()) || !effect.transforms {
+            continue;
+        }
+        let target_score = element_scores
+            .get(&effect.target_element)
+            .copied()
+            .unwrap_or(0.0);
+        let second_score = element_scores
+            .iter()
+            .filter(|(element, _)| *element != &effect.target_element)
+            .map(|(_, value)| *value)
+            .fold(0.0, f64::max);
+        if target_score >= total_magnitude * 0.4 && target_score >= second_score * 1.25 {
+            let pattern = format!("{}化{}格", effect.pair, effect.target_element);
+            return Some(QuantSpecialPattern {
+                primary_pattern: Some(pattern.clone()),
+                category: "化氣格".to_string(),
+                authenticity: "嚴格成立".to_string(),
+                normal_pattern_reference: normal_pattern_reference.to_string(),
+                special_use_gods: vec![effect.target_element.clone()],
+                special_avoid_gods: elements_except(&[effect.target_element.as_str()]),
+                process: format!(
+                    "先以月令正格「{}」作參照；{}，且化神{}占全局量化力 {:.1}% ，高於次強五行，故按嚴格化氣格成立。",
+                    normal_pattern_reference,
+                    effect.note,
+                    effect.target_element,
+                    target_score / total_magnitude * 100.0
+                ),
+                conclusion: format!(
+                    "特殊格成立：{}。特殊格用神以化神{}為主，正格用神另作參考。",
+                    pattern, effect.target_element
+                ),
+                rejection_reasons: Vec::new(),
+            });
+        }
+    }
+
+    None
+}
+
+fn analyze_two_element_pattern(
+    normal_pattern_reference: &str,
+    bundle: &ResolvedScoreBundle,
+) -> Option<QuantSpecialPattern> {
+    let mut element_scores =
+        aggregate_element_magnitude_scores(&bundle.stem_scores, &bundle.branch_scores)
+            .into_iter()
+            .collect::<Vec<_>>();
+    element_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
+    let total: f64 = element_scores.iter().map(|(_, value)| *value).sum();
+    if total < 0.1 || element_scores.len() < 2 {
+        return None;
+    }
+
+    let (first, first_score) = &element_scores[0];
+    let (second, second_score) = &element_scores[1];
+    let third_score = element_scores
+        .get(2)
+        .map(|(_, value)| *value)
+        .unwrap_or(0.0);
+    let top_two_ratio = (first_score + second_score) / total;
+    let third_ratio = third_score / total;
+    if top_two_ratio < 0.82 || third_ratio > 0.15 {
+        return None;
+    }
+
+    let ordered = if generates_element(first, second) {
+        (first.clone(), second.clone())
+    } else if generates_element(second, first) {
+        (second.clone(), first.clone())
+    } else {
+        return None;
+    };
+    let pattern = format!("{}{}成象", ordered.0, ordered.1);
+
+    Some(QuantSpecialPattern {
+        primary_pattern: Some(pattern.clone()),
+        category: "兩神成象".to_string(),
+        authenticity: "嚴格成立".to_string(),
+        normal_pattern_reference: normal_pattern_reference.to_string(),
+        special_use_gods: vec![ordered.0.clone(), ordered.1.clone()],
+        special_avoid_gods: elements_except(&[ordered.0.as_str(), ordered.1.as_str()]),
+        process: format!(
+            "先以月令正格「{}」作參照；{}、{}合計占全局量化力 {:.1}% ，第三五行僅 {:.1}% ，且兩行相生，故按兩神成象成立。",
+            normal_pattern_reference,
+            first,
+            second,
+            top_two_ratio * 100.0,
+            third_ratio * 100.0
+        ),
+        conclusion: format!(
+            "特殊格成立：{}。特殊格用神以{}、{}兩行流通為主，正格用神另作參考。",
+            pattern, ordered.0, ordered.1
+        ),
+        rejection_reasons: Vec::new(),
+    })
 }
 
 fn analyze_sha_yin(
@@ -3854,6 +4067,45 @@ fn aggregate_element_scores(
     totals
 }
 
+fn aggregate_element_magnitude_scores(
+    stem_scores: &[QuantModelPillarScore],
+    branch_scores: &[QuantModelPillarScore],
+) -> HashMap<String, f64> {
+    let mut totals = HashMap::from([
+        ("木".to_string(), 0.0),
+        ("火".to_string(), 0.0),
+        ("土".to_string(), 0.0),
+        ("金".to_string(), 0.0),
+        ("水".to_string(), 0.0),
+    ]);
+    for score in stem_scores {
+        let element = stem_element(&score.target);
+        if !element.is_empty() {
+            *totals.entry(element).or_insert(0.0) += score.final_score.abs();
+        }
+    }
+    for pillar in branch_scores {
+        if let Some(rows) = &pillar.rows {
+            for row in rows {
+                let Some(hidden_stem) = &row.hidden_stem else {
+                    continue;
+                };
+                let element = if ["木", "火", "土", "金", "水"].contains(&hidden_stem.as_str())
+                {
+                    hidden_stem.clone()
+                } else {
+                    stem_element(hidden_stem)
+                };
+                if !element.is_empty() {
+                    *totals.entry(element).or_insert(0.0) +=
+                        row.final_contribution.unwrap_or(0.0).abs();
+                }
+            }
+        }
+    }
+    totals
+}
+
 fn aggregate_cong_family_scores(
     stem_scores: &[QuantModelPillarScore],
     branch_scores: &[QuantModelPillarScore],
@@ -4053,6 +4305,21 @@ fn officer_element_of(element: &str) -> String {
 
 fn generated_by_element(element: &str) -> String {
     mother_of(element)
+}
+
+fn elements_except(kept: &[&str]) -> Vec<String> {
+    ["木", "火", "土", "金", "水"]
+        .into_iter()
+        .filter(|element| !kept.contains(element))
+        .map(|element| element.to_string())
+        .collect()
+}
+
+fn generates_element(from: &str, to: &str) -> bool {
+    matches!(
+        (from, to),
+        ("木", "火") | ("火", "土") | ("土", "金") | ("金", "水") | ("水", "木")
+    )
 }
 
 fn is_kill_god(ten_god: &str) -> bool {

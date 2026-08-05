@@ -376,6 +376,20 @@ pub struct QuantCongPattern {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct QuantSpecialPattern {
+    pub primary_pattern: Option<String>,
+    pub category: String,
+    pub authenticity: String,
+    pub normal_pattern_reference: String,
+    pub special_use_gods: Vec<String>,
+    pub special_avoid_gods: Vec<String>,
+    pub process: String,
+    pub conclusion: String,
+    pub rejection_reasons: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct QuantShaYin {
     pub method_summary: String,
     pub stem_pattern_found: bool,
@@ -406,6 +420,7 @@ pub struct QuantModelResponse {
     pub strength_label: String,
     pub yong_shen: Option<QuantYongShen>,
     pub cong_pattern: Option<QuantCongPattern>,
+    pub special_pattern: Option<QuantSpecialPattern>,
     pub sha_yin: Option<QuantShaYin>,
     pub interactions: Option<Vec<QuantModelInteraction>>,
     pub stem_scores: Vec<QuantModelPillarScore>,
@@ -632,6 +647,7 @@ pub fn calculate_bazi(request: BaziRequest) -> Result<BaziResponse, String> {
         day_master.clone(),
         &natal_cycles,
         &da_yun,
+        &ge_ju_result.ge_ju,
     ));
 
     let mut response = BaziResponse {
@@ -695,6 +711,7 @@ pub fn analyze_pillars(request: PillarAnalyzeRequest) -> Result<BaziResponse, St
         day_master.clone(),
         &natal_cycles,
         &da_yun,
+        "直輸四柱分析",
     ));
     let direct_pillar_year_hint = if request.infer_gregorian_years.unwrap_or(false) {
         Some(resolve_recent_matching_solar_years(&request)?)
@@ -963,6 +980,95 @@ mod tests {
             yun_sect: 1,
             leap_month: false,
         }
+    }
+
+    fn direct_pillar_request(
+        year_pillar: &str,
+        month_pillar: &str,
+        day_pillar: &str,
+        hour_pillar: &str,
+    ) -> PillarAnalyzeRequest {
+        PillarAnalyzeRequest {
+            year_pillar: year_pillar.to_string(),
+            month_pillar: month_pillar.to_string(),
+            day_pillar: day_pillar.to_string(),
+            hour_pillar: hour_pillar.to_string(),
+            gender: Some(Gender::Female),
+            selected_gregorian_year: None,
+            infer_gregorian_years: Some(false),
+        }
+    }
+
+    #[test]
+    fn special_pattern_reports_follow_child_for_strict_follow_weak_chart() {
+        let response = analyze_pillars(direct_pillar_request("甲申", "壬申", "戊辰", "辛酉"))
+            .expect("direct chart should build");
+        let special = response
+            .quant_model
+            .as_ref()
+            .and_then(|quant_model| quant_model.special_pattern.as_ref())
+            .expect("special pattern analysis should exist");
+
+        assert_eq!(special.primary_pattern.as_deref(), Some("從兒格"));
+        assert_eq!(special.category, "從格/專旺");
+        assert_eq!(special.normal_pattern_reference, "直輸四柱分析");
+        assert!(special.special_use_gods.contains(&"食傷".to_string()));
+        assert!(special.special_avoid_gods.contains(&"印比".to_string()));
+    }
+
+    #[test]
+    fn special_pattern_reports_specialized_prosperity_for_strict_follow_strong_chart() {
+        let response = analyze_pillars(direct_pillar_request("戊戌", "庚申", "辛酉", "辛卯"))
+            .expect("direct chart should build");
+        let special = response
+            .quant_model
+            .as_ref()
+            .and_then(|quant_model| quant_model.special_pattern.as_ref())
+            .expect("special pattern analysis should exist");
+
+        assert_eq!(special.category, "從格/專旺");
+        assert!(special
+            .primary_pattern
+            .as_deref()
+            .is_some_and(|pattern| { pattern.contains("專旺") || pattern.contains("從強") }));
+        assert!(special.special_use_gods.contains(&"印比".to_string()));
+        assert!(special.conclusion.contains("特殊格"));
+    }
+
+    #[test]
+    fn special_pattern_keeps_non_follow_chart_unformed() {
+        let response = analyze_pillars(direct_pillar_request("癸丑", "壬戌", "乙巳", "壬午"))
+            .expect("direct chart should build");
+        let special = response
+            .quant_model
+            .as_ref()
+            .and_then(|quant_model| quant_model.special_pattern.as_ref())
+            .expect("special pattern analysis should exist");
+
+        assert_eq!(special.primary_pattern, None);
+        assert_eq!(special.authenticity, "不成立");
+        assert!(special
+            .rejection_reasons
+            .iter()
+            .any(|reason| reason.contains("從格")));
+    }
+
+    #[test]
+    fn special_pattern_does_not_treat_bing_xin_non_transform_as_transformation_pattern() {
+        let response = analyze_pillars(direct_pillar_request("丙寅", "辛丑", "壬戌", "庚戌"))
+            .expect("direct chart should build");
+        let special = response
+            .quant_model
+            .as_ref()
+            .and_then(|quant_model| quant_model.special_pattern.as_ref())
+            .expect("special pattern analysis should exist");
+
+        assert_ne!(special.category, "化氣格");
+        assert_ne!(special.primary_pattern.as_deref(), Some("丙辛化水格"));
+        assert!(special
+            .rejection_reasons
+            .iter()
+            .any(|reason| reason.contains("丙辛") && reason.contains("化氣")));
     }
 
     #[test]
@@ -2168,8 +2274,14 @@ fn build_quant_model(
     day_master: HeavenStem,
     natal_cycles: &[SixtyCycle; 4],
     da_yun: &[DaYunDto],
+    normal_pattern_reference: &str,
 ) -> QuantModelResponse {
-    crate::quant_model::build_quant_model_response(day_master, natal_cycles, da_yun)
+    crate::quant_model::build_quant_model_response(
+        day_master,
+        natal_cycles,
+        da_yun,
+        normal_pattern_reference,
+    )
 }
 
 fn build_luck_scores(
