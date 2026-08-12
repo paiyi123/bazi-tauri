@@ -295,6 +295,54 @@ export interface QuantShaYin {
   conclusion: string;
 }
 
+export interface QuantLessonItem {
+  id: string;
+  sourceDate: string;
+  category: string;
+  title: string;
+  summary: string;
+  algorithmStatus: string;
+  verification: string;
+  fixtureAllowed: boolean;
+  evidence: string[];
+}
+
+export interface QuantLessonInference {
+  ruleId: string;
+  title: string;
+  status: string;
+  sourceVerification: string;
+  algorithmStatus: "candidate" | "verified" | "implemented" | "blocked";
+  matchStatus: "matched" | "not_matched" | "not_evaluated" | "blocked";
+  outputMode: "annotation_only" | "documentation_only";
+  fixtureScope: "none" | "source_case_only" | "rule_validation";
+  agreementStatus: "agree" | "partial" | "conflict" | "not_comparable";
+  fallbackPolicy: "preserve_normal_outputs";
+  appReference: {
+    geJu: string;
+    strengthLabel: string;
+    specialPattern: string;
+  };
+  lessonCandidate?: {
+    pattern: string;
+    strength: string;
+    useElements: string[];
+  };
+  sensitiveClaimsPolicy: "excluded";
+  conclusion: string;
+  evidence: string[];
+  rejectedAlternatives: string[];
+}
+
+export interface QuantLessonContent {
+  title: string;
+  status: string;
+  analysisOrder: string[];
+  futureRuleNotice: string;
+  lessons: QuantLessonItem[];
+  inferences: QuantLessonInference[];
+}
+
 export interface QuantModelResponse {
   dayMaster: string;
   summary: string;
@@ -307,6 +355,7 @@ export interface QuantModelResponse {
   congPattern?: QuantCongPattern;
   specialPattern?: QuantSpecialPattern;
   shaYin?: QuantShaYin;
+  lessonContent?: QuantLessonContent;
   interactions?: QuantModelInteraction[];
   stemScores: QuantModelPillarScore[];
   branchScores: QuantModelPillarScore[];

@@ -1,0 +1,4 @@
+interface:
+  display_name: "八字課堂命例分析"
+  short_description: "將八字課堂內容轉成可驗證可追溯的命例分析證據鏈規則"
+  default_prompt: "Use $bazi-lesson-case-analysis to organize this BaZi lesson case into facts, rules, and evidence."

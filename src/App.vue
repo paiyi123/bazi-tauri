@@ -59,6 +59,7 @@
           <FiveElementFlowPanel :result="result" :compact="false" />
           <LuckCyclePanel :result="result" :compact="false" @preview-change="handlePreviewChange" />
           <FiveElementStrengthPanel :result="result" />
+          <CourseContentPanel :result="result" />
           <QuantFivePhasePanel :result="result" :compact="false" @preview-change="handlePreviewChange" />
           <TenGodPanel :result="result" />
         </div>
@@ -97,14 +98,15 @@
             <el-tab-pane label="流通" name="flow" lazy>
               <FiveElementFlowPanel v-if="activeCompactTab === 'flow'" :result="result" :compact="true" />
             </el-tab-pane>
-            <el-tab-pane label="量化" name="quant" lazy>
-              <QuantFivePhasePanel :result="result" :compact="true" @preview-change="handlePreviewChange" />
-            </el-tab-pane>
             <el-tab-pane label="分析" name="analysis" lazy>
               <div class="compact-section-stack">
                 <FiveElementStrengthPanel :result="result" />
+                <CourseContentPanel :result="result" />
                 <TenGodPanel :result="result" />
               </div>
+            </el-tab-pane>
+            <el-tab-pane label="量化" name="quant" lazy>
+              <QuantFivePhasePanel :result="result" :compact="true" @preview-change="handlePreviewChange" />
             </el-tab-pane>
           </el-tabs>
         </div>
@@ -149,6 +151,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import FiveElementFlowPanel from "./components/FiveElementFlowPanel.vue";
 import BirthForm from "./components/BirthForm.vue";
+import CourseContentPanel from "./components/CourseContentPanel.vue";
 import FiveElementStrengthPanel from "./components/FiveElementStrengthPanel.vue";
 import LuckCyclePanel from "./components/LuckCyclePanel.vue";
 import PillarPanel from "./components/PillarPanel.vue";
