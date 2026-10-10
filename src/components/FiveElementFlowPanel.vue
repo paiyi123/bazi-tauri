@@ -43,14 +43,38 @@
           />
         </template>
 
-        <div
-          v-for="badge in floatingBadges"
-          :key="badge.key"
-          class="flow-floating-badge flow-floating-badge-bad"
-          :style="{ left: `${badge.x}px`, top: `${badge.y}px` }"
+        <!-- 隔柱或三支的關係：天干畫在上方、地支畫在下方的括線 -->
+        <svg
+          v-if="arcGroups.length"
+          class="flow-arc-layer"
+          :width="boardWidth"
+          :height="boardHeight"
+          :viewBox="`0 0 ${boardWidth} ${boardHeight}`"
         >
-          {{ badge.label }}
-        </div>
+          <path
+            v-for="arc in arcGroups"
+            :key="arc.key"
+            :d="arc.path"
+            :class="`flow-arc-${arc.tone}`"
+          />
+        </svg>
+
+        <template v-for="badge in floatingBadges" :key="badge.key">
+          <!-- 相剋有方向：箭頭指向被剋的一方 -->
+          <div
+            v-if="badge.arrow"
+            :class="['flow-control-arrow', `is-${badge.arrow}`]"
+            :style="{ left: `${badge.x}px`, top: `${badge.y}px` }"
+          />
+          <div
+            class="flow-floating-badge"
+            :class="`flow-floating-badge-${badge.tone}`"
+            :style="{ left: `${badge.x}px`, top: `${badge.y}px` }"
+            :title="badge.title"
+          >
+            {{ badge.label }}
+          </div>
+        </template>
 
         <div
           v-for="(item, index) in bottomFlags"
@@ -67,11 +91,14 @@
     <div class="flow-legend">
       <div class="legend-row">
         <span class="legend-icon legend-icon-good">✓</span>
-        <span>流通：三合、六合、相生、相助</span>
+        <span>流通：三合、三會、六合、半合、相生、相助</span>
       </div>
       <div class="legend-row">
         <span class="legend-icon legend-icon-bad">×</span>
-        <span>阻塞：相沖、相刑、相克</span>
+        <span>阻塞：相沖、相刑、相破、相害、相克（克的箭頭指向被剋的一方）</span>
+      </div>
+      <div class="legend-note">
+        相鄰兩柱有多種關係時往內上下排列；隔柱或三支的關係用括線連起，天干畫在上方、地支畫在下方。滑鼠停在圓標上可看說明。
       </div>
     </div>
   </el-card>
@@ -91,8 +118,9 @@ import ltSyImg from "../assets/images/ganzhi/lt_sy.png";
 import ltSzImg from "../assets/images/ganzhi/lt_sz.png";
 import ltZhImg from "../assets/images/ganzhi/lt_zh.png";
 import ltZsImg from "../assets/images/ganzhi/lt_zs.png";
+import { BRANCH_WUXING, STEM_WUXING, type WuXing } from "../constants/wuxing";
 
-type ElementKey = "wood" | "fire" | "earth" | "metal" | "water";
+type ElementKey = WuXing;
 type NodeKind = "stem" | "branch";
 type FlowNode = {
   key: string;
@@ -111,16 +139,51 @@ type PngLink = {
   x: number;
   y: number;
 };
+type Tone = "good" | "bad";
 type FloatingBadge = {
   key: string;
   label: string;
+  tone: Tone;
   x: number;
   y: number;
+  arrow?: "left" | "right" | "up" | "down";
+  title?: string;
 };
 type FlowRelation = {
   label: string;
-  tone: "good" | "bad";
+  tone: Tone;
   direction?: "forward" | "reverse";
+  // For 克: which side of (from, to) does the controlling.
+  controller?: "from" | "to";
+  title?: string;
+};
+// One relation from the quant model, located by pillar index (0 時, 1 日, 2 月, 3 年).
+type NatalRelation = {
+  kind: NodeKind;
+  indexes: number[];
+  label: string;
+  tone: Tone;
+  title: string;
+};
+// All relations between two adjacent pillars; entry 0 sits on the line, the rest stack toward the middle.
+type PairStack = {
+  key: string;
+  kind: NodeKind;
+  from: FlowNode;
+  to: FlowNode;
+  entries: FlowRelation[];
+};
+// Relations between non-adjacent pillars (or three branches), drawn as a bracket outside the rows.
+type ArcGroup = {
+  key: string;
+  kind: NodeKind;
+  indexes: number[];
+  relations: NatalRelation[];
+  layer: number;
+  tone: Tone | "mixed";
+  path: string;
+  badgeX: number;
+  levelY: number;
 };
 
 const props = withDefaults(
@@ -134,14 +197,22 @@ const props = withDefaults(
 );
 
 const pillarXs = [112, 330, 548, 766];
-const stemY = 104;
-const branchY = 306;
+const baseStemY = 104;
+const rowGap = 202;
+const baseBoardHeight = 440;
 const boardWidth = 878;
-const boardHeight = 440;
 const horizontalLinkWidth = 146;
 const horizontalLinkHeight = 35;
-const verticalLinkHeight = branchY - stemY;
+const verticalLinkHeight = rowGap;
 const verticalLinkWidth = 42;
+// Extra relations of one pillar pair stack toward the middle of the board, this far apart.
+const stackGap = 40;
+// Brackets: the stub starts past the ten-god label, the first level sits arcOffset from the row.
+const arcStubOffset = 70;
+const arcOffset = 96;
+const arcLayerGap = 38;
+const arcCornerRadius = 10;
+const badgeStep = 46;
 
 const flowScrollRef = ref<HTMLElement | null>(null);
 const flowScale = ref(1);
@@ -152,18 +223,14 @@ const flowScrollStyle = computed(() => {
     return undefined;
   }
   return {
-    height: `${boardHeight * flowScale.value}px`,
+    height: `${boardHeight.value * flowScale.value}px`,
   };
 });
 
-const flowBoardStyle = computed(() => {
-  if (!props.compact) {
-    return undefined;
-  }
-  return {
-    transform: `scale(${flowScale.value})`,
-  };
-});
+const flowBoardStyle = computed(() => ({
+  height: `${boardHeight.value}px`,
+  ...(props.compact ? { transform: `scale(${flowScale.value})` } : {}),
+}));
 
 function updateFlowScale() {
   if (!props.compact) {
@@ -195,33 +262,8 @@ watch(
   },
 );
 
-const STEM_ELEMENTS: Record<string, ElementKey> = {
-  甲: "wood",
-  乙: "wood",
-  丙: "fire",
-  丁: "fire",
-  戊: "earth",
-  己: "earth",
-  庚: "metal",
-  辛: "metal",
-  壬: "water",
-  癸: "water",
-};
-
-const BRANCH_ELEMENTS: Record<string, ElementKey> = {
-  子: "water",
-  丑: "earth",
-  寅: "wood",
-  卯: "wood",
-  辰: "earth",
-  巳: "fire",
-  午: "fire",
-  未: "earth",
-  申: "metal",
-  酉: "metal",
-  戌: "earth",
-  亥: "water",
-};
+const STEM_ELEMENTS = STEM_WUXING;
+const BRANCH_ELEMENTS = BRANCH_WUXING;
 
 const GENERATES: Record<ElementKey, ElementKey> = {
   wood: "fire",
@@ -264,38 +306,170 @@ const branchTenGods = computed(() => [
   props.result.yearBranchTenGods?.[0] || "",
 ]);
 
+const natalRelations = computed(() => {
+  const relations: NatalRelation[] = [];
+  const seen = new Set<string>();
+  props.result.quantModel?.interactions?.forEach((interaction) => {
+    const members = interactionMembers(interaction);
+    if (!members) {
+      return;
+    }
+    const label = shortInteractionLabel(interaction.type);
+    const key = `${members.kind}-${members.indexes.join("")}-${label}`;
+    if (seen.has(key)) {
+      return;
+    }
+    seen.add(key);
+    relations.push({
+      ...members,
+      label,
+      tone: isBlockingInteraction(interaction.type) ? "bad" : "good",
+      title: interactionTitle(interaction),
+    });
+  });
+  return relations;
+});
+
+// Bracket layers: shorter spans sit closer to the row; overlapping spans move one level further out.
+const arcLayout = computed(() => {
+  const groups = new Map<string, { kind: NodeKind; indexes: number[]; relations: NatalRelation[] }>();
+  natalRelations.value
+    .filter((relation) => !isAdjacentPair(relation.indexes))
+    .forEach((relation) => {
+      const key = `${relation.kind}-${relation.indexes.join("")}`;
+      const group = groups.get(key) ?? { kind: relation.kind, indexes: relation.indexes, relations: [] };
+      group.relations.push(relation);
+      groups.set(key, group);
+    });
+
+  const sorted = [...groups.entries()].sort(([, left], [, right]) => {
+    const spanDiff = span(left.indexes) - span(right.indexes);
+    return spanDiff || left.indexes[0] - right.indexes[0];
+  });
+  const placed: { kind: NodeKind; indexes: number[]; layer: number }[] = [];
+  return sorted.map(([key, group]) => {
+    let layer = 0;
+    while (
+      placed.some(
+        (other) =>
+          other.kind === group.kind && other.layer === layer && rangesTouch(other.indexes, group.indexes),
+      )
+    ) {
+      layer += 1;
+    }
+    placed.push({ kind: group.kind, indexes: group.indexes, layer });
+    return { key, ...group, layer };
+  });
+});
+
+const stemArcLayers = computed(() => layerCount("stem"));
+const branchArcLayers = computed(() => layerCount("branch"));
+
+// Room above the stems for their brackets; badges on the outermost level need ~22px.
+const topPad = computed(() =>
+  stemArcLayers.value
+    ? Math.max(0, arcOffset + (stemArcLayers.value - 1) * arcLayerGap + 22 - baseStemY)
+    : 0,
+);
+const stemY = computed(() => baseStemY + topPad.value);
+const branchY = computed(() => stemY.value + rowGap);
+// Brackets under the branches need room above the 蓋頭/截腳 flags (bottom 26px, 18px tall).
+const boardHeight = computed(() => {
+  const base = baseBoardHeight + topPad.value;
+  if (!branchArcLayers.value) {
+    return base;
+  }
+  return Math.max(base, branchY.value + arcOffset + (branchArcLayers.value - 1) * arcLayerGap + 71);
+});
+
 const stemNodes = computed(() =>
   pillars.value.map((pillar, index) =>
-    makeNode(`stem-${index}`, pillar, stemTenGods.value[index], "stem", pillarXs[index], stemY),
+    makeNode(`stem-${index}`, pillar, stemTenGods.value[index], "stem", pillarXs[index], stemY.value),
   ),
 );
 
 const branchNodes = computed(() =>
   pillars.value.map((pillar, index) =>
-    makeNode(`branch-${index}`, pillar, branchTenGods.value[index], "branch", pillarXs[index], branchY),
+    makeNode(`branch-${index}`, pillar, branchTenGods.value[index], "branch", pillarXs[index], branchY.value),
   ),
+);
+
+const pairStacks = computed(() => {
+  const stacks: PairStack[] = [];
+  (["stem", "branch"] as const).forEach((kind) => {
+    const nodes = kind === "stem" ? stemNodes.value : branchNodes.value;
+    for (let index = 0; index < nodes.length - 1; index += 1) {
+      const from = nodes[index];
+      const to = nodes[index + 1];
+      const entries: FlowRelation[] = [];
+      const combined =
+        kind === "stem" ? isStemCombination(from.char, to.char) : isBranchCombination(from.char, to.char);
+      if (combined) {
+        entries.push({ label: "合", tone: "good" });
+      }
+      const element = elementFlowRelation(from.element, to.element);
+      if (element) {
+        entries.push(element);
+      }
+      natalRelations.value
+        .filter((relation) => relation.kind === kind && relation.indexes.join() === `${index},${index + 1}`)
+        .forEach((relation) => {
+          // The 合 link on the line already shows this combination.
+          if (relation.tone === "good" && combined) {
+            return;
+          }
+          if (entries.some((entry) => entry.label === relation.label)) {
+            return;
+          }
+          entries.push({ label: relation.label, tone: relation.tone, title: relation.title });
+        });
+      stacks.push({ key: `${kind}-${index}`, kind, from, to, entries });
+    }
+  });
+  return stacks;
+});
+
+const arcGroups = computed<ArcGroup[]>(() =>
+  arcLayout.value.map((group) => {
+    const direction = group.kind === "stem" ? -1 : 1;
+    const rowY = group.kind === "stem" ? stemY.value : branchY.value;
+    const startY = rowY + direction * arcStubOffset;
+    const levelY = rowY + direction * (arcOffset + group.layer * arcLayerGap);
+    const xs = group.indexes.map((index) => pillarXs[index]);
+    const left = xs[0];
+    const right = xs[xs.length - 1];
+    const r = arcCornerRadius;
+    const outline =
+      `M ${left} ${startY} V ${levelY - direction * r} Q ${left} ${levelY} ${left + r} ${levelY} ` +
+      `H ${right - r} Q ${right} ${levelY} ${right} ${levelY - direction * r} V ${startY}`;
+    const middles = xs.slice(1, -1).map((x) => ` M ${x} ${startY} V ${levelY}`).join("");
+    const tones = new Set(group.relations.map((relation) => relation.tone));
+    return {
+      key: `arc-${group.key}`,
+      kind: group.kind,
+      indexes: group.indexes,
+      relations: group.relations,
+      layer: group.layer,
+      tone: tones.size > 1 ? "mixed" : group.relations[0].tone,
+      path: outline + middles,
+      badgeX: arcBadgeX(group.indexes, group.layer),
+      levelY,
+    };
+  }),
 );
 
 const pngLinks = computed(() => {
   const links: PngLink[] = [];
 
-  for (let index = 0; index < stemNodes.value.length - 1; index += 1) {
-    const from = stemNodes.value[index];
-    const to = stemNodes.value[index + 1];
-    const relation = stemRelation(from, to);
-    if (relation) {
-      links.push(horizontalLink(`stem-${index}`, index, relation, from.x < to.x));
-    }
-  }
-
-  for (let index = 0; index < branchNodes.value.length - 1; index += 1) {
-    const from = branchNodes.value[index];
-    const to = branchNodes.value[index + 1];
-    const relation = branchRelation(from, to);
-    if (relation && relation.tone === "good") {
-      links.push(horizontalLink(`branch-${index}`, index, relation, from.x < to.x, true));
-    }
-  }
+  pairStacks.value.forEach((stack) => {
+    stack.entries.forEach((relation, slot) => {
+      if (hasLinkImage(relation)) {
+        links.push(
+          horizontalLink(`${stack.key}-${slot}`, stack, relation, stackY(stack, slot)),
+        );
+      }
+    });
+  });
 
   stemNodes.value.forEach((stem, index) => {
     const branch = branchNodes.value[index];
@@ -311,19 +485,22 @@ const pngLinks = computed(() => {
 const floatingBadges = computed(() => {
   const badges: FloatingBadge[] = [];
 
-  for (let index = 0; index < branchNodes.value.length - 1; index += 1) {
-    const from = branchNodes.value[index];
-    const to = branchNodes.value[index + 1];
-    const relation = branchRelation(from, to);
-    if (relation?.tone === "bad") {
+  pairStacks.value.forEach((stack) => {
+    stack.entries.forEach((relation, slot) => {
+      if (hasLinkImage(relation)) {
+        return;
+      }
       badges.push({
-        key: `branch-${index}-bad-badge`,
+        key: `${stack.key}-${slot}-badge`,
         label: relation.label,
-        x: (from.x + to.x) / 2,
-        y: branchY,
+        tone: relation.tone,
+        x: (stack.from.x + stack.to.x) / 2,
+        y: stackY(stack, slot),
+        title: relation.title,
+        ...controlArrow(relation, stack.from, stack.to, "right", "left"),
       });
-    }
-  }
+    });
+  });
 
   stemNodes.value.forEach((stem, index) => {
     const branch = branchNodes.value[index];
@@ -332,43 +509,60 @@ const floatingBadges = computed(() => {
       badges.push({
         key: `vertical-${index}-bad-badge`,
         label: relation.label,
+        tone: relation.tone,
         x: stem.x,
         y: (stem.y + branch.y) / 2,
+        ...controlArrow(relation, branch, stem, "up", "down"),
       });
     }
   });
 
-  props.result.quantModel?.interactions?.forEach((interaction, index) => {
-    if (!isBlockingInteraction(interaction.type)) {
-      return;
-    }
-    const matched = nodesForInteraction(interaction);
-    if (matched.length < 2 || !isAdjacentInteractionNodes(matched)) {
-      return;
-    }
-    badges.push({
-      key: `interaction-badge-${index}`,
-      label: shortInteractionLabel(interaction.type),
-      x: (matched[0].x + matched[1].x) / 2,
-      y: (matched[0].y + matched[1].y) / 2,
+  arcGroups.value.forEach((arc) => {
+    arc.relations.forEach((relation, position) => {
+      badges.push({
+        key: `${arc.key}-${relation.label}`,
+        label: relation.label,
+        tone: relation.tone,
+        x: arc.badgeX + (position - (arc.relations.length - 1) / 2) * badgeStep,
+        y: arc.levelY,
+        title: relation.title,
+      });
     });
   });
 
-  return dedupeBadges(badges);
+  return badges;
 });
 
 const bottomFlags = computed(() =>
   pillars.value.map((pillar) => {
     const gz = `${pillar.stem}${pillar.branch}`;
     if (/(甲辰)|(甲戌)|(乙丑)|(乙未)|(丙申)|(丁酉)|(戊子)|(己亥)|(庚寅)|(辛卯)|(壬午)|(癸巳)/.test(gz)) {
-      return "盖头";
+      return "蓋頭";
     }
     if (/(甲申)|(乙酉)|(丙子)|(丁亥)|(戊寅)|(己卯)|(庚午)|(辛巳)|(壬辰)|(癸丑)|(癸未)|(壬戌)/.test(gz)) {
-      return "截脚";
+      return "截腳";
     }
     return "";
   }),
 );
+
+// Arrow points from the controller toward the controlled node.
+function controlArrow(
+  relation: FlowRelation,
+  from: FlowNode,
+  to: FlowNode,
+  towardTo: NonNullable<FloatingBadge["arrow"]>,
+  towardFrom: NonNullable<FloatingBadge["arrow"]>,
+): Pick<FloatingBadge, "arrow" | "title"> {
+  if (!relation.controller) {
+    return {};
+  }
+  const [controller, controlled] = relation.controller === "from" ? [from, to] : [to, from];
+  return {
+    arrow: relation.controller === "from" ? towardTo : towardFrom,
+    title: `${controller.char}剋${controlled.char}`,
+  };
+}
 
 function makeNode(key: string, pillar: Pillar, tenGod: string, kind: NodeKind, x: number, y: number): FlowNode {
   const char = kind === "stem" ? pillar.stem : pillar.branch;
@@ -384,22 +578,43 @@ function makeNode(key: string, pillar: Pillar, tenGod: string, kind: NodeKind, x
   };
 }
 
-function stemRelation(from: FlowNode, to: FlowNode) {
-  if (isStemCombination(from.char, to.char)) {
-    return { label: "合", tone: "good" as const };
-  }
-  return elementFlowRelation(from.element, to.element);
+// Slot 0 is on the line between the two characters; later slots step toward the middle of the board.
+function stackY(stack: PairStack, slot: number) {
+  const rowY = stack.kind === "stem" ? stemY.value : branchY.value;
+  return rowY + (stack.kind === "stem" ? 1 : -1) * slot * stackGap;
 }
 
-function branchRelation(from: FlowNode, to: FlowNode): FlowRelation | null {
-  if (isBranchCombination(from.char, to.char)) {
-    return { label: "合", tone: "good" as const };
+function hasLinkImage(relation: FlowRelation) {
+  return relation.tone === "good" && ["合", "生", "助"].includes(relation.label);
+}
+
+function layerCount(kind: NodeKind) {
+  const layers = arcLayout.value.filter((group) => group.kind === kind).map((group) => group.layer);
+  return layers.length ? Math.max(...layers) + 1 : 0;
+}
+
+function span(indexes: number[]) {
+  return indexes[indexes.length - 1] - indexes[0];
+}
+
+function isAdjacentPair(indexes: number[]) {
+  return indexes.length === 2 && span(indexes) === 1;
+}
+
+function rangesTouch(left: number[], right: number[]) {
+  return left[0] <= right[right.length - 1] && right[0] <= left[left.length - 1];
+}
+
+// Badges go between two pillars, never on a pillar: other brackets' stubs run down the pillar lines.
+function arcBadgeX(indexes: number[], layer: number) {
+  const center = (pillarXs[indexes[0]] + pillarXs[indexes[indexes.length - 1]]) / 2;
+  const gaps: number[] = [];
+  for (let index = indexes[0]; index < indexes[indexes.length - 1]; index += 1) {
+    gaps.push((pillarXs[index] + pillarXs[index + 1]) / 2);
   }
-  const relation = elementFlowRelation(from.element, to.element);
-  if (relation?.tone === "good" && hasBlockingInteractionBetween("地支", from.char, to.char)) {
-    return null;
-  }
-  return relation;
+  const nearest = Math.min(...gaps.map((x) => Math.abs(x - center)));
+  const candidates = gaps.filter((x) => Math.abs(x - center) === nearest);
+  return candidates[layer % 2 === 0 ? 0 : candidates.length - 1];
 }
 
 function elementFlowRelation(from: ElementKey, to: ElementKey): FlowRelation | null {
@@ -412,33 +627,31 @@ function elementFlowRelation(from: ElementKey, to: ElementKey): FlowRelation | n
   if (GENERATES[to] === from) {
     return { label: "生", tone: "good" as const, direction: "reverse" };
   }
-  if (CONTROLS[from] === to || CONTROLS[to] === from) {
-    return { label: "克", tone: "bad" as const };
+  if (CONTROLS[from] === to) {
+    return { label: "克", tone: "bad" as const, controller: "from" };
+  }
+  if (CONTROLS[to] === from) {
+    return { label: "克", tone: "bad" as const, controller: "to" };
   }
   return null;
 }
 
-function horizontalLink(
-  key: string,
-  index: number,
-  relation: FlowRelation,
-  leftToRight: boolean,
-  branch = false,
-): PngLink {
-  const midpointX = (pillarXs[index] + pillarXs[index + 1]) / 2;
+function horizontalLink(key: string, stack: PairStack, relation: FlowRelation, centerY: number): PngLink {
+  const midpointX = (stack.from.x + stack.to.x) / 2;
+  const leftToRight = stack.from.x < stack.to.x;
   return {
     key,
     image: imageForHorizontal(relation.label, relation.direction ?? (leftToRight ? "forward" : "reverse"), relation.tone),
     tone: relation.tone,
     orientation: "horizontal",
     x: midpointX - horizontalLinkWidth / 2,
-    y: (branch ? branchY : stemY) - horizontalLinkHeight / 2,
+    y: centerY - horizontalLinkHeight / 2,
   };
 }
 
 function verticalLink(key: string, index: number, relation: FlowRelation): PngLink {
   const charCenterX = pillarXs[index];
-  const charCenterY = (stemY + branchY) / 2;
+  const charCenterY = (stemY.value + branchY.value) / 2;
   return {
     key,
     image: imageForVertical(relation.label, relation.direction ?? "forward", relation.tone),
@@ -466,24 +679,52 @@ function imageForVertical(label: string, direction: "forward" | "reverse", tone:
   return direction === "forward" ? ltSsImg : ltSxImg;
 }
 
-function nodesForInteraction(interaction: QuantModelInteraction) {
-  const scope = interaction.scope.includes("天干") ? "stem" : interaction.scope.includes("地支") ? "branch" : null;
-  const chars = [...interaction.target].filter((char) => STEM_ELEMENTS[char] || BRANCH_ELEMENTS[char]);
-  return [...stemNodes.value, ...branchNodes.value].filter(
-    (node) => (!scope || node.kind === scope) && chars.includes(node.char),
-  );
+// Display order of the board: 時、日、月、年
+const PILLAR_LABEL_INDEX: Record<string, number> = { 時: 0, 日: 1, 月: 2, 年: 3 };
+
+// Locates a natal interaction on the board. Only relations among the four natal pillars are drawn
+// (rows such as 「大運 - 月柱」 are skipped).
+function interactionMembers(interaction: QuantModelInteraction): Pick<NatalRelation, "kind" | "indexes"> | null {
+  const kind: NodeKind | null = interaction.scope.includes("天干")
+    ? "stem"
+    : interaction.scope.includes("地支")
+      ? "branch"
+      : null;
+  if (!kind) {
+    return null;
+  }
+  // Prefer the pillar positions (e.g. 「日柱(子)、月柱(午)」): matching by character alone puts a
+  // 子午沖 between two 子 when the chart has 子 twice.
+  const segments = (interaction.pillars ?? "")
+    .split("、")
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+  let indexes: number[];
+  if (segments.some((segment) => segment.includes("柱"))) {
+    indexes = segments.map((segment) => {
+      const match = segment.match(/^([年月日時])柱/);
+      return match ? PILLAR_LABEL_INDEX[match[1]] : -1;
+    });
+    if (indexes.includes(-1)) {
+      return null;
+    }
+  } else {
+    const chars = pillars.value.map((pillar) => (kind === "stem" ? pillar.stem : pillar.branch));
+    const targets = [...interaction.target].filter((char) => STEM_ELEMENTS[char] || BRANCH_ELEMENTS[char]);
+    indexes = chars.flatMap((char, index) => (targets.includes(char) ? [index] : []));
+    // Ambiguous when a character appears in more pillars than the relation has members.
+    if (indexes.length !== targets.length) {
+      return null;
+    }
+  }
+  const unique = [...new Set(indexes)].sort((left, right) => left - right);
+  return unique.length >= 2 ? { kind, indexes: unique } : null;
 }
 
-function isAdjacentInteractionNodes(nodes: FlowNode[]) {
-  const [first, second] = nodes;
-  if (!first || !second || first.kind !== second.kind) {
-    return false;
-  }
-
-  const sourceNodes = first.kind === "stem" ? stemNodes.value : branchNodes.value;
-  const firstIndex = sourceNodes.findIndex((node) => node.key === first.key);
-  const secondIndex = sourceNodes.findIndex((node) => node.key === second.key);
-  return firstIndex >= 0 && secondIndex >= 0 && Math.abs(firstIndex - secondIndex) === 1;
+function interactionTitle(interaction: QuantModelInteraction) {
+  const outcome = interaction.outcome && interaction.outcome !== "-" ? `（${interaction.outcome}）` : "";
+  const detail = interaction.detail && interaction.detail !== "-" ? `：${interaction.detail}` : "";
+  return `${interaction.target}${interaction.type}${outcome}${detail}`;
 }
 
 function isStemCombination(left: string, right: string) {
@@ -501,41 +742,14 @@ function isBranchCombination(left: string, right: string) {
   );
 }
 
-function hasBlockingInteractionBetween(scope: "天干" | "地支", left: string, right: string) {
-  return (
-    props.result.quantModel?.interactions?.some((interaction) => {
-      if (!interaction.scope.includes(scope) || !isBlockingInteraction(interaction.type)) {
-        return false;
-      }
-      const chars = [...interaction.target];
-      return chars.includes(left) && chars.includes(right);
-    }) || false
-  );
-}
-
 function isBlockingInteraction(type: string) {
   return type.includes("沖") || type.includes("刑") || type.includes("破") || type.includes("害") || type.includes("克");
 }
 
+// 「三合化」→三合、「半合化」→半合、「自刑」→刑
 function shortInteractionLabel(type: string) {
-  if (type.includes("沖")) return "冲";
-  if (type.includes("刑")) return "刑";
-  if (type.includes("破")) return "破";
-  if (type.includes("害")) return "害";
-  if (type.includes("克")) return "克";
-  return type.slice(0, 1);
-}
-
-function dedupeBadges(badges: FloatingBadge[]) {
-  const seen = new Set<string>();
-  return badges.filter((badge) => {
-    const key = `${Math.round(badge.x / 8)}-${Math.round(badge.y / 8)}-${badge.label}`;
-    if (seen.has(key)) {
-      return false;
-    }
-    seen.add(key);
-    return true;
-  });
+  const label = ["三合", "三會", "半合", "沖", "刑", "破", "害", "克", "合"].find((item) => type.includes(item));
+  return label ?? type.slice(0, 2);
 }
 </script>
 
@@ -608,23 +822,23 @@ function dedupeBadges(badges: FloatingBadge[]) {
 }
 
 .flow-node-wood .flow-node-char {
-  color: #00c535;
+  color: var(--wx-wood);
 }
 
 .flow-node-fire .flow-node-char {
-  color: #e60012;
+  color: var(--wx-fire);
 }
 
 .flow-node-earth .flow-node-char {
-  color: #9b6a00;
+  color: var(--wx-earth);
 }
 
 .flow-node-metal .flow-node-char {
-  color: #9b9b9b;
+  color: var(--wx-metal);
 }
 
 .flow-node-water .flow-node-char {
-  color: #1769ff;
+  color: var(--wx-water);
 }
 
 .flow-link-img {
@@ -652,8 +866,11 @@ function dedupeBadges(badges: FloatingBadge[]) {
 .flow-floating-badge {
   position: absolute;
   z-index: 3;
-  width: 34px;
+  box-sizing: border-box;
+  min-width: 34px;
   height: 34px;
+  padding: 0 7px;
+  white-space: nowrap;
   transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
@@ -666,6 +883,94 @@ function dedupeBadges(badges: FloatingBadge[]) {
 
 .flow-floating-badge-bad {
   background: #f23932;
+}
+
+.flow-floating-badge-good {
+  background: #009f5d;
+}
+
+.flow-arc-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.flow-arc-layer path {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.flow-arc-layer .flow-arc-good {
+  stroke: #009f5d;
+}
+
+.flow-arc-layer .flow-arc-bad {
+  stroke: #f23932;
+  stroke-dasharray: 6 5;
+}
+
+.flow-arc-layer .flow-arc-mixed {
+  stroke: #bc8f32;
+  stroke-dasharray: 6 5;
+}
+
+.flow-control-arrow {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.flow-control-arrow.is-left,
+.flow-control-arrow.is-right {
+  width: 128px;
+  height: 0;
+  border-top: 2px dashed #f23932;
+}
+
+.flow-control-arrow.is-up,
+.flow-control-arrow.is-down {
+  width: 0;
+  height: 100px;
+  border-left: 2px dashed #f23932;
+}
+
+.flow-control-arrow::after {
+  content: "";
+  position: absolute;
+  border: 7px solid transparent;
+}
+
+.flow-control-arrow.is-right::after {
+  top: -8px;
+  right: -8px;
+  border-left: 12px solid #f23932;
+  border-right-width: 0;
+}
+
+.flow-control-arrow.is-left::after {
+  top: -8px;
+  left: -8px;
+  border-right: 12px solid #f23932;
+  border-left-width: 0;
+}
+
+.flow-control-arrow.is-down::after {
+  bottom: -8px;
+  left: -8px;
+  border-top: 12px solid #f23932;
+  border-bottom-width: 0;
+}
+
+.flow-control-arrow.is-up::after {
+  top: -8px;
+  left: -8px;
+  border-bottom: 12px solid #f23932;
+  border-top-width: 0;
 }
 
 .flow-bottom-flag {
@@ -696,6 +1001,11 @@ function dedupeBadges(badges: FloatingBadge[]) {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.legend-note {
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 .legend-icon {

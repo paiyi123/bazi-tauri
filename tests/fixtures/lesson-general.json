@@ -1,0 +1,1078 @@
+{
+  "version": "classroom-2026-09-v1",
+  "status": "conditional",
+  "facts": {
+    "title": "排盤事實",
+    "conclusion": "日主庚屬金，月令辰本氣戊屬土；根氣與透干均保留原柱位及藏干層位。",
+    "pillars": [
+      {
+        "pillar": "年柱",
+        "ganZhi": "戊申",
+        "stem": "戊",
+        "stemElement": "土",
+        "stemTenGod": "偏印",
+        "branch": "申",
+        "branchMainElement": "金",
+        "hiddenStems": [
+          {
+            "stem": "庚",
+            "element": "金",
+            "tenGod": "比肩",
+            "layer": "本氣"
+          },
+          {
+            "stem": "壬",
+            "element": "水",
+            "tenGod": "食神",
+            "layer": "中氣"
+          },
+          {
+            "stem": "戊",
+            "element": "土",
+            "tenGod": "偏印",
+            "layer": "餘氣"
+          }
+        ]
+      },
+      {
+        "pillar": "月柱",
+        "ganZhi": "丙辰",
+        "stem": "丙",
+        "stemElement": "火",
+        "stemTenGod": "七殺",
+        "branch": "辰",
+        "branchMainElement": "土",
+        "hiddenStems": [
+          {
+            "stem": "戊",
+            "element": "土",
+            "tenGod": "偏印",
+            "layer": "本氣"
+          },
+          {
+            "stem": "乙",
+            "element": "木",
+            "tenGod": "正財",
+            "layer": "中氣"
+          },
+          {
+            "stem": "癸",
+            "element": "水",
+            "tenGod": "傷官",
+            "layer": "餘氣"
+          }
+        ]
+      },
+      {
+        "pillar": "日柱",
+        "ganZhi": "庚午",
+        "stem": "庚",
+        "stemElement": "金",
+        "stemTenGod": "日元",
+        "branch": "午",
+        "branchMainElement": "火",
+        "hiddenStems": [
+          {
+            "stem": "丁",
+            "element": "火",
+            "tenGod": "正官",
+            "layer": "本氣"
+          },
+          {
+            "stem": "己",
+            "element": "土",
+            "tenGod": "正印",
+            "layer": "中氣"
+          }
+        ]
+      },
+      {
+        "pillar": "時柱",
+        "ganZhi": "癸未",
+        "stem": "癸",
+        "stemElement": "水",
+        "stemTenGod": "傷官",
+        "branch": "未",
+        "branchMainElement": "土",
+        "hiddenStems": [
+          {
+            "stem": "己",
+            "element": "土",
+            "tenGod": "正印",
+            "layer": "本氣"
+          },
+          {
+            "stem": "丁",
+            "element": "火",
+            "tenGod": "正官",
+            "layer": "中氣"
+          },
+          {
+            "stem": "乙",
+            "element": "木",
+            "tenGod": "正財",
+            "layer": "餘氣"
+          }
+        ]
+      }
+    ],
+    "dayMaster": {
+      "stem": "庚",
+      "element": "金"
+    },
+    "monthCommand": {
+      "branch": "辰",
+      "mainStem": "戊",
+      "element": "土",
+      "tenGod": "偏印"
+    },
+    "transparencies": [
+      {
+        "hiddenStem": "戊",
+        "hiddenStemLayer": "本氣",
+        "tenGod": "偏印",
+        "visibleLocations": [
+          "年干"
+        ],
+        "evidenceId": "fact-transparency-1"
+      },
+      {
+        "hiddenStem": "乙",
+        "hiddenStemLayer": "中氣",
+        "tenGod": "正財",
+        "visibleLocations": [],
+        "evidenceId": "fact-transparency-2"
+      },
+      {
+        "hiddenStem": "癸",
+        "hiddenStemLayer": "餘氣",
+        "tenGod": "傷官",
+        "visibleLocations": [
+          "時干"
+        ],
+        "evidenceId": "fact-transparency-3"
+      }
+    ],
+    "roots": [
+      {
+        "pillar": "年支",
+        "branch": "申",
+        "hiddenStem": "庚",
+        "hiddenStemLayer": "本氣",
+        "element": "金",
+        "tenGod": "比肩",
+        "rootKind": "same_stem",
+        "evidenceId": "fact-hidden-1-1"
+      }
+    ],
+    "tenGodDistribution": [
+      {
+        "family": "印",
+        "element": "土",
+        "surfaceLocations": [
+          "年干戊",
+          "月支辰本氣戊",
+          "時支未本氣己"
+        ],
+        "hiddenLocations": [
+          "年支申餘氣戊",
+          "月支辰本氣戊",
+          "日支午中氣己",
+          "時支未本氣己"
+        ],
+        "surfaceEvidenceIds": [
+          "fact-stem-1",
+          "fact-hidden-2-1",
+          "fact-hidden-4-1"
+        ],
+        "hiddenEvidenceIds": [
+          "fact-hidden-1-3",
+          "fact-hidden-2-1",
+          "fact-hidden-3-2",
+          "fact-hidden-4-1"
+        ]
+      },
+      {
+        "family": "比劫",
+        "element": "金",
+        "surfaceLocations": [
+          "年支申本氣庚"
+        ],
+        "hiddenLocations": [
+          "年支申本氣庚"
+        ],
+        "surfaceEvidenceIds": [
+          "fact-hidden-1-1"
+        ],
+        "hiddenEvidenceIds": [
+          "fact-hidden-1-1"
+        ]
+      },
+      {
+        "family": "食傷",
+        "element": "水",
+        "surfaceLocations": [
+          "時干癸"
+        ],
+        "hiddenLocations": [
+          "年支申中氣壬",
+          "月支辰餘氣癸"
+        ],
+        "surfaceEvidenceIds": [
+          "fact-stem-4"
+        ],
+        "hiddenEvidenceIds": [
+          "fact-hidden-1-2",
+          "fact-hidden-2-3"
+        ]
+      },
+      {
+        "family": "財",
+        "element": "木",
+        "surfaceLocations": [],
+        "hiddenLocations": [
+          "月支辰中氣乙",
+          "時支未餘氣乙"
+        ],
+        "surfaceEvidenceIds": [],
+        "hiddenEvidenceIds": [
+          "fact-hidden-2-2",
+          "fact-hidden-4-3"
+        ]
+      },
+      {
+        "family": "官殺",
+        "element": "火",
+        "surfaceLocations": [
+          "月干丙",
+          "日支午本氣丁"
+        ],
+        "hiddenLocations": [
+          "日支午本氣丁",
+          "時支未中氣丁"
+        ],
+        "surfaceEvidenceIds": [
+          "fact-stem-2",
+          "fact-hidden-3-1"
+        ],
+        "hiddenEvidenceIds": [
+          "fact-hidden-3-1",
+          "fact-hidden-4-2"
+        ]
+      }
+    ],
+    "evidence": [
+      {
+        "id": "fact-hidden-1-1",
+        "kind": "chart_fact",
+        "pillar": "年支",
+        "hiddenStemLayer": "本氣",
+        "interactionId": null,
+        "description": "年支申藏庚（本氣、金）。",
+        "sourceDate": null
+      },
+      {
+        "id": "fact-hidden-1-2",
+        "kind": "chart_fact",
+        "pillar": "年支",
+        "hiddenStemLayer": "中氣",
+        "interactionId": null,
+        "description": "年支申藏壬（中氣、水）。",
+        "sourceDate": null
+      },
+      {
+        "id": "fact-hidden-1-3",
+        "kind": "chart_fact",
+        "pillar": "年支",
+        "hiddenStemLayer": "餘氣",
+        "interactionId": null,
+        "description": "年支申藏戊（餘氣、土）。",
+        "sourceDate": null
+      },
+      {
+        "id": "fact-stem-1",
+        "kind": "chart_fact",
+        "pillar": "年干",
+        "hiddenStemLayer": null,
+        "interactionId": null,
+        "description": "年干為戊，五行土，相對日主為偏印。",
+        "sourceDate": null
+      },
+      {
+        "id": "fact-hidden-2-1",
+        "kind": "chart_fact",
+        "pillar": "月支",
+        "hiddenStemLayer": "本氣",
+        "interactionId": null,
+        "description": "月支辰藏戊（本氣、土）。",
+        "sourceDate": null
+      },
+      {
+        "id": "fact-hidden-2-2",
+        "kind": "chart_fact",
+        "pillar": "月支",
+        "hiddenStemLayer": "中氣",
+        "interactionId": null,
+        "description": "月支辰藏乙（中氣、木）。",
+        "sourceDate": null
+      },
+      {
+        "id": "fact-hidden-2-3",
+        "kind": "chart_fact",
+        "pillar": "月支",
+        "hiddenStemLayer": "餘氣",
+        "interactionId": null,
+        "description": "月支辰藏癸（餘氣、水）。",
+        "sourceDate": null
+      },
+      {
+        "id": "fact-stem-2",
+        "kind": "chart_fact",
+        "pillar": "月干",
+        "hiddenStemLayer": null,
+        "interactionId": null,
+        "description": "月干為丙，五行火，相對日主為七殺。",
+        "sourceDate": null
+      },
+      {
+        "id": "fact-hidden-3-1",
+        "kind": "chart_fact",
+        "pillar": "日支",
+        "hiddenStemLayer": "本氣",
+        "interactionId": null,
+        "description": "日支午藏丁（本氣、火）。",
+        "sourceDate": null
+      },
+      {
+        "id": "fact-hidden-3-2",
+        "kind": "chart_fact",
+        "pillar": "日支",
+        "hiddenStemLayer": "中氣",
+        "interactionId": null,
+        "description": "日支午藏己（中氣、土）。",
+        "sourceDate": null
+      },
+      {
+        "id": "fact-stem-3",
+        "kind": "chart_fact",
+        "pillar": "日干",
+        "hiddenStemLayer": null,
+        "interactionId": null,
+        "description": "日干為庚，五行金，相對日主為日元。",
+        "sourceDate": null
+      },
+      {
+        "id": "fact-hidden-4-1",
+        "kind": "chart_fact",
+        "pillar": "時支",
+        "hiddenStemLayer": "本氣",
+        "interactionId": null,
+        "description": "時支未藏己（本氣、土）。",
+        "sourceDate": null
+      },
+      {
+        "id": "fact-hidden-4-2",
+        "kind": "chart_fact",
+        "pillar": "時支",
+        "hiddenStemLayer": "中氣",
+        "interactionId": null,
+        "description": "時支未藏丁（中氣、火）。",
+        "sourceDate": null
+      },
+      {
+        "id": "fact-hidden-4-3",
+        "kind": "chart_fact",
+        "pillar": "時支",
+        "hiddenStemLayer": "餘氣",
+        "interactionId": null,
+        "description": "時支未藏乙（餘氣、木）。",
+        "sourceDate": null
+      },
+      {
+        "id": "fact-stem-4",
+        "kind": "chart_fact",
+        "pillar": "時干",
+        "hiddenStemLayer": null,
+        "interactionId": null,
+        "description": "時干為癸，五行水，相對日主為傷官。",
+        "sourceDate": null
+      },
+      {
+        "id": "fact-transparency-1",
+        "kind": "chart_fact",
+        "pillar": "月支",
+        "hiddenStemLayer": "本氣",
+        "interactionId": null,
+        "description": "月令藏干戊透於年干。",
+        "sourceDate": null
+      },
+      {
+        "id": "fact-transparency-2",
+        "kind": "chart_fact",
+        "pillar": "月支",
+        "hiddenStemLayer": "中氣",
+        "interactionId": null,
+        "description": "月令藏干乙未在年、月、時干透出。",
+        "sourceDate": null
+      },
+      {
+        "id": "fact-transparency-3",
+        "kind": "chart_fact",
+        "pillar": "月支",
+        "hiddenStemLayer": "餘氣",
+        "interactionId": null,
+        "description": "月令藏干癸透於時干。",
+        "sourceDate": null
+      }
+    ],
+    "limitations": [
+      "藏干事實不因合沖而刪除；互動後是否仍有效另在強弱步驟標為待定。"
+    ]
+  },
+  "pattern": {
+    "title": "第一步：格局判定",
+    "conclusion": "月令有多個合格透干，保留偏印格、傷官格，不以工程排序冒充老師唯一取格。",
+    "status": "conditional",
+    "ordinaryResult": null,
+    "ordinaryCandidates": [
+      {
+        "pattern": "偏印格",
+        "tenGod": "偏印",
+        "monthHiddenStem": "戊",
+        "hiddenStemLayer": "本氣",
+        "transparentLocations": [
+          "年干"
+        ],
+        "selection": "candidate",
+        "evidenceIds": [
+          "fact-transparency-1"
+        ]
+      },
+      {
+        "pattern": "傷官格",
+        "tenGod": "傷官",
+        "monthHiddenStem": "癸",
+        "hiddenStemLayer": "餘氣",
+        "transparentLocations": [
+          "時干"
+        ],
+        "selection": "candidate",
+        "evidenceIds": [
+          "fact-transparency-3"
+        ]
+      }
+    ],
+    "specialReview": {
+      "required": false,
+      "reasons": [
+        "App 既有特殊格只作 model_reference；不據此新增或排除課派成格。"
+      ],
+      "modelReferencePattern": "火土成象",
+      "modelReferenceCategory": "兩神成象",
+      "specializedUseVersions": [
+        {
+          "sourceDate": "2026-07-08",
+          "useDirection": "旺神",
+          "favorableDirection": "生旺神與洩旺神",
+          "limitation": "課次用語未與後課統一，不作唯一順位。"
+        },
+        {
+          "sourceDate": "2026-09-02",
+          "useDirection": "食傷洩秀",
+          "favorableDirection": "印比扶旺",
+          "limitation": "需先確認專旺成格與破格控制元素。"
+        }
+      ],
+      "followChildPeerException": "從兒以食傷為用時，比劫可生食傷；不得套用所有從弱一律忌印比。"
+    },
+    "evidence": [
+      {
+        "id": "pattern-rule-1",
+        "kind": "lesson_rule",
+        "pillar": "月支",
+        "hiddenStemLayer": "本氣",
+        "interactionId": null,
+        "description": "月令戊透於年干，保留偏印格。",
+        "sourceDate": "2026-07-29"
+      },
+      {
+        "id": "pattern-rule-2",
+        "kind": "lesson_rule",
+        "pillar": "月支",
+        "hiddenStemLayer": "餘氣",
+        "interactionId": null,
+        "description": "月令癸透於時干，保留傷官格。",
+        "sourceDate": "2026-07-29"
+      },
+      {
+        "id": "pattern-model-reference",
+        "kind": "model_reference",
+        "pillar": null,
+        "hiddenStemLayer": null,
+        "interactionId": null,
+        "description": "App 原格局為直輸四柱分析；此值只供比較，不餵回課堂候選。",
+        "sourceDate": null
+      }
+    ],
+    "limitations": [
+      "普通格候選不覆蓋 App geJu。",
+      "首版不新增從格、專旺或化氣的泛化成格閾值。"
+    ]
+  },
+  "strength": {
+    "title": "第二步：日主強弱",
+    "conclusion": "三項觀察命中 2 項；表層剋洩耗家族為食傷、官殺，初判強候選。",
+    "status": "conditional",
+    "classification": "強候選",
+    "sameSeasonElement": false,
+    "sealInSeason": true,
+    "supportStemCount": 1,
+    "supportBranchCount": 3,
+    "momentumProxy": true,
+    "rootCount": 1,
+    "observationCount": 2,
+    "pressureFamiliesSurface": [
+      "食傷",
+      "官殺"
+    ],
+    "pressureFamiliesHidden": [
+      "食傷",
+      "財",
+      "官殺"
+    ],
+    "interactions": [
+      {
+        "id": "interaction-1-合",
+        "scope": "地支",
+        "interactionType": "合",
+        "target": "未午",
+        "outcome": "化土",
+        "pillars": "時柱(未)、日柱(午)",
+        "detail": "量化模型裁決為地支六合化土",
+        "assessment": "conditional_not_rescored"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "strength-same-season",
+        "kind": "lesson_rule",
+        "pillar": "月支",
+        "hiddenStemLayer": "本氣",
+        "interactionId": null,
+        "description": "同氣得時=false；印當令=true，兩者分開記錄。",
+        "sourceDate": "2026-07-22"
+      },
+      {
+        "id": "strength-momentum-proxy",
+        "kind": "engineering_proxy",
+        "pillar": null,
+        "hiddenStemLayer": null,
+        "interactionId": null,
+        "description": "得勢工程暫估：supportStemCount=1、supportBranchCount=3；任一達 2 即成立，結果=true。",
+        "sourceDate": "2026-07-22"
+      },
+      {
+        "id": "strength-roots",
+        "kind": "chart_fact",
+        "pillar": null,
+        "hiddenStemLayer": null,
+        "interactionId": null,
+        "description": "同五行藏干根共 1 處，保留全部層位。",
+        "sourceDate": null
+      },
+      {
+        "id": "strength-interaction-1-合",
+        "kind": "chart_fact",
+        "pillar": "時柱(未)、日柱(午)",
+        "hiddenStemLayer": null,
+        "interactionId": "interaction-1-合",
+        "description": "地支合（未午，化土）；只保留關係與模型裁決，不另加扣分。",
+        "sourceDate": "2026-07-29"
+      }
+    ],
+    "limitations": [
+      "supportStemCount >= 2 OR supportBranchCount >= 2 是工程候選門檻，不是老師數值定義。",
+      "表層剋洩耗與藏干出現分欄；不以藏干反向力量冒稱表層壓力。",
+      "互動後有效力量未定；保留初判並標 conditional。"
+    ]
+  },
+  "preferences": {
+    "title": "第三步：用神與喜忌",
+    "conclusion": "依實際表層與根氣位置保留 4 個條件方案；排序不代表優先。",
+    "status": "conditional",
+    "plans": [
+      {
+        "ruleId": "strong-hidden-wealth-visible-kill",
+        "title": "財藏殺顯：官殺候選",
+        "applicability": "conditional",
+        "condition": "若按普通格論，財藏而官殺顯露且有同五行藏根，官殺確能制身時",
+        "useDirections": [
+          {
+            "family": "官殺",
+            "element": "火",
+            "role": "use",
+            "reason": "官殺家族依日主五行換算為火。"
+          }
+        ],
+        "favorableDirections": [
+          {
+            "family": "財",
+            "element": "木",
+            "role": "favorable",
+            "reason": "財家族依日主五行換算為木。"
+          }
+        ],
+        "unfavorableDirections": [
+          {
+            "family": "印",
+            "element": "土",
+            "role": "unfavorable",
+            "reason": "印家族依日主五行換算為土。"
+          }
+        ],
+        "conditionalDirections": [
+          {
+            "family": "食傷",
+            "element": "水",
+            "role": "conditional",
+            "reason": "食傷家族依日主五行換算為水。"
+          }
+        ],
+        "evidenceIds": [
+          "fact-hidden-2-2",
+          "fact-hidden-3-1",
+          "fact-hidden-4-2",
+          "fact-hidden-4-3",
+          "fact-stem-2"
+        ],
+        "rejections": [
+          "財藏不等於無財",
+          "殺顯有根仍不代表足以制身",
+          "與印多取財方案分開"
+        ],
+        "sources": [
+          "2026-08-19"
+        ]
+      },
+      {
+        "ruleId": "strong-peer-use-officer",
+        "title": "強旺比劫：官殺制比",
+        "applicability": "conditional",
+        "condition": "若按普通格論，且比劫為主導問題，官殺可見、有同五行藏根並能制身時",
+        "useDirections": [
+          {
+            "family": "官殺",
+            "element": "火",
+            "role": "use",
+            "reason": "官殺家族依日主五行換算為火。"
+          }
+        ],
+        "favorableDirections": [
+          {
+            "family": "財",
+            "element": "木",
+            "role": "favorable",
+            "reason": "財家族依日主五行換算為木。"
+          }
+        ],
+        "unfavorableDirections": [
+          {
+            "family": "印",
+            "element": "土",
+            "role": "unfavorable",
+            "reason": "印家族依日主五行換算為土。"
+          },
+          {
+            "family": "比劫",
+            "element": "金",
+            "role": "unfavorable",
+            "reason": "比劫家族依日主五行換算為金。"
+          }
+        ],
+        "conditionalDirections": [
+          {
+            "family": "食傷",
+            "element": "水",
+            "role": "conditional",
+            "reason": "食傷家族依日主五行換算為水。"
+          }
+        ],
+        "evidenceIds": [
+          "fact-hidden-1-1",
+          "fact-hidden-2-2",
+          "fact-hidden-3-1",
+          "fact-hidden-4-2",
+          "fact-hidden-4-3",
+          "fact-stem-2"
+        ],
+        "rejections": [
+          "食傷可能制所用官殺",
+          "印可能反生身",
+          "有根不等於制身已成立"
+        ],
+        "sources": [
+          "2026-08-26"
+        ]
+      },
+      {
+        "ruleId": "strong-peer-use-output",
+        "title": "強旺比劫：食傷洩比",
+        "applicability": "conditional",
+        "condition": "若按普通格論，且比劫為主導問題，食傷可見並有財承接時",
+        "useDirections": [
+          {
+            "family": "食傷",
+            "element": "水",
+            "role": "use",
+            "reason": "食傷家族依日主五行換算為水。"
+          }
+        ],
+        "favorableDirections": [
+          {
+            "family": "財",
+            "element": "木",
+            "role": "favorable",
+            "reason": "財家族依日主五行換算為木。"
+          }
+        ],
+        "unfavorableDirections": [
+          {
+            "family": "印",
+            "element": "土",
+            "role": "unfavorable",
+            "reason": "印家族依日主五行換算為土。"
+          }
+        ],
+        "conditionalDirections": [],
+        "evidenceIds": [
+          "fact-hidden-1-1",
+          "fact-hidden-1-2",
+          "fact-hidden-2-2",
+          "fact-hidden-2-3",
+          "fact-hidden-4-3",
+          "fact-stem-4"
+        ],
+        "rejections": [
+          "印可能制食傷",
+          "財的承接能力尚未量化"
+        ],
+        "sources": [
+          "2026-08-26"
+        ]
+      },
+      {
+        "ruleId": "strong-seal-use-wealth",
+        "title": "強旺印多：財制印",
+        "applicability": "conditional",
+        "condition": "若按普通格論，且印確為本局主導問題，財具位置與承接能力時",
+        "useDirections": [
+          {
+            "family": "財",
+            "element": "木",
+            "role": "use",
+            "reason": "財家族依日主五行換算為木。"
+          }
+        ],
+        "favorableDirections": [
+          {
+            "family": "食傷",
+            "element": "水",
+            "role": "favorable",
+            "reason": "食傷家族依日主五行換算為水。"
+          }
+        ],
+        "unfavorableDirections": [
+          {
+            "family": "比劫",
+            "element": "金",
+            "role": "unfavorable",
+            "reason": "比劫家族依日主五行換算為金。"
+          },
+          {
+            "family": "印",
+            "element": "土",
+            "role": "unfavorable",
+            "reason": "印家族依日主五行換算為土。"
+          }
+        ],
+        "conditionalDirections": [],
+        "evidenceIds": [
+          "fact-hidden-1-2",
+          "fact-hidden-1-3",
+          "fact-hidden-2-1",
+          "fact-hidden-2-2",
+          "fact-hidden-2-3",
+          "fact-hidden-3-2",
+          "fact-hidden-4-1",
+          "fact-hidden-4-3",
+          "fact-stem-1",
+          "fact-stem-4"
+        ],
+        "rejections": [
+          "財僅出現不代表能制印",
+          "比劫可能制財",
+          "印可能制食傷"
+        ],
+        "sources": [
+          "2026-08-26"
+        ]
+      }
+    ],
+    "noPlanReasons": [],
+    "bridgePaths": [
+      {
+        "conflictFrom": "木",
+        "intermediary": "火",
+        "conflictTo": "土",
+        "path": [
+          "木",
+          "火",
+          "土"
+        ],
+        "actualNodes": [
+          "木",
+          "火",
+          "土"
+        ],
+        "missingNodes": [],
+        "status": "candidate",
+        "explanation": "三個節點均存在，僅列木→火→土候選；位置、受制與力量尚未認證。"
+      },
+      {
+        "conflictFrom": "火",
+        "intermediary": "土",
+        "conflictTo": "金",
+        "path": [
+          "火",
+          "土",
+          "金"
+        ],
+        "actualNodes": [
+          "火",
+          "土",
+          "金"
+        ],
+        "missingNodes": [],
+        "status": "candidate",
+        "explanation": "三個節點均存在，僅列火→土→金候選；位置、受制與力量尚未認證。"
+      },
+      {
+        "conflictFrom": "土",
+        "intermediary": "金",
+        "conflictTo": "水",
+        "path": [
+          "土",
+          "金",
+          "水"
+        ],
+        "actualNodes": [
+          "土",
+          "金",
+          "水"
+        ],
+        "missingNodes": [],
+        "status": "candidate",
+        "explanation": "三個節點均存在，僅列土→金→水候選；位置、受制與力量尚未認證。"
+      },
+      {
+        "conflictFrom": "金",
+        "intermediary": "水",
+        "conflictTo": "木",
+        "path": [
+          "金",
+          "水",
+          "木"
+        ],
+        "actualNodes": [
+          "金",
+          "水",
+          "木"
+        ],
+        "missingNodes": [],
+        "status": "candidate",
+        "explanation": "三個節點均存在，僅列金→水→木候選；位置、受制與力量尚未認證。"
+      },
+      {
+        "conflictFrom": "水",
+        "intermediary": "木",
+        "conflictTo": "火",
+        "path": [
+          "水",
+          "木",
+          "火"
+        ],
+        "actualNodes": [
+          "水",
+          "木",
+          "火"
+        ],
+        "missingNodes": [],
+        "status": "candidate",
+        "explanation": "三個節點均存在，僅列水→木→火候選；位置、受制與力量尚未認證。"
+      }
+    ],
+    "medicineNotes": [
+      {
+        "protectedPlanRuleId": "strong-hidden-wealth-visible-kill",
+        "protectedFamily": "官殺",
+        "protectedElement": "火",
+        "hindranceFamily": "印",
+        "medicineFamily": "財",
+        "status": "conditional",
+        "explanation": "只在方案 strong-hidden-wealth-visible-kill 中保護官殺方向；印是否為病、財是否能護用尚須比較力量。"
+      },
+      {
+        "protectedPlanRuleId": "strong-peer-use-officer",
+        "protectedFamily": "官殺",
+        "protectedElement": "火",
+        "hindranceFamily": "印",
+        "medicineFamily": "財",
+        "status": "conditional",
+        "explanation": "只在方案 strong-peer-use-officer 中保護官殺方向；印是否為病、財是否能護用尚須比較力量。"
+      },
+      {
+        "protectedPlanRuleId": "strong-peer-use-output",
+        "protectedFamily": "食傷",
+        "protectedElement": "水",
+        "hindranceFamily": "印",
+        "medicineFamily": "財",
+        "status": "conditional",
+        "explanation": "只在方案 strong-peer-use-output 中保護食傷方向；印是否為病、財是否能護用尚須比較力量。"
+      },
+      {
+        "protectedPlanRuleId": "strong-seal-use-wealth",
+        "protectedFamily": "財",
+        "protectedElement": "木",
+        "hindranceFamily": "比劫",
+        "medicineFamily": "食傷",
+        "status": "conditional",
+        "explanation": "只在方案 strong-seal-use-wealth 中保護財方向；比劫是否為病、食傷是否能護用尚須比較力量。"
+      }
+    ],
+    "seasonalCompatibility": [
+      {
+        "planRuleId": null,
+        "season": "outside_bounded_scope",
+        "monthBranches": [],
+        "status": "unassessed",
+        "element": null,
+        "explanation": "月支不在首版三冬／三夏範圍；調候未評估，不套用其他課例。"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "preference-strong-hidden-wealth-visible-kill",
+        "kind": "lesson_rule",
+        "pillar": null,
+        "hiddenStemLayer": null,
+        "interactionId": null,
+        "description": "財藏殺顯：官殺候選；若按普通格論，財藏而官殺顯露且有同五行藏根，官殺確能制身時。",
+        "sourceDate": "2026-08-19"
+      },
+      {
+        "id": "preference-strong-peer-use-officer",
+        "kind": "lesson_rule",
+        "pillar": null,
+        "hiddenStemLayer": null,
+        "interactionId": null,
+        "description": "強旺比劫：官殺制比；若按普通格論，且比劫為主導問題，官殺可見、有同五行藏根並能制身時。",
+        "sourceDate": "2026-08-26"
+      },
+      {
+        "id": "preference-strong-peer-use-output",
+        "kind": "lesson_rule",
+        "pillar": null,
+        "hiddenStemLayer": null,
+        "interactionId": null,
+        "description": "強旺比劫：食傷洩比；若按普通格論，且比劫為主導問題，食傷可見並有財承接時。",
+        "sourceDate": "2026-08-26"
+      },
+      {
+        "id": "preference-strong-seal-use-wealth",
+        "kind": "lesson_rule",
+        "pillar": null,
+        "hiddenStemLayer": null,
+        "interactionId": null,
+        "description": "強旺印多：財制印；若按普通格論，且印確為本局主導問題，財具位置與承接能力時。",
+        "sourceDate": "2026-08-26"
+      }
+    ],
+    "limitations": [
+      "所有普通方案都以『若按普通格論』為適用條件，且不合併互相衝突的角色。",
+      "出現只證明位置存在，不代表該十神主導或有效力量已認證。",
+      "通關元素存在也不宣稱通關成功；病藥不覆寫上游強弱。"
+    ]
+  },
+  "comparison": {
+    "pattern": {
+      "appValue": "直輸四柱分析",
+      "lessonValue": "偏印格、傷官格",
+      "agreementStatus": "not_comparable",
+      "note": "App geJu 與課堂普通格候選逐項比較；直輸入口的標籤不當作課堂格名。"
+    },
+    "strength": {
+      "appValue": "偏強",
+      "lessonValue": "強候選",
+      "agreementStatus": "agree",
+      "note": "App 量化強弱只供比較，不參與課堂三項觀察。"
+    },
+    "preferences": {
+      "appValue": "木、水",
+      "lessonValue": "木、水、火",
+      "agreementStatus": "partial",
+      "note": "僅比較元素方向；不把跨方案角色合併成新的正式用神。"
+    }
+  },
+  "sources": [
+    {
+      "date": "2026-07-08",
+      "ruleIds": [
+        "specialized-use-version"
+      ]
+    },
+    {
+      "date": "2026-07-22",
+      "ruleIds": [
+        "day-master-three-observations"
+      ]
+    },
+    {
+      "date": "2026-07-29",
+      "ruleIds": [
+        "ordinary-pattern-and-interaction-evidence"
+      ]
+    },
+    {
+      "date": "2026-08-12",
+      "ruleIds": [
+        "medicine-protects-selected-role"
+      ]
+    },
+    {
+      "date": "2026-08-19",
+      "ruleIds": [
+        "seasonal-follows-support-balance"
+      ]
+    },
+    {
+      "date": "2026-08-26",
+      "ruleIds": [
+        "ordinary-preference-branches",
+        "five-bridge-paths"
+      ]
+    },
+    {
+      "date": "2026-09-02",
+      "ruleIds": [
+        "specialized-use-version",
+        "follow-child-peer-exception"
+      ]
+    }
+  ],
+  "limitations": [
+    "本結果只重現本課派首版條件分支，不代表命理預測能力獲得驗證。",
+    "得勢採用 2026/07/22 的工程暫定門檻；互動後有效力量未重新計分。",
+    "工程候選可能與老師的精確來源命例結論不同；既有 source_case_only 註解仍分開保留，不以四柱硬編改判。",
+    "不輸出疾病、死亡、自傷、事故、婚姻、投資或人格等現實事件斷語。"
+  ]
+}

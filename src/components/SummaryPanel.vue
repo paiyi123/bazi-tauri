@@ -62,41 +62,12 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { BaziResponse } from "../types/bazi";
+import { BRANCH_WUXING, STEM_WUXING } from "../constants/wuxing";
 
 const props = defineProps<{
   result: BaziResponse;
   compact?: boolean;
 }>();
-
-type WuXing = "wood" | "fire" | "earth" | "metal" | "water";
-
-const STEM_WUXING: Record<string, WuXing> = {
-  甲: "wood",
-  乙: "wood",
-  丙: "fire",
-  丁: "fire",
-  戊: "earth",
-  己: "earth",
-  庚: "metal",
-  辛: "metal",
-  壬: "water",
-  癸: "water",
-};
-
-const BRANCH_WUXING: Record<string, WuXing> = {
-  子: "water",
-  丑: "earth",
-  寅: "wood",
-  卯: "wood",
-  辰: "earth",
-  巳: "fire",
-  午: "fire",
-  未: "earth",
-  申: "metal",
-  酉: "metal",
-  戌: "earth",
-  亥: "water",
-};
 
 const luckStart = computed(() => props.result.luckStart);
 const descriptionColumns = computed(() => (props.compact ? 1 : 2));
@@ -199,23 +170,23 @@ const baziPillars = computed(() => {
 }
 
 .wuxing-wood {
-  color: #2e7d32;
+  color: var(--wx-wood);
 }
 
 .wuxing-fire {
-  color: #c62828;
+  color: var(--wx-fire);
 }
 
 .wuxing-earth {
-  color: #8d6e63;
+  color: var(--wx-earth);
 }
 
 .wuxing-metal {
-  color: #546e7a;
+  color: var(--wx-metal);
 }
 
 .wuxing-water {
-  color: #1565c0;
+  color: var(--wx-water);
 }
 
 .shen-sha-text {

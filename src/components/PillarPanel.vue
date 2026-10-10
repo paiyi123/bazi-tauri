@@ -148,17 +148,18 @@
               :stroke-dasharray="link.dasharray"
               :opacity="link.opacity"
             />
-            <text
-              :x="link.labelX"
-              :y="link.labelY"
-              :fill="link.color"
-              :class="['relation-map-label', `relation-map-label-${link.type}`]"
-              text-anchor="middle"
-            >
-              {{ link.label }}
-            </text>
           </template>
         </svg>
+
+        <!-- Labels are HTML, not SVG text: the SVG uses preserveAspectRatio="none", which stretched the glyphs. -->
+        <span
+          v-for="link in relationLinks"
+          :key="`label-${link.key}`"
+          :class="['relation-map-label', `relation-map-label-${link.type}`]"
+          :style="{ left: `${link.labelX}%`, top: `${link.labelY}%`, '--relation-color': link.color }"
+        >
+          {{ link.label }}
+        </span>
 
         <div
           v-for="node in diagramNodes"
@@ -251,6 +252,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { BaziResponse, LuckPreviewPillar, Pillar, QuantModelInteraction } from '../types/bazi'
+import { BRANCH_WUXING, STEM_WUXING, type WuXing } from '../constants/wuxing'
 
 const props = withDefaults(
   defineProps<{
@@ -269,7 +271,6 @@ const props = withDefaults(
   }
 )
 
-type WuXing = 'wood' | 'fire' | 'earth' | 'metal' | 'water'
 type DisplayPillarItem = {
   key: string
   label: string
@@ -327,34 +328,6 @@ type RelationLink = {
 type InteractionSection = {
   title: string
   rows: InteractionRow[]
-}
-
-const STEM_WUXING: Record<string, WuXing> = {
-  甲: 'wood',
-  乙: 'wood',
-  丙: 'fire',
-  丁: 'fire',
-  戊: 'earth',
-  己: 'earth',
-  庚: 'metal',
-  辛: 'metal',
-  壬: 'water',
-  癸: 'water'
-}
-
-const BRANCH_WUXING: Record<string, WuXing> = {
-  子: 'water',
-  丑: 'earth',
-  寅: 'wood',
-  卯: 'wood',
-  辰: 'earth',
-  巳: 'fire',
-  午: 'fire',
-  未: 'earth',
-  申: 'metal',
-  酉: 'metal',
-  戌: 'earth',
-  亥: 'water'
 }
 
 const STEM_COMBINATION_ELEMENTS: Record<string, string> = {
@@ -1098,8 +1071,9 @@ function buildPairRelationPath(
     const controlY = Math.max(28, 34 - layer * 3)
     return {
       path: `M ${left.x} ${left.y} Q ${controlX} ${controlY} ${right.x} ${right.y}`,
-      labelX: sameNode ? controlX + 1.5 : controlX,
-      labelY: controlY - 2
+      // A self-loop hugs the node, so its label sits just above the node card instead of on it.
+      labelX: sameNode ? start.x : controlX,
+      labelY: sameNode ? 12 : controlY - 2
     }
   }
 
@@ -1175,12 +1149,12 @@ function spreadRelationLabels(links: RelationLink[]) {
     const placed: Array<{ labelX: number; labelY: number }> = []
     // Keep labels inside the map by pushing them toward the center band.
     const yDirection = area === 'top' ? 1 : -1
-    const yMin = area === 'top' ? 4 : 54
-    const yMax = area === 'top' ? 44 : 98
+    const yMin = area === 'top' ? 6 : 54
+    const yMax = area === 'top' ? 44 : 93
     const xMin = 12
     const xMax = 88
     const xCollision = 12.8
-    const yCollision = 5.8
+    const yCollision = 6.8
     const collides = (x: number, y: number) =>
       placed.some((item) => Math.abs(item.labelX - x) < xCollision && Math.abs(item.labelY - y) < yCollision)
 
@@ -1347,15 +1321,16 @@ const relationLinks = computed<RelationLink[]>(() => {
   clear: both;
   position: relative;
   z-index: 0;
-  margin-top: 0;
+  margin-top: 8px;
 }
 
 .relation-map-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 12px;
-  align-items: flex-start;
-  margin-bottom: 10px;
+  gap: 8px 12px;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
 .relation-map-header h3 {
@@ -1409,17 +1384,25 @@ const relationLinks = computed<RelationLink[]>(() => {
 }
 
 .relation-map-label {
-  font-size: calc(2.8px * var(--app-font-scale));
+  position: absolute;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+  padding: 1px 9px;
+  border: 1px solid var(--relation-color);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 6px rgba(84, 45, 18, 0.1);
+  color: var(--relation-color);
+  font-size: calc(12px * var(--app-font-scale));
   font-weight: 700;
-  paint-order: stroke;
-  stroke: rgba(255, 255, 255, 0.96);
-  stroke-width: 1.5px;
-  stroke-linejoin: round;
+  line-height: 1.5;
   letter-spacing: 0.04em;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .relation-map-label-祿 {
-  font-size: calc(2.6px * var(--app-font-scale));
+  font-size: calc(11px * var(--app-font-scale));
 }
 
 .relation-node {
@@ -2053,23 +2036,23 @@ const relationLinks = computed<RelationLink[]>(() => {
 }
 
 .wuxing-wood {
-  color: #2e7d32;
+  color: var(--wx-wood);
 }
 
 .wuxing-fire {
-  color: #c62828;
+  color: var(--wx-fire);
 }
 
 .wuxing-earth {
-  color: #8d6e63;
+  color: var(--wx-earth);
 }
 
 .wuxing-metal {
-  color: #546e7a;
+  color: var(--wx-metal);
 }
 
 .wuxing-water {
-  color: #1565c0;
+  color: var(--wx-water);
 }
 
 

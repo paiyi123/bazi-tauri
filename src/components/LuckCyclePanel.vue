@@ -5,6 +5,7 @@
         <div>
           <h2>大運</h2>
           <p class="luck-start-line">{{ luckStartLine }}</p>
+          <p class="luck-favor-line" :title="favorLineTitle">{{ favorLine }}</p>
         </div>
       </div>
     </template>
@@ -45,6 +46,7 @@
               ]"
               @click="selectLuckRow(row)"
             >
+              <span v-if="isCurrentLuckRow(row)" class="current-badge is-tab">目前</span>
               <div class="fate-cell-year">{{ formatLuckRangeLabel(row) }}</div>
               <div class="fate-cell-main">
                 <div class="fate-char-row">
@@ -70,6 +72,17 @@
                   <span class="hidden-ten-god-text">{{ item.tenGod }}</span>
                 </span>
               </div>
+              <div v-if="luckNatalRelations.get(row.index)?.length" class="fate-relation-list" title="此步大運與原局四柱的合沖刑破">
+                <span
+                  v-for="tag in luckNatalRelations.get(row.index)"
+                  :key="`luck-relation-${row.index}-${tag.text}`"
+                  :class="['fate-relation-tag', `is-${tag.tone}`, tag.judgement && `favor-${tag.judgement.favor}`]"
+                  :title="tag.judgement?.reason"
+                >
+                  {{ tag.text }}<span v-if="tag.judgement?.favor === 'good'" class="favor-mark">▲</span
+                  ><span v-else-if="tag.judgement?.favor === 'bad'" class="favor-mark">▼</span>
+                </span>
+              </div>
             </button>
           </div>
         </el-scrollbar>
@@ -93,6 +106,7 @@
               ]"
               @click="selectAnnualRow(annual)"
             >
+              <span v-if="isCurrentAnnualRow(annual)" class="current-badge">今年</span>
               <div class="fate-cell-year">{{ annual.year }}</div>
               <div class="fate-cell-main">
                 <div class="fate-char-row">
@@ -197,10 +211,10 @@
               <div
                 v-for="item in stemSummaryStrips"
                 :key="item.key"
-                :class="['interaction-summary-strip', item.tone]"
+                :class="['interaction-summary-strip', item.tone, { 'is-empty': item.value === '無沖合關係' }]"
                 :style="summaryStripStyle(item)"
               >
-                {{ item.label }}: {{ item.value }}
+                <span class="strip-label">{{ item.label }}</span>{{ item.value }}
               </div>
             </div>
           </div>
@@ -238,10 +252,10 @@
             <div
               v-for="item in branchSummaryStrips"
               :key="item.key"
-              :class="['interaction-summary-strip', item.tone]"
+              :class="['interaction-summary-strip', item.tone, { 'is-empty': item.value === '無沖合關係' }]"
               :style="summaryStripStyle(item)"
             >
-              {{ item.label }}: {{ item.value }}
+              <span class="strip-label">{{ item.label }}</span>{{ item.value }}
             </div>
           </div>
         </div>
@@ -253,6 +267,13 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import type { BaziResponse, DaYun, LiuNian, LiuYue, LuckPreviewPillar } from "../types/bazi";
+import { BRANCH_WUXING, STEM_WUXING, type WuXing } from "../constants/wuxing";
+import {
+  combineJudgements,
+  judgeLuckRelation,
+  lessonPreferences,
+  type RelationJudgement,
+} from "../utils/lessonPreference";
 
 const props = defineProps<{
   result: BaziResponse;
@@ -263,7 +284,6 @@ const emit = defineEmits<{
   "preview-change": [LuckPreviewPillar[] | null];
 }>();
 
-type WuXing = "wood" | "fire" | "earth" | "metal" | "water";
 type DisplayDaYun = DaYun & {
   ageRange: string;
   yearRange: string;
@@ -297,34 +317,6 @@ const selectedAnnualYear = ref<number | null>(null);
 const selectedMonthIndex = ref<number | null>(null);
 const expandAnnualLane = ref(!props.compact);
 const expandMonthLane = ref(!props.compact);
-
-const STEM_WUXING: Record<string, WuXing> = {
-  甲: "wood",
-  乙: "wood",
-  丙: "fire",
-  丁: "fire",
-  戊: "earth",
-  己: "earth",
-  庚: "metal",
-  辛: "metal",
-  壬: "water",
-  癸: "water",
-};
-
-const BRANCH_WUXING: Record<string, WuXing> = {
-  子: "water",
-  丑: "earth",
-  寅: "wood",
-  卯: "wood",
-  辰: "earth",
-  巳: "fire",
-  午: "fire",
-  未: "earth",
-  申: "metal",
-  酉: "metal",
-  戌: "earth",
-  亥: "water",
-};
 
 const STEM_COMBINATION_ELEMENTS: Record<string, string> = {
   甲己: "土",
@@ -652,6 +644,103 @@ const natalItems = computed<InteractionPillarItem[]>(() => [
   },
 ]);
 
+type RelationTag = {
+  text: string;
+  tone: "combine" | "clash" | "punish" | "break" | "echo";
+  judgement?: RelationJudgement;
+};
+
+function relationTone(text: string): RelationTag["tone"] {
+  if (text.includes("沖")) {
+    return "clash";
+  }
+  if (text.includes("刑")) {
+    return "punish";
+  }
+  if (text.includes("破") || text.includes("害")) {
+    return "break";
+  }
+  if (text.includes("伏吟")) {
+    return "echo";
+  }
+  return "combine";
+}
+
+const lessonFavor = computed(() => lessonPreferences(props.result.quantModel?.lessonContent?.threeStepAnalysis));
+
+const favorLine = computed(() => {
+  const preferences = lessonFavor.value;
+  if (!preferences) {
+    return "關係標籤：課堂三步分析沒有喜忌方案，暫不判有利不利";
+  }
+  const names = (favor: string) =>
+    Object.values(preferences.elements)
+      .filter((item) => item.favor === favor)
+      .map((item) => item.name)
+      .join("、") || "無";
+  const mixed = names("mixed");
+  return `關係標籤：▲有利 ▼不利（依課堂三步分析：喜用 ${names("good")}；忌 ${names("bad")}${
+    mixed === "無" ? "" : `；依方案而定 ${mixed}`
+  }）`;
+});
+
+const favorLineTitle = computed(() => {
+  const preferences = lessonFavor.value;
+  if (!preferences) {
+    return undefined;
+  }
+  return [
+    `方案：${preferences.planTitles.join("、")}`,
+    ...Object.values(preferences.elements).flatMap((item) => item.notes),
+  ].join("\n");
+});
+
+// Each 大運 against the four natal pillars, same rules as the 「大運 × 原局」 strip.
+const luckNatalRelations = computed(
+  () =>
+    new Map(
+      rows.value.map((row) => {
+        const item: InteractionPillarItem = {
+          key: `luck-${row.index}`,
+          label: "大運",
+          stem: ganZhiStem(row.ganZhi),
+          branch: ganZhiBranch(row.ganZhi),
+          branchHiddenStems: row.branchHiddenStems,
+          branchTenGods: row.branchTenGods,
+        };
+        // Keep which natal character each tag touches, so it can be judged against 喜忌.
+        const touched = new Map<string, Array<{ char: string; element: WuXing }>>();
+        const collect = (text: string, char: string, element: WuXing | undefined) => {
+          const list = touched.get(text) ?? [];
+          if (element) {
+            list.push({ char, element });
+          }
+          touched.set(text, list);
+        };
+        natalItems.value.forEach((natal) => {
+          summarizeStemInteractions(item, natal).forEach((text) => collect(text, natal.stem, STEM_WUXING[natal.stem]));
+          summarizeBranchInteractions(item, natal).forEach((text) =>
+            collect(text, natal.branch, BRANCH_WUXING[natal.branch]),
+          );
+        });
+        const preferences = lessonFavor.value;
+        return [
+          row.index,
+          [...touched.entries()].map(([text, natals]): RelationTag => ({
+            text,
+            tone: relationTone(text),
+            judgement:
+              preferences && natals.length
+                ? combineJudgements(
+                    natals.map((natal) => judgeLuckRelation(text, natal.char, natal.element, preferences)),
+                  )
+                : undefined,
+          })),
+        ];
+      }),
+    ),
+);
+
 const selectedLuckRow = computed(
   () =>
     rows.value.find((row) => row.index === selectedLuckIndex.value) ??
@@ -940,7 +1029,7 @@ function buildSummaryRows(
   if (selectedAnnualItem.value) {
     const summary = buildSummaryItem(
       "annualNatal",
-      "年.局",
+      "流年 × 原局",
       [selectedAnnualItem.value, ...natalItems.value],
       summarizeGroupInteractions([selectedAnnualItem.value], natalItems.value, summarizePair),
     );
@@ -952,7 +1041,7 @@ function buildSummaryRows(
   if (selectedLuckItem.value) {
     const summary = buildSummaryItem(
       "luckNatal",
-      "運.局",
+      "大運 × 原局",
       [selectedLuckItem.value, ...natalItems.value],
       summarizeGroupInteractions([selectedLuckItem.value], natalItems.value, summarizePair),
     );
@@ -964,7 +1053,7 @@ function buildSummaryRows(
   if (selectedAnnualItem.value && selectedLuckItem.value) {
     const summary = buildSummaryItem(
       "annualLuck",
-      "年.運",
+      "流年 × 大運",
       [selectedAnnualItem.value, selectedLuckItem.value],
       summarizeGroupInteractions([selectedAnnualItem.value], [selectedLuckItem.value], summarizePair),
     );
@@ -975,7 +1064,7 @@ function buildSummaryRows(
 
   const natalSummary = buildSummaryItem(
     "natal",
-    "命局",
+    "原局本身",
     natalItems.value,
     summarizeWithinGroup(natalItems.value, summarizePair),
   );
@@ -1010,7 +1099,7 @@ function buildMonthAnnualSummary(
     }
   }
 
-  const summary = buildSummaryItem("monthAnnual", "農曆月.年", [selectedAnnualItem.value], parts);
+  const summary = buildSummaryItem("monthAnnual", "流月 × 流年", [selectedAnnualItem.value], parts);
   return summary ? [summary] : [];
 }
 
@@ -1296,7 +1385,80 @@ watch(expandMonthLane, (expanded) => {
 }
 
 .fate-cell-major {
-  height: 248px;
+  grid-template-rows: auto minmax(72px, auto) minmax(72px, auto) auto;
+  height: auto;
+  min-height: 248px;
+  padding-top: 18px;
+  align-content: start;
+}
+
+.fate-relation-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 3px;
+}
+
+.fate-relation-tag {
+  padding: 0 5px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.85);
+  font-size: calc(11px * var(--app-font-scale));
+  font-weight: 600;
+  line-height: 1.55;
+  white-space: nowrap;
+}
+
+.fate-relation-tag.is-combine {
+  color: #2f7d45;
+}
+
+.fate-relation-tag.is-clash {
+  color: #b42318;
+}
+
+.fate-relation-tag.is-punish {
+  color: #c2410c;
+}
+
+.fate-relation-tag.is-break {
+  color: #64748b;
+}
+
+.fate-relation-tag.is-echo {
+  color: #7c3aed;
+}
+
+/* 喜忌 verdict: keep the relation color, mark the result with a filled corner and an arrow. */
+.fate-relation-tag.favor-good {
+  background: rgba(47, 125, 69, 0.12);
+  box-shadow: inset 3px 0 0 #2f7d45;
+}
+
+.fate-relation-tag.favor-bad {
+  background: rgba(180, 35, 24, 0.1);
+  box-shadow: inset 3px 0 0 #b42318;
+}
+
+.favor-mark {
+  margin-left: 2px;
+  font-size: 0.85em;
+}
+
+.favor-good .favor-mark {
+  color: #2f7d45;
+}
+
+.favor-bad .favor-mark {
+  color: #b42318;
+}
+
+.luck-favor-line {
+  margin: 2px 0 0;
+  color: var(--bazi-text-muted);
+  font-size: calc(12px * var(--app-font-scale));
+  cursor: help;
 }
 
 .fate-cell-year {
@@ -1438,29 +1600,48 @@ watch(expandMonthLane, (expanded) => {
   line-height: 1.35;
 }
 
+.interaction-summary-strip {
+  border-left: 4px solid transparent;
+  color: var(--bazi-text);
+}
+
+.strip-label {
+  margin-right: 8px;
+  font-weight: 700;
+}
+
+.interaction-summary-strip.is-empty {
+  color: var(--bazi-text-subtle);
+}
+
+/* 流月 × 流年 */
 .tone-1 {
-  background: #f9a03f;
-  color: #111827;
+  background: #f5f0fb;
+  border-left-color: #7c3aed;
 }
 
+/* 流年 × 原局 */
 .tone-2 {
-  background: #ef4b34;
-  color: #111827;
+  background: #fdf0f3;
+  border-left-color: #be185d;
 }
 
+/* 大運 × 原局 */
 .tone-3 {
-  background: #38a84c;
-  color: #111827;
+  background: #fff4e5;
+  border-left-color: var(--bazi-accent);
 }
 
+/* 原局本身 */
 .tone-4 {
-  background: #4c84f0;
-  color: #111827;
+  background: #f6efe6;
+  border-left-color: var(--bazi-primary);
 }
 
+/* 流年 × 大運 */
 .tone-5 {
-  background: #f6d743;
-  color: #111827;
+  background: #fdf7e3;
+  border-left-color: var(--bazi-gold);
 }
 
 .interaction-pillar-grid {
@@ -1533,23 +1714,23 @@ watch(expandMonthLane, (expanded) => {
 }
 
 .wuxing-wood {
-  color: #16a34a;
+  color: var(--wx-wood);
 }
 
 .wuxing-fire {
-  color: #ff2a1a;
+  color: var(--wx-fire);
 }
 
 .wuxing-earth {
-  color: #a16207;
+  color: var(--wx-earth);
 }
 
 .wuxing-metal {
-  color: #f59e0b;
+  color: var(--wx-metal);
 }
 
 .wuxing-water {
-  color: #1d4ed8;
+  color: var(--wx-water);
 }
 
 .luck-panel.is-compact .luck-start-line {
@@ -1575,11 +1756,21 @@ watch(expandMonthLane, (expanded) => {
 }
 
 .luck-panel.is-compact .fate-cell,
+.luck-panel.is-compact .fate-relation-tag {
+  padding: 0 3px;
+  font-size: calc(9px * var(--app-font-scale));
+}
+
 .luck-panel.is-compact .fate-cell-major,
 .luck-panel.is-compact .fate-cell-annual {
   height: 286px;
   padding: 7px 8px 9px;
   gap: 2px;
+}
+
+.luck-panel.is-compact .fate-cell-major {
+  height: auto;
+  min-height: 286px;
 }
 
 .luck-panel.is-compact .fate-cell-month {
@@ -1823,7 +2014,35 @@ watch(expandMonthLane, (expanded) => {
 }
 
 .fate-cell.is-current:not(.is-selected) {
+  background: #fff1dc;
   box-shadow: inset 0 -3px 0 var(--bazi-accent);
+}
+
+.current-badge {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--bazi-accent);
+  color: #fffaf0;
+  font-size: calc(11px * var(--app-font-scale));
+  font-weight: 700;
+  line-height: 1.6;
+  pointer-events: none;
+}
+
+/* 大運格底部放關係標籤，所以「目前」改成貼在上緣的小頁籤 */
+.current-badge.is-tab {
+  top: 0;
+  right: auto;
+  bottom: auto;
+  left: 50%;
+  padding: 0 10px;
+  border-radius: 0 0 8px 8px;
+  font-size: calc(10px * var(--app-font-scale));
+  line-height: 1.5;
+  transform: translateX(-50%);
 }
 
 .fate-cell-year,

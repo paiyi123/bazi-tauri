@@ -27,6 +27,12 @@
   --bazi-transition: 180ms ease;
   --bazi-z-sticky: 20;
   --bazi-z-overlay: 40;
+  /* 五行配色：全 App 共用，改這裡即可 */
+  --wx-wood: #2f7d45;
+  --wx-fire: #b42318;
+  --wx-earth: #8a5a28;
+  --wx-metal: #53606a;
+  --wx-water: #1d5fa7;
   font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", sans-serif;
   color: var(--bazi-text);
   background:
@@ -569,6 +575,7 @@ body {
 }
 
 .pillar-box {
+  box-sizing: border-box;
   height: 100%;
   border: 1px solid var(--bazi-border);
   border-radius: var(--bazi-radius-md);
@@ -636,23 +643,23 @@ body {
 }
 
 .wuxing-wood {
-  color: #2f7d45;
+  color: var(--wx-wood);
 }
 
 .wuxing-fire {
-  color: #b42318;
+  color: var(--wx-fire);
 }
 
 .wuxing-earth {
-  color: #8a5a28;
+  color: var(--wx-earth);
 }
 
 .wuxing-metal {
-  color: #53606a;
+  color: var(--wx-metal);
 }
 
 .wuxing-water {
-  color: #1d5fa7;
+  color: var(--wx-water);
 }
 
 @media (max-width: 1280px) {

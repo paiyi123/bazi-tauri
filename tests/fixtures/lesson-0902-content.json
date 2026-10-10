@@ -1,0 +1,1261 @@
+{
+  "title": "上課內容",
+  "status": "課堂推論已整理（來源含 2026/07/01、2026/07/08、2026/07/15、2026/07/22、2026/07/29、2026/08/05、2026/08/12、2026/08/19、2026/08/26、2026/09/02；未核對規則不視為已驗證）",
+  "analysisOrder": [
+    "格局判定",
+    "日主強弱",
+    "用神與喜忌"
+  ],
+  "futureRuleNotice": "完整課堂規則與來源保存在 bazi-skills 文件；已接入規則以事實、規則與證據鏈顯示，未核對內容不納入自動推論。",
+  "inferences": [
+    {
+      "ruleId": "20260812-xin-wealth-case",
+      "title": "2026/08/12 辛金偏財命例比對",
+      "status": "未符合本課命例",
+      "sourceVerification": "transcript_and_whiteboard_confirmed",
+      "algorithmStatus": "candidate",
+      "matchStatus": "not_matched",
+      "outputMode": "annotation_only",
+      "fixtureScope": "source_case_only",
+      "agreementStatus": "not_comparable",
+      "fallbackPolicy": "preserve_normal_outputs",
+      "appReference": {
+        "geJu": "直輸四柱分析",
+        "strengthLabel": "偏強",
+        "specialPattern": "未成"
+      },
+      "lessonCandidate": null,
+      "sensitiveClaimsPolicy": "excluded",
+      "conclusion": "目前四柱「甲寅 癸酉 壬午 癸卯」不是本課例「癸卯 乙卯 辛亥 庚寅」，不套用偏財格、身弱財旺及金土方向候選。",
+      "evidence": [
+        "目前四柱：甲寅 癸酉 壬午 癸卯。",
+        "精確命例 predicate：癸卯／乙卯／辛亥／庚寅，任一柱不同即不套用。"
+      ],
+      "rejectedAlternatives": [
+        "不把來源命例推廣成所有辛金卯月命造的正式規則。",
+        "課堂未定義可運算的旺衰門檻，因此不自動套用「旺神沖衰、衰神沖旺」於大運。",
+        "健康、婚姻、事故或其他敏感現實事件不納入自動推論。"
+      ]
+    },
+    {
+      "ruleId": "20260812-disease-medicine-case",
+      "title": "2026/08/12 財格病藥命例比對",
+      "status": "未符合本課命例",
+      "sourceVerification": "transcript_exact",
+      "algorithmStatus": "candidate",
+      "matchStatus": "not_matched",
+      "outputMode": "annotation_only",
+      "fixtureScope": "source_case_only",
+      "agreementStatus": "not_comparable",
+      "fallbackPolicy": "preserve_normal_outputs",
+      "appReference": {
+        "geJu": "直輸四柱分析",
+        "strengthLabel": "偏強",
+        "specialPattern": "未成"
+      },
+      "lessonCandidate": null,
+      "sensitiveClaimsPolicy": "excluded",
+      "conclusion": "目前四柱「甲寅 癸酉 壬午 癸卯」不是本課例「壬戌 己酉 丁丑 甲辰」，不套用財格病藥與木用神方向候選。",
+      "evidence": [
+        "目前四柱：甲寅 癸酉 壬午 癸卯。",
+        "精確命例 predicate：壬戌／己酉／丁丑／甲辰，任一柱不同即不套用。"
+      ],
+      "rejectedAlternatives": [
+        "病與藥只表示命局中不利作用及其制衡，不對應醫療診斷。",
+        "不把此來源命例推廣成所有丁火酉月命造的正式病藥規則。",
+        "不以病藥候選覆蓋扶抑方向或 App 既有正式用神。"
+      ]
+    },
+    {
+      "ruleId": "20260812-follow-wealth-case",
+      "title": "2026/08/12 從財格命例比對",
+      "status": "未符合本課命例",
+      "sourceVerification": "transcript_and_whiteboard_confirmed",
+      "algorithmStatus": "candidate",
+      "matchStatus": "not_matched",
+      "outputMode": "annotation_only",
+      "fixtureScope": "source_case_only",
+      "agreementStatus": "not_comparable",
+      "fallbackPolicy": "preserve_normal_outputs",
+      "appReference": {
+        "geJu": "直輸四柱分析",
+        "strengthLabel": "偏強",
+        "specialPattern": "未成"
+      },
+      "lessonCandidate": null,
+      "sensitiveClaimsPolicy": "excluded",
+      "conclusion": "目前四柱「甲寅 癸酉 壬午 癸卯」不是本課例「己卯 甲戌 乙未 庚辰」，不套用從財格及土火方向候選。",
+      "evidence": [
+        "目前四柱：甲寅 癸酉 壬午 癸卯。",
+        "精確命例 predicate：己卯／甲戌／乙未／庚辰，任一柱不同即不套用。"
+      ],
+      "rejectedAlternatives": [
+        "本課例不足以建立通用從財 predicate、合化後根氣門檻或破格規則。",
+        "甲己合不涉及乙木日干本身，不直接改稱日主化土。",
+        "不覆蓋 App 的普通格、量化強弱、正式用神或既有特殊格結論。",
+        "疾病、人格、交友或其他敏感現實事件不納入自動推論。"
+      ]
+    },
+    {
+      "ruleId": "20260805-fu-yi-priority",
+      "title": "扶抑用神優先（本課派候選對照）",
+      "status": "已套用候選對照",
+      "sourceVerification": "lesson_transcript_summary",
+      "algorithmStatus": "candidate",
+      "matchStatus": "matched",
+      "outputMode": "annotation_only",
+      "fixtureScope": "rule_validation",
+      "agreementStatus": "not_comparable",
+      "fallbackPolicy": "preserve_normal_outputs",
+      "appReference": {
+        "geJu": "直輸四柱分析",
+        "strengthLabel": "偏強",
+        "specialPattern": "未成"
+      },
+      "lessonCandidate": {
+        "pattern": "扶抑方向候選",
+        "strength": "依 App 既有量化結果：偏強",
+        "useElements": [
+          "木",
+          "火"
+        ]
+      },
+      "sensitiveClaimsPolicy": "excluded",
+      "conclusion": "依 2026/08/05 本課派扶抑規則，日主偏強時以生扶為方向、日主強旺時以剋瀉耗為方向。此處只對照 App 既有量化用神「木、火」，不另行選取或覆蓋正式用神。",
+      "evidence": [
+        "身強",
+        "命局總分 34.8，先判為身強；印只在地支；身強且印只在地支，用食財，忌印比；官可制的之。",
+        "課堂優先順序：扶抑優先於病藥、通關、調和；後三者不得與扶抑衝突。"
+      ],
+      "rejectedAlternatives": [
+        "不以病藥、通關或調和規則覆蓋 App 既有扶抑型量化用神。",
+        "不把課堂的扶抑說明當作另一套正式用神計分引擎。",
+        "健康、事故、感情、家族或其他敏感現實事件不納入自動推論。"
+      ]
+    },
+    {
+      "ruleId": "20260805-bing-fire-support-case",
+      "title": "2026/08/05 丙火未月命例比對",
+      "status": "未符合本課命例",
+      "sourceVerification": "transcript_exact",
+      "algorithmStatus": "candidate",
+      "matchStatus": "not_matched",
+      "outputMode": "annotation_only",
+      "fixtureScope": "source_case_only",
+      "agreementStatus": "not_comparable",
+      "fallbackPolicy": "preserve_normal_outputs",
+      "appReference": {
+        "geJu": "直輸四柱分析",
+        "strengthLabel": "偏強",
+        "specialPattern": "未成"
+      },
+      "lessonCandidate": null,
+      "sensitiveClaimsPolicy": "excluded",
+      "conclusion": "目前四柱「甲寅 癸酉 壬午 癸卯」不是本課例「戊戌 己未 丙子 庚寅」，不套用身弱、木火扶身的課堂候選值。",
+      "evidence": [
+        "目前四柱：甲寅 癸酉 壬午 癸卯。",
+        "精確命例 predicate：戊戌／己未／丙子／庚寅，任一柱不同即不套用。"
+      ],
+      "rejectedAlternatives": [
+        "不以單一未月土旺就忽略未、戌、寅中的火根與寅木生火。",
+        "不覆蓋 App 正式用神；本課例的木火方向只作候選比較。",
+        "不從命例推出健康、感情、財富或保證式人生事件。"
+      ]
+    },
+    {
+      "ruleId": "20260722-day-master-state",
+      "title": "日干得時／得勢／得地（本課派候選）",
+      "status": "已套用候選規則",
+      "sourceVerification": "lesson_transcript_summary",
+      "algorithmStatus": "candidate",
+      "matchStatus": "matched",
+      "outputMode": "annotation_only",
+      "fixtureScope": "rule_validation",
+      "agreementStatus": "not_comparable",
+      "fallbackPolicy": "preserve_normal_outputs",
+      "appReference": {
+        "geJu": "直輸四柱分析",
+        "strengthLabel": "偏強",
+        "specialPattern": "未成"
+      },
+      "lessonCandidate": {
+        "pattern": "弱候選",
+        "strength": "本課派日干狀態候選",
+        "useElements": [
+          "金",
+          "水"
+        ]
+      },
+      "sensitiveClaimsPolicy": "excluded",
+      "conclusion": "本課派候選為「弱候選」。得時=否（月令金）；得勢=是（生扶比助：天干2、地支1）；得地=否（同五行藏干根0處）；克瀉耗可見4處。 App 的普通格、量化強弱、用神與特殊格結果只作並列參照，不直接覆蓋。",
+      "evidence": [
+        "得時=否（月令金）；得勢=是（生扶比助：天干2、地支1）；得地=否（同五行藏干根0處）；克瀉耗可見4處。",
+        "規則來源：2026/07/22 課程以得時、得勢、得地及克瀉耗判日干旺、強、弱、衰與兩端狀態。",
+        "得勢的兩來源門檻是 App 工程候選，課程原文未給可驗證數值，因此規則維持 candidate。"
+      ],
+      "rejectedAlternatives": [
+        "不直接覆蓋 App 的普通格、量化強弱、用神或既有特殊格結論。",
+        "旺極或衰極不自動改判專旺／從格；仍須通過既有特殊格的獨旺、破格與回歸檢查。",
+        "健康、婚姻、死亡或保證式現實事件不納入自動推論。"
+      ]
+    },
+    {
+      "ruleId": "20260729-geng-shen-weak-case",
+      "title": "2026/07/29 庚金申月命例比對",
+      "status": "未符合本課命例",
+      "sourceVerification": "transcript_exact",
+      "algorithmStatus": "candidate",
+      "matchStatus": "not_matched",
+      "outputMode": "annotation_only",
+      "fixtureScope": "source_case_only",
+      "agreementStatus": "not_comparable",
+      "fallbackPolicy": "preserve_normal_outputs",
+      "appReference": {
+        "geJu": "直輸四柱分析",
+        "strengthLabel": "偏強",
+        "specialPattern": "未成"
+      },
+      "lessonCandidate": null,
+      "sensitiveClaimsPolicy": "excluded",
+      "conclusion": "目前四柱「甲寅 癸酉 壬午 癸卯」不是本課例「丙子 丙申 庚寅 丁亥」，不套用日干弱候選。App 普通格「直輸四柱分析」與其他量化結果保持原值。",
+      "evidence": [
+        "目前四柱：甲寅 癸酉 壬午 癸卯。",
+        "課堂來源：庚金生申月先記得時，再檢查根氣與生剋瀉合化的變化。",
+        "互動證據：午寅 半合（不化；日柱(午)、年柱(寅)；量化模型偵測到地支半合火，但未達合化條件）。",
+        "互動證據：卯酉 沖（-；時柱(卯)、月柱(酉)；辛=正印 80×1.00×0.75×0.75 → 位調後 45.0）。"
+      ],
+      "rejectedAlternatives": [
+        "不因庚金生申月得時就跳過根氣、半合與沖的互動檢查。",
+        "不把來源命例的日干弱候選推廣成所有庚金申月命例的正式身弱規則。",
+        "不覆蓋 App 的普通格、量化強弱、用神或既有特殊格結論。",
+        "健康、事故、家庭或其他敏感現實事件不納入自動推論。"
+      ]
+    },
+    {
+      "ruleId": "20260715-two-element-normalization",
+      "title": "兩神成像格名簡化",
+      "status": "未觸發",
+      "sourceVerification": "lesson_transcript_summary",
+      "algorithmStatus": "implemented",
+      "matchStatus": "not_matched",
+      "outputMode": "annotation_only",
+      "fixtureScope": "rule_validation",
+      "agreementStatus": "not_comparable",
+      "fallbackPolicy": "preserve_normal_outputs",
+      "appReference": {
+        "geJu": "直輸四柱分析",
+        "strengthLabel": "偏強",
+        "specialPattern": "未成"
+      },
+      "lessonCandidate": null,
+      "sensitiveClaimsPolicy": "excluded",
+      "conclusion": "本命未觸發兩神成像候選；目前仍以普通格「直輸四柱分析」及既有特殊格檢查結果為準。",
+      "evidence": [
+        "本命四柱：甲寅 癸酉 壬午 癸卯。",
+        "普通格參照：直輸四柱分析。",
+        "特殊格檢查：特殊格局未成，仍以正格與既有用神分析為主。。"
+      ],
+      "rejectedAlternatives": [
+        "不因兩種五行集中就自動覆蓋普通格。",
+        "不使用四柱中不存在的暗沖、暗合來補造財官。"
+      ]
+    },
+    {
+      "ruleId": "20260902-male-natal",
+      "title": "2026/09/02 男命原例｜本命：正印格與取用對照",
+      "status": "已比對原例・課堂註解",
+      "sourceVerification": "dated_lesson_chart_and_transcript_rechecked",
+      "algorithmStatus": "candidate",
+      "matchStatus": "matched",
+      "outputMode": "annotation_only",
+      "fixtureScope": "source_case_only",
+      "agreementStatus": "not_comparable",
+      "fallbackPolicy": "preserve_normal_outputs",
+      "appReference": {
+        "geJu": "直輸四柱分析",
+        "strengthLabel": "偏強",
+        "specialPattern": "未成"
+      },
+      "lessonCandidate": {
+        "pattern": "正印格",
+        "strength": "身強",
+        "useElements": [
+          "火"
+        ]
+      },
+      "sensitiveClaimsPolicy": "excluded",
+      "conclusion": "0902 原例：老師判正印格、身強，用火財、喜木食傷。此為原例註解；App 量化模型及課堂三步候選各自保留。",
+      "evidence": [
+        "事實：壬日主，酉藏辛正印；月、時兩癸為劫財；寅卯為食傷木，午本氣丁火為正財。四支無壬癸藏干，沒有直接水根。",
+        "本課派說法：金印當令、兩癸扶身，老師判身強；官藏財顯，取火財、喜木生火，土官殺列其次以防土轉生金。財顯指支本氣，並非透干。",
+        "補充推論：水→木→火只是可檢查的承接方向，是否有效仍受位置、力量與合沖影響；不以字數或工具百分比認證。",
+        "來源：D:/Data/20260902.txt 字元 [17306,19600)，2026/09/09 核對；搜尋『四 比 四』『觀 場 財 顯』『我 怕 土 去 生 金』。字元為 UTF-8 解碼後零起算、終點不含。",
+        "比對範圍：agreementStatus 只比較 App 普通格與量化強弱；不代表用神、大運或課堂三步演算法一致。",
+        "App 原局互動：午寅（半合）；量化模型偵測到地支半合火，但未達合化條件",
+        "App 原局互動：卯酉（沖）；辛=正印 80×1.00×0.75×0.75 → 位調後 45.0"
+      ],
+      "rejectedAlternatives": [
+        "本課例不套從格或專旺；用火喜木依賴老師的身強判斷。",
+        "課堂三步演算法可判弱候選；不為了與老師一致而改寫一般強弱門檻或正式用神。",
+        "課堂現場回饋與原始推測須分開；不能把事後解釋當作預測通過。",
+        "適用範圍：只比對本課四柱原例；大運序列照錄男命課例，未驗算生日與交運日期，不表示目前正行該運。"
+      ]
+    },
+    {
+      "ruleId": "20260902-male-wuyin",
+      "title": "2026/09/02 男命原例｜戊寅：喜木為何未直接判好",
+      "status": "已比對原例・課堂註解",
+      "sourceVerification": "dated_lesson_chart_and_transcript_rechecked",
+      "algorithmStatus": "candidate",
+      "matchStatus": "matched",
+      "outputMode": "annotation_only",
+      "fixtureScope": "source_case_only",
+      "agreementStatus": "not_comparable",
+      "fallbackPolicy": "preserve_normal_outputs",
+      "appReference": {
+        "geJu": "直輸四柱分析",
+        "strengthLabel": "偏強",
+        "specialPattern": "未成"
+      },
+      "lessonCandidate": null,
+      "sensitiveClaimsPolicy": "excluded",
+      "conclusion": "課堂比較：丁丑較戊寅平順。老師提到喜神作用轉差，但逐字稿缺少完整作用鏈，不能把戊寅普遍判差。",
+      "evidence": [
+        "事實：運干戊為七殺；寅藏甲食神、丙偏財、戊七殺。戊與原局兩癸有五合關係；寅與午有半合火關係。這些是配對，並非已合化。",
+        "本課派說法：老師比較丁丑火土與戊寅土木，說後者喜神作用轉差；課堂結論為丁丑較平順。",
+        "補充推論：寅木可洩水生火，也可制戊土；戊可制水，也可能生酉金再扶水。需比較這些相反路徑，不能只見喜木就判優。",
+        "來源：D:/Data/20260902.txt 字元 [19000,21300)，2026/09/09 核對；搜尋『喜 生 變 訣 竅』『應 酬 運 會比 戊 寅 運 順利』。前一句 ASR 不清，後句『應酬運』依前文丁丑／戊寅比較作語境整理。"
+      ],
+      "rejectedAlternatives": [
+        "戊癸相合不等於兩癸消失或已化火；未提供成立門檻，不能計分。",
+        "原局已有寅午關係，大運寅再現不自動加倍；不能宣稱半合已變完整火局。",
+        "現場工作與業外投資談話只留文件來源，不轉成職涯或財務建議。",
+        "適用範圍：只比對本課四柱原例；大運序列照錄男命課例，未驗算生日與交運日期，不表示目前正行該運。"
+      ]
+    },
+    {
+      "ruleId": "20260902-male-jimao",
+      "title": "2026/09/02 男命原例｜己卯：沖忌印的課堂解釋",
+      "status": "已比對原例・課堂註解",
+      "sourceVerification": "dated_lesson_chart_and_transcript_rechecked",
+      "algorithmStatus": "candidate",
+      "matchStatus": "matched",
+      "outputMode": "annotation_only",
+      "fixtureScope": "source_case_only",
+      "agreementStatus": "not_comparable",
+      "fallbackPolicy": "preserve_normal_outputs",
+      "appReference": {
+        "geJu": "直輸四柱分析",
+        "strengthLabel": "偏強",
+        "specialPattern": "未成"
+      },
+      "lessonCandidate": null,
+      "sensitiveClaimsPolicy": "excluded",
+      "conclusion": "課堂比較：己卯較戊寅好一些。老師明說卯酉沖使忌印受傷；這是原例的相對評價，尚非一般沖忌判吉公式。",
+      "evidence": [
+        "事實：己為正官，卯藏乙傷官；運支卯與原局酉相沖，與午相破，運干己與年干甲有五合關係。原局時支已是卯。",
+        "本課派說法：老師以卯酉沖使忌神酉印受傷，解釋己卯較戊寅改善；『天干就土沒有什麼問題』是口述概評，未細分己官的作用。",
+        "補充推論：卯木可以洩水、生午火，也可能受酉金反制或制己官；甲己相合是否牽制甲木承接火，需另查條件。這些不是老師已講出的因果鏈。",
+        "來源：D:/Data/20260902.txt 字元 [21000,21500)，2026/09/09 核對；搜尋『忌 神 受傷 是可以 的』『吉 卯 印 會比 戊 寅 印 好 一些』。『吉卯印』按大運序列整理為己卯運。"
+      ],
+      "rejectedAlternatives": [
+        "沖是雙向關係，卯喜神是否受損也要檢查；酉及辛藏干仍然存在。",
+        "原局已有卯酉沖；大運是再引動，不作兩倍沖分數。甲己合不直接當作化土。",
+        "『較好一些』不等於絕對吉；不推現實事件或收益。",
+        "適用範圍：只比對本課四柱原例；大運序列照錄男命課例，未驗算生日與交運日期，不表示目前正行該運。"
+      ]
+    },
+    {
+      "ruleId": "20260902-male-gengchen",
+      "title": "2026/09/02 男命原例｜庚辰：保留結論與證據缺口",
+      "status": "已比對原例・課堂註解",
+      "sourceVerification": "dated_lesson_chart_and_transcript_rechecked",
+      "algorithmStatus": "candidate",
+      "matchStatus": "matched",
+      "outputMode": "annotation_only",
+      "fixtureScope": "source_case_only",
+      "agreementStatus": "not_comparable",
+      "fallbackPolicy": "preserve_normal_outputs",
+      "appReference": {
+        "geJu": "直輸四柱分析",
+        "strengthLabel": "偏強",
+        "specialPattern": "未成"
+      },
+      "lessonCandidate": null,
+      "sensitiveClaimsPolicy": "excluded",
+      "conclusion": "課堂記錄：老師也稱庚辰好運，但作用鏈未交代。保留來源結論，無法據此排出庚辰與己卯的高低。",
+      "evidence": [
+        "事實：庚為偏印；辰藏戊七殺、乙傷官、癸劫財。辰與原局酉有六合關係；年支寅、時支卯與運支辰湊齊寅卯辰三會的支字。這不代表六合或三會已化。",
+        "本課派說法：逐字稿明載『喜 卯 印 好運 庚 辰 印 也是 好運』，但這句前後沒有交代庚辰如何改善本局。",
+        "補充推論：土生金、金生水可增加印比；庚金也可能制甲木。辰酉合與寅卯辰三會涉及不同方向，須有優先序與有效力量判準，不能挑一條替『好運』補理由。",
+        "來源：D:/Data/20260902.txt 字元 [23900,24300)，2026/09/09 核對；搜尋『庚 辰 印 也是 好運』。僅確認老師有此評語，並未驗證評語正確。"
+      ],
+      "rejectedAlternatives": [
+        "不能說辰是濕土所以一定好；後面的濕土與回剋講解屬另一個女命，不移植成本例來源。",
+        "不能因六合就刪除酉印，或因三會支字齊就宣稱木局成化。",
+        "尚缺合會競合、季節與位置權重，以及庚辰相對己卯的直接比較；不產生通用大運分數。",
+        "適用範圍：只比對本課四柱原例；大運序列照錄男命課例，未驗算生日與交運日期，不表示目前正行該運。"
+      ]
+    },
+    {
+      "ruleId": "20260715-case-1977",
+      "title": "2026/07/15 課堂命例比對",
+      "status": "未符合本課命例",
+      "sourceVerification": "transcript_and_whiteboard_confirmed",
+      "algorithmStatus": "candidate",
+      "matchStatus": "not_matched",
+      "outputMode": "annotation_only",
+      "fixtureScope": "source_case_only",
+      "agreementStatus": "not_comparable",
+      "fallbackPolicy": "preserve_normal_outputs",
+      "appReference": {
+        "geJu": "直輸四柱分析",
+        "strengthLabel": "偏強",
+        "specialPattern": "未成"
+      },
+      "lessonCandidate": null,
+      "sensitiveClaimsPolicy": "excluded",
+      "conclusion": "本命四柱「甲寅 癸酉 壬午 癸卯」不是 2026/07/15 課例「丁巳 己酉 己卯 乙丑」，不套用食神格身弱、火扶身的課堂候選值。",
+      "evidence": [
+        "目前四柱：甲寅 癸酉 壬午 癸卯。",
+        "精確命例 predicate：丁巳／己酉／己卯／乙丑，任一柱不同即不套用。"
+      ],
+      "rejectedAlternatives": [
+        "不覆蓋 App 的普通格與量化強弱。",
+        "敏感人生事件敘述不納入自動推論。"
+      ]
+    }
+  ],
+  "threeStepAnalysis": {
+    "version": "classroom-2026-09-v1",
+    "status": "conditional",
+    "facts": {
+      "title": "排盤事實",
+      "conclusion": "日主壬屬水，月令酉本氣辛屬金；根氣與透干均保留原柱位及藏干層位。",
+      "pillars": [
+        {
+          "pillar": "年柱",
+          "ganZhi": "甲寅",
+          "stem": "甲",
+          "stemElement": "木",
+          "stemTenGod": "食神",
+          "branch": "寅",
+          "branchMainElement": "木",
+          "hiddenStems": [
+            {
+              "stem": "甲",
+              "element": "木",
+              "tenGod": "食神",
+              "layer": "本氣"
+            },
+            {
+              "stem": "丙",
+              "element": "火",
+              "tenGod": "偏財",
+              "layer": "中氣"
+            },
+            {
+              "stem": "戊",
+              "element": "土",
+              "tenGod": "七殺",
+              "layer": "餘氣"
+            }
+          ]
+        },
+        {
+          "pillar": "月柱",
+          "ganZhi": "癸酉",
+          "stem": "癸",
+          "stemElement": "水",
+          "stemTenGod": "劫財",
+          "branch": "酉",
+          "branchMainElement": "金",
+          "hiddenStems": [
+            {
+              "stem": "辛",
+              "element": "金",
+              "tenGod": "正印",
+              "layer": "本氣"
+            }
+          ]
+        },
+        {
+          "pillar": "日柱",
+          "ganZhi": "壬午",
+          "stem": "壬",
+          "stemElement": "水",
+          "stemTenGod": "日元",
+          "branch": "午",
+          "branchMainElement": "火",
+          "hiddenStems": [
+            {
+              "stem": "丁",
+              "element": "火",
+              "tenGod": "正財",
+              "layer": "本氣"
+            },
+            {
+              "stem": "己",
+              "element": "土",
+              "tenGod": "正官",
+              "layer": "中氣"
+            }
+          ]
+        },
+        {
+          "pillar": "時柱",
+          "ganZhi": "癸卯",
+          "stem": "癸",
+          "stemElement": "水",
+          "stemTenGod": "劫財",
+          "branch": "卯",
+          "branchMainElement": "木",
+          "hiddenStems": [
+            {
+              "stem": "乙",
+              "element": "木",
+              "tenGod": "傷官",
+              "layer": "本氣"
+            }
+          ]
+        }
+      ],
+      "dayMaster": {
+        "stem": "壬",
+        "element": "水"
+      },
+      "monthCommand": {
+        "branch": "酉",
+        "mainStem": "辛",
+        "element": "金",
+        "tenGod": "正印"
+      },
+      "transparencies": [
+        {
+          "hiddenStem": "辛",
+          "hiddenStemLayer": "本氣",
+          "tenGod": "正印",
+          "visibleLocations": [],
+          "evidenceId": "fact-transparency-1"
+        }
+      ],
+      "roots": [],
+      "tenGodDistribution": [
+        {
+          "family": "印",
+          "element": "金",
+          "surfaceLocations": [
+            "月支酉本氣辛"
+          ],
+          "hiddenLocations": [
+            "月支酉本氣辛"
+          ],
+          "surfaceEvidenceIds": [
+            "fact-hidden-2-1"
+          ],
+          "hiddenEvidenceIds": [
+            "fact-hidden-2-1"
+          ]
+        },
+        {
+          "family": "比劫",
+          "element": "水",
+          "surfaceLocations": [
+            "月干癸",
+            "時干癸"
+          ],
+          "hiddenLocations": [],
+          "surfaceEvidenceIds": [
+            "fact-stem-2",
+            "fact-stem-4"
+          ],
+          "hiddenEvidenceIds": []
+        },
+        {
+          "family": "食傷",
+          "element": "木",
+          "surfaceLocations": [
+            "年干甲",
+            "年支寅本氣甲",
+            "時支卯本氣乙"
+          ],
+          "hiddenLocations": [
+            "年支寅本氣甲",
+            "時支卯本氣乙"
+          ],
+          "surfaceEvidenceIds": [
+            "fact-stem-1",
+            "fact-hidden-1-1",
+            "fact-hidden-4-1"
+          ],
+          "hiddenEvidenceIds": [
+            "fact-hidden-1-1",
+            "fact-hidden-4-1"
+          ]
+        },
+        {
+          "family": "財",
+          "element": "火",
+          "surfaceLocations": [
+            "日支午本氣丁"
+          ],
+          "hiddenLocations": [
+            "年支寅中氣丙",
+            "日支午本氣丁"
+          ],
+          "surfaceEvidenceIds": [
+            "fact-hidden-3-1"
+          ],
+          "hiddenEvidenceIds": [
+            "fact-hidden-1-2",
+            "fact-hidden-3-1"
+          ]
+        },
+        {
+          "family": "官殺",
+          "element": "土",
+          "surfaceLocations": [],
+          "hiddenLocations": [
+            "年支寅餘氣戊",
+            "日支午中氣己"
+          ],
+          "surfaceEvidenceIds": [],
+          "hiddenEvidenceIds": [
+            "fact-hidden-1-3",
+            "fact-hidden-3-2"
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "id": "fact-hidden-1-1",
+          "kind": "chart_fact",
+          "pillar": "年支",
+          "hiddenStemLayer": "本氣",
+          "interactionId": null,
+          "description": "年支寅藏甲（本氣、木）。",
+          "sourceDate": null
+        },
+        {
+          "id": "fact-hidden-1-2",
+          "kind": "chart_fact",
+          "pillar": "年支",
+          "hiddenStemLayer": "中氣",
+          "interactionId": null,
+          "description": "年支寅藏丙（中氣、火）。",
+          "sourceDate": null
+        },
+        {
+          "id": "fact-hidden-1-3",
+          "kind": "chart_fact",
+          "pillar": "年支",
+          "hiddenStemLayer": "餘氣",
+          "interactionId": null,
+          "description": "年支寅藏戊（餘氣、土）。",
+          "sourceDate": null
+        },
+        {
+          "id": "fact-stem-1",
+          "kind": "chart_fact",
+          "pillar": "年干",
+          "hiddenStemLayer": null,
+          "interactionId": null,
+          "description": "年干為甲，五行木，相對日主為食神。",
+          "sourceDate": null
+        },
+        {
+          "id": "fact-hidden-2-1",
+          "kind": "chart_fact",
+          "pillar": "月支",
+          "hiddenStemLayer": "本氣",
+          "interactionId": null,
+          "description": "月支酉藏辛（本氣、金）。",
+          "sourceDate": null
+        },
+        {
+          "id": "fact-stem-2",
+          "kind": "chart_fact",
+          "pillar": "月干",
+          "hiddenStemLayer": null,
+          "interactionId": null,
+          "description": "月干為癸，五行水，相對日主為劫財。",
+          "sourceDate": null
+        },
+        {
+          "id": "fact-hidden-3-1",
+          "kind": "chart_fact",
+          "pillar": "日支",
+          "hiddenStemLayer": "本氣",
+          "interactionId": null,
+          "description": "日支午藏丁（本氣、火）。",
+          "sourceDate": null
+        },
+        {
+          "id": "fact-hidden-3-2",
+          "kind": "chart_fact",
+          "pillar": "日支",
+          "hiddenStemLayer": "中氣",
+          "interactionId": null,
+          "description": "日支午藏己（中氣、土）。",
+          "sourceDate": null
+        },
+        {
+          "id": "fact-stem-3",
+          "kind": "chart_fact",
+          "pillar": "日干",
+          "hiddenStemLayer": null,
+          "interactionId": null,
+          "description": "日干為壬，五行水，相對日主為日元。",
+          "sourceDate": null
+        },
+        {
+          "id": "fact-hidden-4-1",
+          "kind": "chart_fact",
+          "pillar": "時支",
+          "hiddenStemLayer": "本氣",
+          "interactionId": null,
+          "description": "時支卯藏乙（本氣、木）。",
+          "sourceDate": null
+        },
+        {
+          "id": "fact-stem-4",
+          "kind": "chart_fact",
+          "pillar": "時干",
+          "hiddenStemLayer": null,
+          "interactionId": null,
+          "description": "時干為癸，五行水，相對日主為劫財。",
+          "sourceDate": null
+        },
+        {
+          "id": "fact-transparency-1",
+          "kind": "chart_fact",
+          "pillar": "月支",
+          "hiddenStemLayer": "本氣",
+          "interactionId": null,
+          "description": "月令藏干辛未在年、月、時干透出。",
+          "sourceDate": null
+        }
+      ],
+      "limitations": [
+        "藏干事實不因合沖而刪除；互動後是否仍有效另在強弱步驟標為待定。"
+      ]
+    },
+    "pattern": {
+      "title": "第一步：格局判定",
+      "conclusion": "普通格候選為正印格。",
+      "status": "candidate",
+      "ordinaryResult": "正印格",
+      "ordinaryCandidates": [
+        {
+          "pattern": "正印格",
+          "tenGod": "正印",
+          "monthHiddenStem": "辛",
+          "hiddenStemLayer": "本氣",
+          "transparentLocations": [],
+          "selection": "selected",
+          "evidenceIds": [
+            "fact-transparency-1"
+          ]
+        }
+      ],
+      "specialReview": {
+        "required": false,
+        "reasons": [],
+        "modelReferencePattern": null,
+        "modelReferenceCategory": null,
+        "specializedUseVersions": [
+          {
+            "sourceDate": "2026-07-08",
+            "useDirection": "旺神",
+            "favorableDirection": "生旺神與洩旺神",
+            "limitation": "課次用語未與後課統一，不作唯一順位。"
+          },
+          {
+            "sourceDate": "2026-09-02",
+            "useDirection": "食傷洩秀",
+            "favorableDirection": "印比扶旺",
+            "limitation": "需先確認專旺成格與破格控制元素。"
+          }
+        ],
+        "followChildPeerException": "從兒以食傷為用時，比劫可生食傷；不得套用所有從弱一律忌印比。"
+      },
+      "evidence": [
+        {
+          "id": "pattern-rule-1",
+          "kind": "lesson_rule",
+          "pillar": "月支",
+          "hiddenStemLayer": "本氣",
+          "interactionId": null,
+          "description": "月令藏干未透，按本氣順序保留正印格。",
+          "sourceDate": "2026-07-29"
+        },
+        {
+          "id": "pattern-model-reference",
+          "kind": "model_reference",
+          "pillar": null,
+          "hiddenStemLayer": null,
+          "interactionId": null,
+          "description": "App 原格局為直輸四柱分析；此值只供比較，不餵回課堂候選。",
+          "sourceDate": null
+        }
+      ],
+      "limitations": [
+        "普通格候選不覆蓋 App geJu。",
+        "首版不新增從格、專旺或化氣的泛化成格閾值。"
+      ]
+    },
+    "strength": {
+      "title": "第二步：日主強弱",
+      "conclusion": "三項觀察命中 1 項；表層剋洩耗家族為食傷、財，初判弱候選。",
+      "status": "conditional",
+      "classification": "弱候選",
+      "sameSeasonElement": false,
+      "sealInSeason": true,
+      "supportStemCount": 2,
+      "supportBranchCount": 1,
+      "momentumProxy": true,
+      "rootCount": 0,
+      "observationCount": 1,
+      "pressureFamiliesSurface": [
+        "食傷",
+        "財"
+      ],
+      "pressureFamiliesHidden": [
+        "食傷",
+        "財",
+        "官殺"
+      ],
+      "interactions": [
+        {
+          "id": "interaction-1-半合",
+          "scope": "地支",
+          "interactionType": "半合",
+          "target": "午寅",
+          "outcome": "不化",
+          "pillars": "日柱(午)、年柱(寅)",
+          "detail": "量化模型偵測到地支半合火，但未達合化條件",
+          "assessment": "conditional_not_rescored"
+        },
+        {
+          "id": "interaction-2-沖",
+          "scope": "地支",
+          "interactionType": "沖",
+          "target": "卯酉",
+          "outcome": "-",
+          "pillars": "時柱(卯)、月柱(酉)",
+          "detail": "辛=正印 80×1.00×0.75×0.75 → 位調後 45.0",
+          "assessment": "conditional_not_rescored"
+        },
+        {
+          "id": "interaction-3-破",
+          "scope": "地支",
+          "interactionType": "破",
+          "target": "卯午",
+          "outcome": "-",
+          "pillars": "時柱(卯)、日柱(午)",
+          "detail": "地支相破",
+          "assessment": "conditional_not_rescored"
+        }
+      ],
+      "evidence": [
+        {
+          "id": "strength-same-season",
+          "kind": "lesson_rule",
+          "pillar": "月支",
+          "hiddenStemLayer": "本氣",
+          "interactionId": null,
+          "description": "同氣得時=false；印當令=true，兩者分開記錄。",
+          "sourceDate": "2026-07-22"
+        },
+        {
+          "id": "strength-momentum-proxy",
+          "kind": "engineering_proxy",
+          "pillar": null,
+          "hiddenStemLayer": null,
+          "interactionId": null,
+          "description": "得勢工程暫估：supportStemCount=2、supportBranchCount=1；任一達 2 即成立，結果=true。",
+          "sourceDate": "2026-07-22"
+        },
+        {
+          "id": "strength-roots",
+          "kind": "chart_fact",
+          "pillar": null,
+          "hiddenStemLayer": null,
+          "interactionId": null,
+          "description": "同五行藏干根共 0 處，保留全部層位。",
+          "sourceDate": null
+        },
+        {
+          "id": "strength-interaction-1-半合",
+          "kind": "chart_fact",
+          "pillar": "日柱(午)、年柱(寅)",
+          "hiddenStemLayer": null,
+          "interactionId": "interaction-1-半合",
+          "description": "地支半合（午寅，不化）；只保留關係與模型裁決，不另加扣分。",
+          "sourceDate": "2026-07-29"
+        },
+        {
+          "id": "strength-interaction-2-沖",
+          "kind": "chart_fact",
+          "pillar": "時柱(卯)、月柱(酉)",
+          "hiddenStemLayer": null,
+          "interactionId": "interaction-2-沖",
+          "description": "地支沖（卯酉，-）；只保留關係與模型裁決，不另加扣分。",
+          "sourceDate": "2026-07-29"
+        },
+        {
+          "id": "strength-interaction-3-破",
+          "kind": "chart_fact",
+          "pillar": "時柱(卯)、日柱(午)",
+          "hiddenStemLayer": null,
+          "interactionId": "interaction-3-破",
+          "description": "地支破（卯午，-）；只保留關係與模型裁決，不另加扣分。",
+          "sourceDate": "2026-07-29"
+        }
+      ],
+      "limitations": [
+        "supportStemCount >= 2 OR supportBranchCount >= 2 是工程候選門檻，不是老師數值定義。",
+        "表層剋洩耗與藏干出現分欄；不以藏干反向力量冒稱表層壓力。",
+        "互動後有效力量未定；保留初判並標 conditional。"
+      ]
+    },
+    "preferences": {
+      "title": "第三步：用神與喜忌",
+      "conclusion": "依實際表層與根氣位置保留 2 個條件方案；排序不代表優先。",
+      "status": "conditional",
+      "plans": [
+        {
+          "ruleId": "weak-output-use-seal",
+          "title": "身弱食傷：印制食傷扶身",
+          "applicability": "conditional",
+          "condition": "若按普通格論，食傷確為主要洩身壓力，且印未受制時",
+          "useDirections": [
+            {
+              "family": "印",
+              "element": "金",
+              "role": "use",
+              "reason": "印家族依日主五行換算為金。"
+            }
+          ],
+          "favorableDirections": [
+            {
+              "family": "比劫",
+              "element": "水",
+              "role": "favorable",
+              "reason": "比劫家族依日主五行換算為水。"
+            }
+          ],
+          "unfavorableDirections": [
+            {
+              "family": "財",
+              "element": "火",
+              "role": "unfavorable",
+              "reason": "財家族依日主五行換算為火。"
+            },
+            {
+              "family": "食傷",
+              "element": "木",
+              "role": "unfavorable",
+              "reason": "食傷家族依日主五行換算為木。"
+            }
+          ],
+          "conditionalDirections": [],
+          "evidenceIds": [
+            "fact-hidden-1-1",
+            "fact-hidden-2-1",
+            "fact-hidden-4-1",
+            "fact-stem-1",
+            "fact-stem-2",
+            "fact-stem-4"
+          ],
+          "rejections": [
+            "印可能受制",
+            "食傷生財可能加重耗身"
+          ],
+          "sources": [
+            "2026-08-26"
+          ]
+        },
+        {
+          "ruleId": "weak-wealth-use-peer",
+          "title": "身弱財旺：比劫分財",
+          "applicability": "conditional",
+          "condition": "若按普通格論，財確為主要耗身壓力，比劫不受官殺制時",
+          "useDirections": [
+            {
+              "family": "比劫",
+              "element": "水",
+              "role": "use",
+              "reason": "比劫家族依日主五行換算為水。"
+            }
+          ],
+          "favorableDirections": [
+            {
+              "family": "印",
+              "element": "金",
+              "role": "favorable",
+              "reason": "印家族依日主五行換算為金。"
+            }
+          ],
+          "unfavorableDirections": [
+            {
+              "family": "食傷",
+              "element": "木",
+              "role": "unfavorable",
+              "reason": "食傷家族依日主五行換算為木。"
+            },
+            {
+              "family": "官殺",
+              "element": "土",
+              "role": "unfavorable",
+              "reason": "官殺家族依日主五行換算為土。"
+            },
+            {
+              "family": "財",
+              "element": "火",
+              "role": "unfavorable",
+              "reason": "財家族依日主五行換算為火。"
+            }
+          ],
+          "conditionalDirections": [],
+          "evidenceIds": [
+            "fact-hidden-1-2",
+            "fact-hidden-2-1",
+            "fact-hidden-3-1",
+            "fact-stem-2",
+            "fact-stem-4"
+          ],
+          "rejections": [
+            "食傷可能生財",
+            "官殺可能制比",
+            "財可能破印"
+          ],
+          "sources": [
+            "2026-08-12",
+            "2026-08-26"
+          ]
+        }
+      ],
+      "noPlanReasons": [],
+      "bridgePaths": [
+        {
+          "conflictFrom": "木",
+          "intermediary": "火",
+          "conflictTo": "土",
+          "path": [
+            "木",
+            "火",
+            "土"
+          ],
+          "actualNodes": [
+            "木",
+            "火",
+            "土"
+          ],
+          "missingNodes": [],
+          "status": "candidate",
+          "explanation": "三個節點均存在，僅列木→火→土候選；位置、受制與力量尚未認證。"
+        },
+        {
+          "conflictFrom": "火",
+          "intermediary": "土",
+          "conflictTo": "金",
+          "path": [
+            "火",
+            "土",
+            "金"
+          ],
+          "actualNodes": [
+            "火",
+            "土",
+            "金"
+          ],
+          "missingNodes": [],
+          "status": "candidate",
+          "explanation": "三個節點均存在，僅列火→土→金候選；位置、受制與力量尚未認證。"
+        },
+        {
+          "conflictFrom": "土",
+          "intermediary": "金",
+          "conflictTo": "水",
+          "path": [
+            "土",
+            "金",
+            "水"
+          ],
+          "actualNodes": [
+            "土",
+            "金",
+            "水"
+          ],
+          "missingNodes": [],
+          "status": "candidate",
+          "explanation": "三個節點均存在，僅列土→金→水候選；位置、受制與力量尚未認證。"
+        },
+        {
+          "conflictFrom": "金",
+          "intermediary": "水",
+          "conflictTo": "木",
+          "path": [
+            "金",
+            "水",
+            "木"
+          ],
+          "actualNodes": [
+            "金",
+            "水",
+            "木"
+          ],
+          "missingNodes": [],
+          "status": "candidate",
+          "explanation": "三個節點均存在，僅列金→水→木候選；位置、受制與力量尚未認證。"
+        },
+        {
+          "conflictFrom": "水",
+          "intermediary": "木",
+          "conflictTo": "火",
+          "path": [
+            "水",
+            "木",
+            "火"
+          ],
+          "actualNodes": [
+            "水",
+            "木",
+            "火"
+          ],
+          "missingNodes": [],
+          "status": "candidate",
+          "explanation": "三個節點均存在，僅列水→木→火候選；位置、受制與力量尚未認證。"
+        }
+      ],
+      "medicineNotes": [
+        {
+          "protectedPlanRuleId": "weak-output-use-seal",
+          "protectedFamily": "印",
+          "protectedElement": "金",
+          "hindranceFamily": "財",
+          "medicineFamily": "比劫",
+          "status": "conditional",
+          "explanation": "只在方案 weak-output-use-seal 中保護印方向；財是否為病、比劫是否能護用尚須比較力量。"
+        },
+        {
+          "protectedPlanRuleId": "weak-wealth-use-peer",
+          "protectedFamily": "比劫",
+          "protectedElement": "水",
+          "hindranceFamily": "食傷",
+          "medicineFamily": "印",
+          "status": "conditional",
+          "explanation": "只在方案 weak-wealth-use-peer 中保護比劫方向；食傷是否為病、印是否能護用尚須比較力量。"
+        }
+      ],
+      "seasonalCompatibility": [
+        {
+          "planRuleId": null,
+          "season": "outside_bounded_scope",
+          "monthBranches": [],
+          "status": "unassessed",
+          "element": null,
+          "explanation": "月支不在首版三冬／三夏範圍；調候未評估，不套用其他課例。"
+        }
+      ],
+      "evidence": [
+        {
+          "id": "preference-weak-output-use-seal",
+          "kind": "lesson_rule",
+          "pillar": null,
+          "hiddenStemLayer": null,
+          "interactionId": null,
+          "description": "身弱食傷：印制食傷扶身；若按普通格論，食傷確為主要洩身壓力，且印未受制時。",
+          "sourceDate": "2026-08-26"
+        },
+        {
+          "id": "preference-weak-wealth-use-peer",
+          "kind": "lesson_rule",
+          "pillar": null,
+          "hiddenStemLayer": null,
+          "interactionId": null,
+          "description": "身弱財旺：比劫分財；若按普通格論，財確為主要耗身壓力，比劫不受官殺制時。",
+          "sourceDate": "2026-08-12"
+        }
+      ],
+      "limitations": [
+        "所有普通方案都以『若按普通格論』為適用條件，且不合併互相衝突的角色。",
+        "出現只證明位置存在，不代表該十神主導或有效力量已認證。",
+        "通關元素存在也不宣稱通關成功；病藥不覆寫上游強弱。"
+      ]
+    },
+    "comparison": {
+      "pattern": {
+        "appValue": "直輸四柱分析",
+        "lessonValue": "正印格",
+        "agreementStatus": "not_comparable",
+        "note": "App geJu 與課堂普通格候選逐項比較；直輸入口的標籤不當作課堂格名。"
+      },
+      "strength": {
+        "appValue": "偏強",
+        "lessonValue": "弱候選",
+        "agreementStatus": "conflict",
+        "note": "App 量化強弱只供比較，不參與課堂三項觀察。"
+      },
+      "preferences": {
+        "appValue": "木、火",
+        "lessonValue": "水、金",
+        "agreementStatus": "conflict",
+        "note": "僅比較元素方向；不把跨方案角色合併成新的正式用神。"
+      }
+    },
+    "sources": [
+      {
+        "date": "2026-07-08",
+        "ruleIds": [
+          "specialized-use-version"
+        ]
+      },
+      {
+        "date": "2026-07-22",
+        "ruleIds": [
+          "day-master-three-observations"
+        ]
+      },
+      {
+        "date": "2026-07-29",
+        "ruleIds": [
+          "ordinary-pattern-and-interaction-evidence"
+        ]
+      },
+      {
+        "date": "2026-08-12",
+        "ruleIds": [
+          "medicine-protects-selected-role"
+        ]
+      },
+      {
+        "date": "2026-08-19",
+        "ruleIds": [
+          "seasonal-follows-support-balance"
+        ]
+      },
+      {
+        "date": "2026-08-26",
+        "ruleIds": [
+          "ordinary-preference-branches",
+          "five-bridge-paths"
+        ]
+      },
+      {
+        "date": "2026-09-02",
+        "ruleIds": [
+          "specialized-use-version",
+          "follow-child-peer-exception"
+        ]
+      }
+    ],
+    "limitations": [
+      "本結果只重現本課派首版條件分支，不代表命理預測能力獲得驗證。",
+      "得勢採用 2026/07/22 的工程暫定門檻；互動後有效力量未重新計分。",
+      "工程候選可能與老師的精確來源命例結論不同；既有 source_case_only 註解仍分開保留，不以四柱硬編改判。",
+      "不輸出疾病、死亡、自傷、事故、婚姻、投資或人格等現實事件斷語。"
+    ]
+  }
+}

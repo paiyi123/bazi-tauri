@@ -295,18 +295,6 @@ export interface QuantShaYin {
   conclusion: string;
 }
 
-export interface QuantLessonItem {
-  id: string;
-  sourceDate: string;
-  category: string;
-  title: string;
-  summary: string;
-  algorithmStatus: string;
-  verification: string;
-  fixtureAllowed: boolean;
-  evidence: string[];
-}
-
 export interface QuantLessonInference {
   ruleId: string;
   title: string;
@@ -339,9 +327,24 @@ export interface QuantLessonContent {
   status: string;
   analysisOrder: string[];
   futureRuleNotice: string;
-  lessons: QuantLessonItem[];
   inferences: QuantLessonInference[];
+  threeStepAnalysis?: LessonThreeStepAnalysis | null;
 }
+
+export interface LessonEvidence { id: string; kind: string; pillar: string | null; hiddenStemLayer: string | null; interactionId: string | null; description: string; sourceDate: string | null; }
+export interface LessonSource { date: string; ruleIds: string[]; }
+export interface LessonHiddenStemFact { stem: string; element: string; tenGod: string; layer: string; }
+export interface LessonPillarFact { pillar: string; ganZhi: string; stem: string; stemElement: string; stemTenGod: string; branch: string; branchMainElement: string; hiddenStems: LessonHiddenStemFact[]; }
+export interface LessonFacts { title: string; conclusion: string; pillars: LessonPillarFact[]; dayMaster: { stem: string; element: string }; monthCommand: { branch: string; mainStem: string; element: string; tenGod: string }; transparencies: Array<{ hiddenStem: string; hiddenStemLayer: string; tenGod: string; visibleLocations: string[]; evidenceId: string }>; roots: Array<{ pillar: string; branch: string; hiddenStem: string; hiddenStemLayer: string; element: string; tenGod: string; rootKind: string; evidenceId: string }>; tenGodDistribution: Array<{ family: string; element: string; surfaceLocations: string[]; hiddenLocations: string[]; surfaceEvidenceIds: string[]; hiddenEvidenceIds: string[] }>; evidence: LessonEvidence[]; limitations: string[]; }
+export interface LessonPatternCandidate { pattern: string; tenGod: string; monthHiddenStem: string; hiddenStemLayer: string; transparentLocations: string[]; selection: string; evidenceIds: string[]; }
+export interface LessonPatternAnalysis { title: string; conclusion: string; status: string; ordinaryResult: string | null; ordinaryCandidates: LessonPatternCandidate[]; specialReview: { required: boolean; reasons: string[]; modelReferencePattern: string | null; modelReferenceCategory: string | null; specializedUseVersions: Array<{ sourceDate: string; useDirection: string; favorableDirection: string; limitation: string }>; followChildPeerException: string }; evidence: LessonEvidence[]; limitations: string[]; }
+export interface LessonInteractionEvidence { id: string; scope: string; interactionType: string; target: string; outcome: string; pillars: string; detail: string; assessment: string; }
+export interface LessonStrengthAnalysis { title: string; conclusion: string; status: string; classification: string; sameSeasonElement: boolean; sealInSeason: boolean; supportStemCount: number; supportBranchCount: number; momentumProxy: boolean; rootCount: number; observationCount: number; pressureFamiliesSurface: string[]; pressureFamiliesHidden: string[]; interactions: LessonInteractionEvidence[]; evidence: LessonEvidence[]; limitations: string[]; }
+export interface LessonDirection { family: string; element: string; role: string; reason: string; }
+export interface LessonPreferencePlan { ruleId: string; title: string; applicability: string; condition: string; useDirections: LessonDirection[]; favorableDirections: LessonDirection[]; unfavorableDirections: LessonDirection[]; conditionalDirections: LessonDirection[]; evidenceIds: string[]; rejections: string[]; sources: string[]; }
+export interface LessonPreferenceAnalysis { title: string; conclusion: string; status: string; plans: LessonPreferencePlan[]; noPlanReasons: string[]; bridgePaths: Array<{ conflictFrom: string; intermediary: string; conflictTo: string; path: string[]; actualNodes: string[]; missingNodes: string[]; status: string; explanation: string }>; medicineNotes: Array<{ protectedPlanRuleId: string; protectedFamily: string; protectedElement: string; hindranceFamily: string; medicineFamily: string | null; status: string; explanation: string }>; seasonalCompatibility: Array<{ planRuleId: string | null; season: string; monthBranches: string[]; status: string; element: string | null; explanation: string }>; evidence: LessonEvidence[]; limitations: string[]; }
+export interface LessonComparisonItem { appValue: string; lessonValue: string; agreementStatus: string; note: string; }
+export interface LessonThreeStepAnalysis { version: string; status: string; facts: LessonFacts; pattern: LessonPatternAnalysis; strength: LessonStrengthAnalysis; preferences: LessonPreferenceAnalysis; comparison: { pattern: LessonComparisonItem; strength: LessonComparisonItem; preferences: LessonComparisonItem }; sources: LessonSource[]; limitations: string[]; }
 
 export interface QuantModelResponse {
   dayMaster: string;

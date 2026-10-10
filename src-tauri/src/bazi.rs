@@ -14,6 +14,7 @@ use tyme4rs::tyme::sixtycycle::{
 use tyme4rs::tyme::solar::{SolarTerm, SolarTime};
 use tyme4rs::tyme::{Culture, Tyme};
 
+use crate::lesson_analysis::LessonThreeStepAnalysis;
 use crate::shen_sha::{analyze_shen_sha, FourPillarShenShaDto};
 
 const MONTH_LABELS: [&str; 12] = [
@@ -410,20 +411,6 @@ pub struct QuantShaYin {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct QuantLessonItem {
-    pub id: String,
-    pub source_date: String,
-    pub category: String,
-    pub title: String,
-    pub summary: String,
-    pub algorithm_status: String,
-    pub verification: String,
-    pub fixture_allowed: bool,
-    pub evidence: Vec<String>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct QuantLessonAppReference {
     pub ge_ju: String,
     pub strength_label: String,
@@ -466,8 +453,8 @@ pub struct QuantLessonContent {
     pub status: String,
     pub analysis_order: Vec<String>,
     pub future_rule_notice: String,
-    pub lessons: Vec<QuantLessonItem>,
     pub inferences: Vec<QuantLessonInference>,
+    pub three_step_analysis: Option<LessonThreeStepAnalysis>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -1135,6 +1122,182 @@ mod tests {
     }
 
     #[test]
+    fn three_step_analysis_is_serialized_for_direct_pillar_responses() {
+        let response = analyze_pillars(direct_pillar_request("甲子", "乙丑", "丙寅", "丁卯"))
+            .expect("direct chart should build");
+        let json = serde_json::to_value(response).expect("response should serialize");
+
+        assert_eq!(
+            json["quantModel"]["lessonContent"]["threeStepAnalysis"]["version"],
+            "classroom-2026-09-v1"
+        );
+    }
+
+    #[test]
+    fn three_step_core_matches_between_date_and_direct_production_entrypoints() {
+        let dated = calculate_bazi(sample_request()).expect("dated chart should build");
+        let direct = analyze_pillars(direct_pillar_request(
+            &dated.year_pillar.gan_zhi,
+            &dated.month_pillar.gan_zhi,
+            &dated.day_pillar.gan_zhi,
+            &dated.hour_pillar.gan_zhi,
+        ))
+        .expect("same direct chart should build");
+        let dated_analysis = dated
+            .quant_model
+            .as_ref()
+            .and_then(|model| model.lesson_content.as_ref())
+            .and_then(|lesson| lesson.three_step_analysis.as_ref())
+            .expect("dated three-step analysis should exist");
+        let direct_analysis = direct
+            .quant_model
+            .as_ref()
+            .and_then(|model| model.lesson_content.as_ref())
+            .and_then(|lesson| lesson.three_step_analysis.as_ref())
+            .expect("direct three-step analysis should exist");
+
+        assert_eq!(
+            serde_json::to_value(&dated_analysis.facts).unwrap(),
+            serde_json::to_value(&direct_analysis.facts).unwrap()
+        );
+        assert_eq!(
+            serde_json::to_value(&dated_analysis.strength).unwrap(),
+            serde_json::to_value(&direct_analysis.strength).unwrap()
+        );
+        assert_eq!(
+            serde_json::to_value(&dated_analysis.preferences).unwrap(),
+            serde_json::to_value(&direct_analysis.preferences).unwrap()
+        );
+    }
+
+    #[test]
+    fn three_step_general_analysis_changes_with_a_nearby_nonlookup_chart() {
+        let source = analyze_pillars(direct_pillar_request("甲寅", "癸酉", "壬午", "癸卯"))
+            .expect("source chart should build");
+        let near = analyze_pillars(direct_pillar_request("甲寅", "癸酉", "壬午", "癸巳"))
+            .expect("nearby chart should build");
+        let source_json = serde_json::to_value(&source).unwrap();
+        let near_json = serde_json::to_value(&near).unwrap();
+
+        assert_eq!(
+            source_json["quantModel"]["lessonContent"]["threeStepAnalysis"]["facts"]["pillars"][3]
+                ["branch"],
+            "卯"
+        );
+        assert_eq!(
+            near_json["quantModel"]["lessonContent"]["threeStepAnalysis"]["facts"]["pillars"][3]
+                ["branch"],
+            "巳"
+        );
+        assert_ne!(
+            source_json["quantModel"]["lessonContent"]["threeStepAnalysis"]["facts"],
+            near_json["quantModel"]["lessonContent"]["threeStepAnalysis"]["facts"]
+        );
+        assert_eq!(source.ge_ju, "直輸四柱分析");
+        assert_eq!(near.ge_ju, "直輸四柱分析");
+        assert!(source.quant_model.as_ref().unwrap().yong_shen.is_some());
+        assert!(near.quant_model.as_ref().unwrap().yong_shen.is_some());
+    }
+
+    #[test]
+    fn three_step_qa_payloads_are_emitted_only_when_opted_in() {
+        let Ok(output_dir) = std::env::var("LESSON_QA_OUTPUT_DIR") else {
+            return;
+        };
+        let output_dir = std::path::PathBuf::from(output_dir);
+        std::fs::create_dir_all(&output_dir).expect("QA output directory should be creatable");
+        let payloads = [
+            (
+                "general.json",
+                analyze_pillars(direct_pillar_request("戊申", "丙辰", "庚午", "癸未"))
+                    .expect("general chart should build"),
+            ),
+            (
+                "general-one-pillar-variant.json",
+                analyze_pillars(direct_pillar_request("戊申", "丙辰", "庚午", "癸酉"))
+                    .expect("variant chart should build"),
+            ),
+            (
+                "source-2026-09-02.json",
+                analyze_pillars(direct_pillar_request("甲寅", "癸酉", "壬午", "癸卯"))
+                    .expect("source chart should build"),
+            ),
+            (
+                "source-2026-09-02-near.json",
+                analyze_pillars(direct_pillar_request("甲寅", "癸酉", "壬午", "癸丑"))
+                    .expect("source near-match should build"),
+            ),
+            (
+                "structural-single-fallback.json",
+                analyze_pillars(direct_pillar_request("甲寅", "甲寅", "甲寅", "甲寅"))
+                    .expect("synthetic structural fallback chart should build"),
+            ),
+            (
+                "structural-insufficient.json",
+                analyze_pillars(direct_pillar_request("戊戌", "己丑", "甲午", "丁巳"))
+                    .expect("synthetic structural insufficient chart should build"),
+            ),
+        ];
+        for (name, response) in payloads {
+            let bytes = serde_json::to_vec_pretty(&response).expect("response should serialize");
+            std::fs::write(output_dir.join(name), bytes).expect("QA payload should be written");
+        }
+    }
+
+    #[test]
+    fn lesson_0902_annotations_keep_source_layers_and_normal_outputs() {
+        let mut request = direct_pillar_request("甲寅", "癸酉", "壬午", "癸卯");
+        request.gender = Some(Gender::Male);
+        let response = analyze_pillars(request).unwrap();
+        let quant = response.quant_model.as_ref().unwrap();
+        let content = quant.lesson_content.as_ref().unwrap();
+        let cases = content.inferences.iter()
+            .filter(|item| item.rule_id.starts_with("20260902-male-"))
+            .collect::<Vec<_>>();
+        assert_eq!(cases.len(), 4, "natal and three luck source annotations must exist");
+        for item in &cases {
+            assert_eq!(item.match_status, "matched");
+            assert_eq!(item.algorithm_status, "candidate");
+            assert_eq!(item.fixture_scope, "source_case_only");
+            assert_eq!(item.output_mode, "annotation_only");
+            assert_eq!(item.fallback_policy, "preserve_normal_outputs");
+            assert_eq!(item.app_reference.ge_ju, response.ge_ju);
+            assert_eq!(item.sensitive_claims_policy, "excluded");
+            assert!(item.evidence.iter().any(|s| s.starts_with("事實：")));
+            assert!(item.evidence.iter().any(|s| s.starts_with("本課派說法：")));
+            assert!(item.evidence.iter().any(|s| s.contains("來源：") && s.contains("字元")));
+        }
+        let natal = cases.iter().find(|s| s.rule_id.ends_with("natal")).unwrap();
+        assert_eq!(natal.lesson_candidate.as_ref().unwrap().use_elements, vec!["火"]);
+        assert_eq!(natal.agreement_status, "not_comparable");
+        let geng = cases.iter().find(|s| s.rule_id.ends_with("gengchen")).unwrap();
+        assert!(geng.conclusion.contains("作用鏈未交代"));
+        assert!(geng.lesson_candidate.is_none());
+        // The source conclusion must coexist with, not replace, the engineering result.
+        assert_eq!(content.three_step_analysis.as_ref().unwrap().strength.classification, "弱候選");
+        assert_eq!(response.ge_ju, "直輸四柱分析");
+        let serialized = serde_json::to_string(&cases).unwrap();
+        for forbidden in ["不能結婚", "必然賺錢", "不能合夥", "健康預測"] {
+            assert!(!serialized.contains(forbidden));
+        }
+    }
+
+    #[test]
+    fn lesson_0902_annotations_reject_each_changed_pillar_and_unconfirmed_female_case() {
+        for names in [
+            ["甲子", "癸酉", "壬午", "癸卯"],
+            ["甲寅", "癸亥", "壬午", "癸卯"],
+            ["甲寅", "癸酉", "壬辰", "癸卯"],
+            ["甲寅", "癸酉", "壬午", "癸丑"],
+            ["丁丑", "癸丑", "壬申", "甲辰"],
+        ] {
+            let response = analyze_pillars(direct_pillar_request(names[0], names[1], names[2], names[3])).unwrap();
+            let content = response.quant_model.as_ref().unwrap().lesson_content.as_ref().unwrap();
+            assert!(!content.inferences.iter().any(|item| item.rule_id.starts_with("20260902-male-")), "unexpected match: {names:?}");
+        }
+    }
+
+    #[test]
     fn course_content_is_available_with_the_lesson_analysis_order() {
         let response = analyze_pillars(direct_pillar_request("甲子", "乙丑", "丙寅", "丁卯"))
             .expect("direct chart should build");
@@ -1145,45 +1308,19 @@ mod tests {
             .expect("course content should be present");
 
         assert_eq!(course_content.title, "上課內容");
-        assert!(course_content.status.contains("課程規則庫起始版"));
+        let serialized = serde_json::to_value(course_content)
+            .expect("course content should serialize without the document-only rule library");
+        assert!(
+            serialized.get("lessons").is_none(),
+            "course rule documents must not be returned by the App API"
+        );
+        assert!(!course_content.status.contains("課程規則庫"));
+        assert!(course_content.status.contains("課堂推論已整理"));
         assert_eq!(
             course_content.analysis_order,
-            vec!["定格", "取用神", "明喜忌", "大運相對比較"]
+            vec!["格局判定", "日主強弱", "用神與喜忌"]
         );
-        assert!(course_content.future_rule_notice.contains("逐條實作"));
-        assert!(course_content
-            .lessons
-            .iter()
-            .any(|lesson| lesson.id == "20260708-special-patterns"));
-        let flame_case = course_content
-            .lessons
-            .iter()
-            .find(|lesson| lesson.id == "20260708-special-patterns")
-            .expect("2026-07-08 special-pattern lesson should exist");
-        assert_eq!(flame_case.category, "命例");
-        assert!(flame_case
-            .evidence
-            .iter()
-            .any(|item| item.contains("丁巳 丙午 丁巳 丙午")));
-        assert_eq!(flame_case.verification, "transcript_exact");
-        assert!(flame_case.fixture_allowed);
-        let unverified_cases = course_content
-            .lessons
-            .iter()
-            .find(|lesson| lesson.id == "20260708-unverified-cases")
-            .expect("uncertain cases should stay visible");
-        assert!(!unverified_cases.fixture_allowed);
-        let transformation_rule = course_content
-            .lessons
-            .iter()
-            .find(|lesson| lesson.id == "20260708-transformation-rule")
-            .expect("2026-07-08 transformation rule should exist");
-        assert_eq!(
-            transformation_rule.algorithm_status,
-            "本課派規則・待四柱確認"
-        );
-        assert_eq!(transformation_rule.verification, "image_uncertain");
-        assert!(!transformation_rule.fixture_allowed);
+        assert!(course_content.future_rule_notice.contains("bazi-skills"));
     }
 
     #[test]
@@ -1198,14 +1335,6 @@ mod tests {
             .and_then(|quant_model| quant_model.lesson_content.as_ref())
             .expect("course content should be present");
         assert!(course_content.status.contains("2026/07/15"));
-
-        let lesson = course_content
-            .lessons
-            .iter()
-            .find(|lesson| lesson.id == "20260715-regularize-special-labels")
-            .expect("2026-07-15 lesson rule should exist");
-        assert_eq!(lesson.verification, "transcript_and_whiteboard_confirmed");
-        assert!(lesson.fixture_allowed);
 
         let case_inference = course_content
             .inferences
@@ -1346,33 +1475,6 @@ mod tests {
     }
 
     #[test]
-    fn course_content_lists_20260729_source_and_uncertain_cases() {
-        let response = analyze_pillars(direct_pillar_request("丙子", "丙申", "庚寅", "丁亥"))
-            .expect("2026-07-29 source chart should build");
-        let course_content = response
-            .quant_model
-            .as_ref()
-            .and_then(|quant_model| quant_model.lesson_content.as_ref())
-            .expect("course content should be present");
-
-        let source_case = course_content
-            .lessons
-            .iter()
-            .find(|lesson| lesson.id == "20260729-geng-shen-case")
-            .expect("2026-07-29 source case should be listed");
-        assert_eq!(source_case.verification, "transcript_exact");
-        assert!(source_case.fixture_allowed);
-
-        let uncertain_cases = course_content
-            .lessons
-            .iter()
-            .find(|lesson| lesson.id == "20260729-whiteboard-cases")
-            .expect("uncertain whiteboard cases should remain visible");
-        assert_eq!(uncertain_cases.verification, "image_uncertain");
-        assert!(!uncertain_cases.fixture_allowed);
-    }
-
-    #[test]
     fn course_content_applies_20260729_geng_shen_case_with_interaction_evidence() {
         let response = analyze_pillars(direct_pillar_request("丙子", "丙申", "庚寅", "丁亥"))
             .expect("2026-07-29 source chart should build");
@@ -1392,6 +1494,7 @@ mod tests {
         assert_eq!(inference.fixture_scope, "source_case_only");
         assert_eq!(inference.output_mode, "annotation_only");
         assert_eq!(inference.fallback_policy, "preserve_normal_outputs");
+        assert_eq!(inference.sensitive_claims_policy, "excluded");
         assert_eq!(inference.app_reference.ge_ju, response.ge_ju);
         assert_eq!(
             inference
@@ -1436,36 +1539,6 @@ mod tests {
     }
 
     #[test]
-    fn course_content_lists_20260805_fuyi_and_disease_medicine_rules() {
-        let response = analyze_pillars(direct_pillar_request("戊戌", "己未", "丙子", "庚寅"))
-            .expect("2026-08-05 source chart should build");
-        let course_content = response
-            .quant_model
-            .as_ref()
-            .and_then(|quant_model| quant_model.lesson_content.as_ref())
-            .expect("course content should be present");
-
-        let fu_yi = course_content
-            .lessons
-            .iter()
-            .find(|lesson| lesson.id == "20260805-fu-yi-priority")
-            .expect("扶抑用神 rule should be listed");
-        assert_eq!(fu_yi.verification, "lesson_transcript_summary");
-        assert_eq!(fu_yi.algorithm_status, "candidate・annotation_only");
-
-        let disease_medicine = course_content
-            .lessons
-            .iter()
-            .find(|lesson| lesson.id == "20260805-disease-medicine")
-            .expect("病藥 rule should be listed");
-        assert_eq!(
-            disease_medicine.algorithm_status,
-            "本課派規則・待正反例回歸"
-        );
-        assert!(!disease_medicine.fixture_allowed);
-    }
-
-    #[test]
     fn course_content_applies_20260805_bing_fire_source_case_without_overwriting_yong_shen() {
         let response = analyze_pillars(direct_pillar_request("戊戌", "己未", "丙子", "庚寅"))
             .expect("2026-08-05 source chart should build");
@@ -1488,6 +1561,7 @@ mod tests {
         assert_eq!(inference.fixture_scope, "source_case_only");
         assert_eq!(inference.output_mode, "annotation_only");
         assert_eq!(inference.fallback_policy, "preserve_normal_outputs");
+        assert_eq!(inference.sensitive_claims_policy, "excluded");
         assert_eq!(inference.app_reference.ge_ju, response.ge_ju);
         assert_eq!(
             inference
@@ -1546,6 +1620,230 @@ mod tests {
         assert!(inference.lesson_candidate.is_none());
         assert_eq!(inference.fallback_policy, "preserve_normal_outputs");
         assert_eq!(inference.app_reference.ge_ju, response.ge_ju);
+    }
+
+    #[test]
+    fn course_content_applies_20260812_xin_wealth_case_with_existing_interactions() {
+        let response = analyze_pillars(direct_pillar_request("癸卯", "乙卯", "辛亥", "庚寅"))
+            .expect("2026-08-12 source chart should build");
+        let course_content = response
+            .quant_model
+            .as_ref()
+            .and_then(|quant_model| quant_model.lesson_content.as_ref())
+            .expect("course content should be present");
+        let inference = course_content
+            .inferences
+            .iter()
+            .find(|inference| inference.rule_id == "20260812-xin-wealth-case")
+            .expect("2026-08-12 辛金 source case inference should exist");
+
+        assert_eq!(
+            inference.source_verification,
+            "transcript_and_whiteboard_confirmed"
+        );
+        assert_eq!(inference.algorithm_status, "candidate");
+        assert_eq!(inference.match_status, "matched");
+        assert_eq!(inference.fixture_scope, "source_case_only");
+        assert_eq!(inference.output_mode, "annotation_only");
+        assert_eq!(inference.fallback_policy, "preserve_normal_outputs");
+        assert_eq!(inference.sensitive_claims_policy, "excluded");
+        assert_eq!(inference.app_reference.ge_ju, response.ge_ju);
+        assert_eq!(
+            inference
+                .lesson_candidate
+                .as_ref()
+                .map(|candidate| candidate.pattern.as_str()),
+            Some("偏財格")
+        );
+        assert_eq!(
+            inference
+                .lesson_candidate
+                .as_ref()
+                .map(|candidate| candidate.strength.as_str()),
+            Some("身弱財旺候選")
+        );
+        assert_eq!(
+            inference
+                .lesson_candidate
+                .as_ref()
+                .map(|candidate| candidate.use_elements.as_slice()),
+            Some(["金".to_string()].as_slice())
+        );
+        let expected_agreement = match (
+            inference.app_reference.ge_ju.contains("偏財"),
+            inference.app_reference.strength_label.contains('弱'),
+        ) {
+            (true, true) => "agree",
+            (true, false) | (false, true) => "partial",
+            (false, false) => "conflict",
+        };
+        assert_eq!(inference.agreement_status, expected_agreement);
+        assert!(inference
+            .evidence
+            .iter()
+            .any(|evidence| evidence.starts_with("互動證據：")
+                && evidence.contains("亥卯")
+                && evidence.contains("半合")));
+        assert!(inference
+            .rejected_alternatives
+            .iter()
+            .any(|alternative| alternative.contains("旺衰門檻")));
+    }
+
+    #[test]
+    fn course_content_applies_20260812_disease_medicine_textbook_case() {
+        let response = analyze_pillars(direct_pillar_request("壬戌", "己酉", "丁丑", "甲辰"))
+            .expect("2026-08-12 textbook chart should build");
+        let course_content = response
+            .quant_model
+            .as_ref()
+            .and_then(|quant_model| quant_model.lesson_content.as_ref())
+            .expect("course content should be present");
+        let inference = course_content
+            .inferences
+            .iter()
+            .find(|inference| inference.rule_id == "20260812-disease-medicine-case")
+            .expect("2026-08-12 病藥 textbook inference should exist");
+
+        assert_eq!(inference.source_verification, "transcript_exact");
+        assert_eq!(inference.algorithm_status, "candidate");
+        assert_eq!(inference.match_status, "matched");
+        assert_eq!(inference.fixture_scope, "source_case_only");
+        assert_eq!(inference.output_mode, "annotation_only");
+        assert_eq!(inference.fallback_policy, "preserve_normal_outputs");
+        assert_eq!(inference.sensitive_claims_policy, "excluded");
+        assert_eq!(inference.app_reference.ge_ju, response.ge_ju);
+        assert_eq!(
+            inference
+                .lesson_candidate
+                .as_ref()
+                .map(|candidate| candidate.pattern.as_str()),
+            Some("財格病藥命例")
+        );
+        assert_eq!(
+            inference
+                .lesson_candidate
+                .as_ref()
+                .map(|candidate| candidate.use_elements.as_slice()),
+            Some(["木".to_string()].as_slice())
+        );
+        assert!(inference
+            .evidence
+            .iter()
+            .any(|evidence| evidence.contains("己土") && evidence.contains("食傷")));
+        assert!(inference
+            .evidence
+            .iter()
+            .any(|evidence| evidence.contains("甲木") && evidence.contains("護官")));
+    }
+
+    #[test]
+    fn course_content_applies_20260812_follow_wealth_source_case() {
+        let response = analyze_pillars(direct_pillar_request("己卯", "甲戌", "乙未", "庚辰"))
+            .expect("2026-08-12 follow-wealth source chart should build");
+        let course_content = response
+            .quant_model
+            .as_ref()
+            .and_then(|quant_model| quant_model.lesson_content.as_ref())
+            .expect("course content should be present");
+        let inference = course_content
+            .inferences
+            .iter()
+            .find(|inference| inference.rule_id == "20260812-follow-wealth-case")
+            .expect("2026-08-12 follow-wealth inference should exist");
+
+        assert_eq!(
+            inference.source_verification,
+            "transcript_and_whiteboard_confirmed"
+        );
+        assert_eq!(inference.algorithm_status, "candidate");
+        assert_eq!(inference.match_status, "matched");
+        assert_eq!(inference.fixture_scope, "source_case_only");
+        assert_eq!(inference.output_mode, "annotation_only");
+        assert_eq!(inference.fallback_policy, "preserve_normal_outputs");
+        assert_eq!(inference.sensitive_claims_policy, "excluded");
+        assert_eq!(inference.app_reference.ge_ju, response.ge_ju);
+        assert_eq!(
+            inference
+                .lesson_candidate
+                .as_ref()
+                .map(|candidate| candidate.pattern.as_str()),
+            Some("從財格")
+        );
+        assert_eq!(
+            inference
+                .lesson_candidate
+                .as_ref()
+                .map(|candidate| candidate.use_elements.as_slice()),
+            Some(["土".to_string()].as_slice())
+        );
+        for target in ["甲己", "卯戌", "戌未"] {
+            assert!(
+                inference
+                    .evidence
+                    .iter()
+                    .any(|evidence| evidence.starts_with("互動證據：")
+                        && evidence.contains(target)
+                        && (evidence.contains("合") || evidence.contains("刑"))),
+                "existing interaction evidence should include {target}"
+            );
+        }
+        assert!(inference.evidence.iter().any(|evidence| {
+            !evidence.starts_with("互動證據：")
+                && evidence.contains("乙庚合")
+                && evidence.contains("課堂")
+        }));
+        assert!(!inference
+            .evidence
+            .iter()
+            .any(|evidence| evidence.starts_with("互動證據：乙庚")));
+        assert_eq!(
+            inference.agreement_status,
+            if inference.app_reference.special_pattern.contains("從財") {
+                "agree"
+            } else {
+                "conflict"
+            }
+        );
+        assert!(inference
+            .rejected_alternatives
+            .iter()
+            .any(|alternative| alternative.contains("通用從財")));
+    }
+
+    #[test]
+    fn course_content_does_not_apply_20260812_cases_to_near_matches() {
+        for (pillars, rule_id) in [
+            (("癸卯", "乙卯", "辛亥", "庚申"), "20260812-xin-wealth-case"),
+            (
+                ("壬戌", "己酉", "丁丑", "乙巳"),
+                "20260812-disease-medicine-case",
+            ),
+            (
+                ("己卯", "甲戌", "乙未", "辛巳"),
+                "20260812-follow-wealth-case",
+            ),
+        ] {
+            let response = analyze_pillars(direct_pillar_request(
+                pillars.0, pillars.1, pillars.2, pillars.3,
+            ))
+            .expect("2026-08-12 near-match chart should build");
+            let course_content = response
+                .quant_model
+                .as_ref()
+                .and_then(|quant_model| quant_model.lesson_content.as_ref())
+                .expect("course content should be present");
+            let inference = course_content
+                .inferences
+                .iter()
+                .find(|inference| inference.rule_id == rule_id)
+                .expect("2026-08-12 lesson diagnostics should exist");
+
+            assert_eq!(inference.match_status, "not_matched");
+            assert!(inference.lesson_candidate.is_none());
+            assert_eq!(inference.fallback_policy, "preserve_normal_outputs");
+            assert_eq!(inference.app_reference.ge_ju, response.ge_ju);
+        }
     }
 
     #[test]

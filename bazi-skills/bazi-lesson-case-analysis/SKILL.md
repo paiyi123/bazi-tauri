@@ -5,7 +5,7 @@ description: Use when organizing BaZi class recordings, whiteboard notes, or les
 
 # BaZi Lesson Case Analysis
 
-Turn a lesson into traceable rules, never unsupported fortune-telling. Read the relevant dated references, including `references/2026-07-01-lesson.md`, `references/2026-07-08-lesson.md`, `references/2026-07-15-lesson.md`, `references/2026-07-22-lesson.md`, `references/2026-07-29-lesson.md`, and `references/2026-08-05-lesson.md`, before adding a rule to the App.
+Turn a lesson into traceable rules, never unsupported fortune-telling. Read the relevant dated references, including `references/2026-07-01-lesson.md`, `references/2026-07-08-lesson.md`, `references/2026-07-15-lesson.md`, `references/2026-07-22-lesson.md`, `references/2026-07-29-lesson.md`, `references/2026-08-05-lesson.md`, and `references/2026-08-12-lesson.md`, before adding a rule to the App.
 
 ## Workflow
 
@@ -14,11 +14,11 @@ Turn a lesson into traceable rules, never unsupported fortune-telling. Read the 
 3. Explain the evidence chain in this order: 定格 → 取用神 → 明喜忌 → 大運相對比較.
 4. For each conclusion, give its supporting pillar/interaction and rejected alternatives. Preserve the App's normal `geJu` as the reference when a special pattern is considered.
 5. Use comparative language for luck: `較前運穩定` does not mean `必然吉`.
-6. Translate a rule into data before code: identify inputs, decision gates, output label, evidence, and fallback. Keep `待核對` or `尚未接入` visible in the App rather than silently treating a classroom hypothesis as production logic.
+6. Translate a rule into data before code: identify inputs, decision gates, output label, evidence, and fallback. Keep `待核對` or `尚未接入` in the dated reference documents rather than silently treating a classroom hypothesis as production logic; the App only receives rules or exact cases intentionally selected for inference display.
 
 ## Hard Gates
 
-- If any pillar, day stem, month command, or source transcription is uncertain or conflicting, output only a `待核對` summary. Set `verification=image_uncertain` (or the matching source state), `algorithm_status=本課派規則・待四柱確認`, and `fixtureAllowed=false`.
+- If any pillar, day stem, month command, or source transcription is uncertain or conflicting, output only a `待核對` summary in the dated reference document. Set `verification=image_uncertain` (or the matching source state), `algorithm_status=本課派規則・待四柱確認`, and `fixtureAllowed=false`; do not add it to App inference unless the product requirement explicitly asks to display blocked diagnostics.
 - Never choose one character from conflicting ASR/photo candidates. Preserve the alternatives and source location; do not create a fixture, production score, or use-god/avoid-god conclusion from that uncertainty.
 - A rule may move from `candidate` to `verified` only with a computable predicate, stated threshold/source, one passing fixture, one rejection or break-pattern fixture, and a regression test. Otherwise it remains documentation.
 - Only `verified` rules with passing fixtures may become `implemented` automatic inference. The normal `geJu` remains visible until then.
@@ -46,6 +46,7 @@ Treat source verification and algorithm maturity as separate axes:
 - For a generalized day-master state rule, keep source examples and the App predicate separate: a transcript phrase such as 「得勢多」 is not a numeric threshold. Any engineering threshold remains `candidate`, labels any suggested elements as directions rather than formal 用神, and never overwrites normal outputs.
 - For 2026/07/29 interaction examples, reuse the existing `QuantModelInteraction` evidence for 半合、三合 and 沖; do not invent a second scoring path. An exact source chart may be `source_case_only`, while unreadable whiteboard charts remain `image_uncertain` with `fixtureAllowed=false`.
 - For 2026/08/05, map 扶抑 only as a `candidate` comparison to the existing `QuantYongShen`; it must not select or overwrite App 用神. 病藥 lacks a generalizable priority gate and computable threshold, so it remains documentation until it has explicit positive and negative fixtures. Keep incomplete whiteboard charts as `image_uncertain`.
+- For 2026/08/12, only the exact `癸卯 乙卯 辛亥 庚寅`, `己卯 甲戌 乙未 庚辰`, and transcript-exact `壬戌 己酉 丁丑 甲辰` charts may become `source_case_only` annotations, each with a one-pillar rejection fixture. The first textbook chart remains `transcript_uncertain`. Do not generalize the exact 從財 candidate, 病藥 mapping, or 「旺神沖衰、衰神沖旺」 until their predicates, thresholds, break conditions, and positive/negative fixtures are explicit. Reuse `QuantModelInteraction` evidence and preserve all normal outputs.
 
 ## Required Output
 

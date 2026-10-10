@@ -1,13 +1,16 @@
 use crate::bazi::{
     DaYunDto, LiuNianDto, QuantAnnualLuckScore, QuantCongPattern, QuantLessonAppReference,
-    QuantLessonCandidate, QuantLessonContent, QuantLessonInference, QuantLessonItem,
-    QuantLuckScore, QuantModelInteraction, QuantModelPillarScore, QuantModelResponse,
-    QuantModelSubScore, QuantShaYin, QuantSpecialPattern, QuantYongShen,
+    QuantLessonCandidate, QuantLessonContent, QuantLessonInference, QuantLuckScore,
+    QuantModelInteraction, QuantModelPillarScore, QuantModelResponse, QuantModelSubScore,
+    QuantShaYin, QuantSpecialPattern, QuantYongShen,
 };
+use crate::lesson_analysis::{analyze as analyze_lesson, LessonModelReference};
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap};
 use tyme4rs::tyme::sixtycycle::{EarthBranch, HeavenStem, SixtyCycle};
 use tyme4rs::tyme::Culture;
+
+mod lesson_0902;
 
 #[derive(Debug, Clone)]
 struct CalculationInputs {
@@ -415,249 +418,30 @@ fn build_lesson_content(
     special_pattern: &QuantSpecialPattern,
     interactions: &[QuantModelInteraction],
 ) -> QuantLessonContent {
+    let three_step_analysis = Some(analyze_lesson(
+        natal_cycles,
+        &LessonModelReference {
+            ge_ju: normal_pattern_reference.to_string(),
+            strength_label: strength_label.to_string(),
+            use_elements: yong_shen.favorable_elements.clone(),
+            special_pattern: special_pattern.primary_pattern.clone(),
+            special_category: special_pattern
+                .primary_pattern
+                .as_ref()
+                .map(|_| special_pattern.category.clone()),
+        },
+        interactions,
+    ));
     QuantLessonContent {
         title: "上課內容".to_string(),
-        status: "課程規則庫起始版（含 2026/07/01、2026/07/08、2026/07/15、2026/07/22、2026/07/29、2026/08/05）".to_string(),
+        status: "課堂推論已整理（來源含 2026/07/01、2026/07/08、2026/07/15、2026/07/22、2026/07/29、2026/08/05、2026/08/12、2026/08/19、2026/08/26、2026/09/02；未核對規則不視為已驗證）".to_string(),
         analysis_order: vec![
-            "定格".to_string(),
-            "取用神".to_string(),
-            "明喜忌".to_string(),
-            "大運相對比較".to_string(),
+            "格局判定".to_string(),
+            "日主強弱".to_string(),
+            "用神與喜忌".to_string(),
         ],
-        future_rule_notice: "課堂規則將以事實、規則與證據鏈逐條實作；未核對的轉錄與白板內容不納入自動推論。"
+        future_rule_notice: "完整課堂規則與來源保存在 bazi-skills 文件；已接入規則以事實、規則與證據鏈顯示，未核對內容不納入自動推論。"
             .to_string(),
-        lessons: vec![
-            QuantLessonItem {
-                id: "20260701-foundation".to_string(),
-                source_date: "2026/07/01".to_string(),
-                category: "觀念".to_string(),
-                title: "先辨生剋瀉合化，再進入格局推論".to_string(),
-                summary: "先記錄四柱事實與互動，再依定格、用神、喜忌、大運的順序解說；普通格與特殊格不可混用強弱邏輯。".to_string(),
-                algorithm_status: "已整理・尚未全面接入".to_string(),
-                verification: "lesson_transcript_summary".to_string(),
-                fixture_allowed: false,
-                evidence: vec![
-                    "生剋瀉合化、三會/三刑/六沖、三合/半合/六合列為第一層檢查。".to_string(),
-                    "神煞或六害不直接當作吉凶結論，需回到全局證據。".to_string(),
-                ],
-            },
-            QuantLessonItem {
-                id: "20260708-special-patterns".to_string(),
-                source_date: "2026/07/08".to_string(),
-                category: "命例".to_string(),
-                title: "專旺五格：炎上、架設與潤下".to_string(),
-                summary: "本課派以月令、地支與透干判斷一行獨旺；專旺神為用神，生旺神與洩旺神可列喜神，控制旺神者列為忌神。".to_string(),
-                algorithm_status: "已整理・規則待回歸測試".to_string(),
-                verification: "transcript_exact".to_string(),
-                fixture_allowed: true,
-                evidence: vec![
-                    "丁巳 丙午 丁巳 丙午：丁火生午月、地支全火、丙丁透干且不見水，課堂判為炎上格。".to_string(),
-                    "戊戌 己未 戊戌 己未：戊土生未月、地支全土、戊己透干且不見木，課堂判為架設格。".to_string(),
-                ],
-            },
-            QuantLessonItem {
-                id: "20260708-unverified-cases".to_string(),
-                source_date: "2026/07/08".to_string(),
-                category: "命例".to_string(),
-                title: "潤下、金專旺與化氣案例（待核對）".to_string(),
-                summary: "錄音可辨識部分判法，但白板照片無法可靠還原完整四柱；只保留候選規則，不產生格局、用神或量化結論。".to_string(),
-                algorithm_status: "待核對・禁止接入".to_string(),
-                verification: "image_uncertain".to_string(),
-                fixture_allowed: false,
-                evidence: vec![
-                    "潤下格水例、金專旺例與庚辰/甲辰等字樣存在辨識不確定性。".to_string(),
-                    "必須取得可核對的四柱與來源定位後，才能建立正反例 fixture。".to_string(),
-                ],
-            },
-            QuantLessonItem {
-                id: "20260708-transformation-rule".to_string(),
-                source_date: "2026/07/08".to_string(),
-                category: "規則".to_string(),
-                title: "化氣格簡化判法".to_string(),
-                summary: "先確認日干本身之合，再決定化神；其餘六位以化神及生化神者為主。若出現破壞化氣的控制元素，回到普通格重新判讀。".to_string(),
-                algorithm_status: "本課派規則・待四柱確認".to_string(),
-                verification: "image_uncertain".to_string(),
-                fixture_allowed: false,
-                evidence: vec![
-                    "甲己化土、乙庚化金、丙辛化水、丁壬化木、戊癸化火。".to_string(),
-                    "課堂採簡化教學規則，不在未核對資料下宣稱真化/假化或唯一格局。".to_string(),
-                ],
-            },
-            QuantLessonItem {
-                id: "20260708-case-explanation-boundary".to_string(),
-                source_date: "2026/07/08".to_string(),
-                category: "命例解說".to_string(),
-                title: "命例解說的證據鏈與安全邊界".to_string(),
-                summary: "命例只輸出可由四柱、藏干、合沖會局與量化分數支持的相對判斷；白板上的健康、死亡或其他絕對事件敘述不轉成 App 自動推論。".to_string(),
-                algorithm_status: "已整理・不納入敏感事件推論".to_string(),
-                verification: "lesson_transcript_summary".to_string(),
-                fixture_allowed: false,
-                evidence: vec![
-                    "每個結論必須列出支持它的柱位或互動，並保留被拒絕的替代判讀。".to_string(),
-                    "大運用較前運穩定/偏弱等相對語句，不表示必然吉凶。".to_string(),
-                ],
-            },
-            QuantLessonItem {
-                id: "20260715-regularize-special-labels".to_string(),
-                source_date: "2026/07/15".to_string(),
-                category: "演算法規則".to_string(),
-                title: "兩神成像先回歸正格／既有特殊格".to_string(),
-                summary: "兩種五行高度集中可記為兩神成像，但本課派不讓別名直接覆蓋正格；先比較普通格、從格、專旺與化氣，保留最能解釋月令及全局力量的既有格局。".to_string(),
-                algorithm_status: "不覆寫 invariant 已接入・選格規則 candidate".to_string(),
-                verification: "transcript_and_whiteboard_confirmed".to_string(),
-                fixture_allowed: true,
-                evidence: vec![
-                    "兩神成像又稱兩氣雙清：八字本氣主要由兩種五行構成，可相生也可相剋。".to_string(),
-                    "丙寅 甲午 丁卯 乙巳雖可描述為木火兩神成像，課堂要求再比較專旺炎上等既有格局。".to_string(),
-                    "相剋型若月令可直接定普通格，應保留普通格，不另造會遮蔽證據的格名。".to_string(),
-                ],
-            },
-            QuantLessonItem {
-                id: "20260715-case-1977".to_string(),
-                source_date: "2026/07/15".to_string(),
-                category: "命例".to_string(),
-                title: "乾造：丁巳／己酉／己卯／乙丑".to_string(),
-                summary: "己土生酉月，以酉藏辛定食神格；課堂判身弱並以火為扶身候選。App 同時列出自身量化強弱，若與課堂不同則保留差異，不互相覆蓋。".to_string(),
-                algorithm_status: "candidate・source_case_only".to_string(),
-                verification: "transcript_and_whiteboard_confirmed".to_string(),
-                fixture_allowed: true,
-                evidence: vec![
-                    "白板：乾造，民國 66 年農曆八月初七丑時；四柱丁巳、己酉、己卯、乙丑。".to_string(),
-                    "大運逆排：戊申、丁未、丙午、乙巳、甲辰、癸卯。".to_string(),
-                    "錄音明述此造為食神格身弱、火運可用；此結論標記為本課派比較值。".to_string(),
-                ],
-            },
-            QuantLessonItem {
-                id: "20260715-exotic-pattern-boundary".to_string(),
-                source_date: "2026/07/15".to_string(),
-                category: "觀念".to_string(),
-                title: "奇格異局不作無中生有的自動規則".to_string(),
-                summary: "課堂批判為求財官而虛構暗沖、暗合或額外格名的判法；App 只接受四柱中可計算的月令、藏干、透干、合沖會局與量化證據。".to_string(),
-                algorithm_status: "已接入・證據不足即拒絕".to_string(),
-                verification: "lesson_transcript_summary".to_string(),
-                fixture_allowed: false,
-                evidence: vec![
-                    "不存在於四柱或已解析互動中的地支，不得為了求財官而自行補入。".to_string(),
-                    "健康、死亡、家族因果與保證式事業事件不納入自動推論。".to_string(),
-                ],
-            },
-            QuantLessonItem {
-                id: "20260722-day-master-state".to_string(),
-                source_date: "2026/07/22".to_string(),
-                category: "演算法規則".to_string(),
-                title: "日干得時／得勢／得地（本課派候選）".to_string(),
-                summary: "以得時、得勢、得地三項觀察日干：三項俱足且無克瀉耗為旺極候選；三項俱足而有克瀉耗為旺候選；兩項為強候選、一項為弱候選。App 的得勢門檻為工程候選，尚非課堂已驗證的量化標準。".to_string(),
-                algorithm_status: "candidate・待正反例回歸".to_string(),
-                verification: "lesson_transcript_summary".to_string(),
-                fixture_allowed: false,
-                evidence: vec![
-                    "得時：日干五行與月令本氣相同；得地：任一地支藏干含同五行。".to_string(),
-                    "得勢：課堂描述為生扶比助多；App 暫以兩個可見生扶來源作候選門檻，僅用於註解。".to_string(),
-                    "旺、強取剋瀉耗方向；弱取生扶比助方向；旺極、衰極是否進專旺或從格仍交由既有特殊格檢查。".to_string(),
-                ],
-            },
-            QuantLessonItem {
-                id: "20260722-water-prosperity-example".to_string(),
-                source_date: "2026/07/22".to_string(),
-                category: "命例".to_string(),
-                title: "壬子／辛亥／壬子／辛亥：水旺極命例".to_string(),
-                summary: "課堂以亥月得時、金水生扶得勢、亥子藏壬癸得地且未見明顯克瀉耗，解為水旺極，並提及潤下／水專旺的後續判斷。App 僅以此作來源命例與候選回歸資料。".to_string(),
-                algorithm_status: "candidate・source_case_only".to_string(),
-                verification: "transcript_exact".to_string(),
-                fixture_allowed: true,
-                evidence: vec![
-                    "四柱：壬子、辛亥、壬子、辛亥；日干為壬水。".to_string(),
-                    "專旺／潤下的正式判定不由本條候選直接覆寫既有格局、量化強弱或用神。".to_string(),
-                ],
-            },
-            QuantLessonItem {
-                id: "20260729-geng-shen-case".to_string(),
-                source_date: "2026/07/29".to_string(),
-                category: "命例".to_string(),
-                title: "丙子／丙申／庚寅／丁亥：庚金申月轉弱候選".to_string(),
-                summary: "課堂先以庚金生申月記為得時，再以月令外無庚辛根、寅申沖及申子半合水洩金修正，列為日干弱候選。此為來源命例比較值，不是一般化身弱演算法。".to_string(),
-                algorithm_status: "candidate・source_case_only".to_string(),
-                verification: "transcript_exact".to_string(),
-                fixture_allowed: true,
-                evidence: vec![
-                    "逐字稿明載四柱：丙子、丙申、庚寅、丁亥；日主庚金生申月。".to_string(),
-                    "課堂以寅申沖損金、申子半合水洩金說明由得時轉弱。".to_string(),
-                    "課堂結論僅作本課派日干弱候選，不覆蓋 App 普通格、量化強弱或用神。".to_string(),
-                ],
-            },
-            QuantLessonItem {
-                id: "20260729-whiteboard-cases".to_string(),
-                source_date: "2026/07/29".to_string(),
-                category: "命例".to_string(),
-                title: "其他白板命例：四柱待核對".to_string(),
-                summary: "白板可見年齡、月份與干支片段，但照片與逐字稿不足以唯一還原完整四柱；只保留來源提示，不建立命例 fixture 或自動推論。".to_string(),
-                algorithm_status: "本課派規則・待四柱確認".to_string(),
-                verification: "image_uncertain".to_string(),
-                fixture_allowed: false,
-                evidence: vec![
-                    "兩張白板命例的部分干支字形、左右欄位與逐字稿候選不一致。".to_string(),
-                    "取得可核對的四柱與來源定位前，不選定偏財格、偏印格或身強身弱結論。".to_string(),
-                ],
-            },
-            QuantLessonItem {
-                id: "20260805-fu-yi-priority".to_string(),
-                source_date: "2026/08/05".to_string(),
-                category: "演算法規則".to_string(),
-                title: "扶抑用神優先（本課派候選對照）".to_string(),
-                summary: "日主弱取印、比劫生扶；日主強或旺取食傷、財、官殺剋瀉耗。病藥、通關、調和如與扶抑衝突，課堂要求以扶抑為優先。App 僅將現有量化用神結果映射為課堂對照，不另起用神引擎。".to_string(),
-                algorithm_status: "candidate・annotation_only".to_string(),
-                verification: "lesson_transcript_summary".to_string(),
-                fixture_allowed: false,
-                evidence: vec![
-                    "扶：正偏印生身、比肩劫財助身；抑：官殺剋身、食傷洩身、財星耗身。".to_string(),
-                    "課堂把扶抑列為第一順位，病藥、通關、調和不得與它衝突。".to_string(),
-                    "App 只引用既有 QuantYongShen 的量化結論作對照，保留其原有結果。".to_string(),
-                ],
-            },
-            QuantLessonItem {
-                id: "20260805-disease-medicine".to_string(),
-                source_date: "2026/08/05".to_string(),
-                category: "演算法規則".to_string(),
-                title: "病藥用神：制病之神為藥（待正反例回歸）".to_string(),
-                summary: "以妨害既定用神的十神為病，能制病或保護用神者為藥；例如用財怕比劫、用食傷怕印、用官殺怕食傷、用比劫怕官殺、用印怕財。此規則仍缺通用優先權與量化門檻，暫不自動選取用神。".to_string(),
-                algorithm_status: "本課派規則・待正反例回歸".to_string(),
-                verification: "lesson_transcript_summary".to_string(),
-                fixture_allowed: false,
-                evidence: vec![
-                    "病重藥輕或病輕藥重時，課堂提及須再以大運綜合；未提供可直接程式化的門檻。".to_string(),
-                    "病藥、通關、調和不可覆蓋扶抑的優先關係。".to_string(),
-                ],
-            },
-            QuantLessonItem {
-                id: "20260805-bing-fire-case".to_string(),
-                source_date: "2026/08/05".to_string(),
-                category: "命例".to_string(),
-                title: "戊戌／己未／丙子／庚寅：丙火身弱候選".to_string(),
-                summary: "課堂以丙火生未月、土氣增旺但未戌寅仍有火根且寅木生火，判為普通格身弱而非從格；取木剋土生火為用、火幫身為喜。此僅作來源命例比較值。".to_string(),
-                algorithm_status: "candidate・source_case_only".to_string(),
-                verification: "transcript_exact".to_string(),
-                fixture_allowed: true,
-                evidence: vec![
-                    "逐字稿明載四柱：戊戌、己未、丙子、庚寅。".to_string(),
-                    "課堂說明未、戌、寅皆可作丙火根氣，寅木亦生丙火。".to_string(),
-                    "木、火是本課派命例的扶身方向；不直接覆蓋 App 正式用神。".to_string(),
-                ],
-            },
-            QuantLessonItem {
-                id: "20260805-whiteboard-cases".to_string(),
-                source_date: "2026/08/05".to_string(),
-                category: "命例".to_string(),
-                title: "白板命例：四柱待核對".to_string(),
-                summary: "白板可辨識部分干支、出生資訊與用神標記，但欄位與逐字稿不能可靠唯一對應完整四柱；只保留待核對來源，不建立 fixture 或命例結論。".to_string(),
-                algorithm_status: "本課派規則・待四柱確認".to_string(),
-                verification: "image_uncertain".to_string(),
-                fixture_allowed: false,
-                evidence: vec![
-                    "圖中 62 年與 80 年命例的部分干支字形及柱位無法可靠轉錄。".to_string(),
-                    "未取得核對資料前，不選定格局、身強弱、用神或喜忌。".to_string(),
-                ],
-            },
-        ],
         inferences: build_lesson_inferences(
             natal_cycles,
             day_master,
@@ -667,6 +451,7 @@ fn build_lesson_content(
             special_pattern,
             interactions,
         ),
+        three_step_analysis,
     }
 }
 
@@ -701,6 +486,9 @@ fn build_lesson_inferences(
 
     let two_element_triggered = special_pattern.category == "兩神成象";
     let mut inferences = vec![
+        build_20260812_xin_wealth_case_inference(&chart, &app_reference, interactions),
+        build_20260812_disease_medicine_case_inference(&chart, &app_reference),
+        build_20260812_follow_wealth_case_inference(&chart, &app_reference, interactions),
         build_20260805_fu_yi_priority_inference(&app_reference, yong_shen),
         build_20260805_bing_fire_case_inference(&chart, &app_reference),
         build_20260722_day_master_state_inference(natal_cycles, day_master, &app_reference),
@@ -766,6 +554,8 @@ fn build_lesson_inferences(
             ],
         },
     ];
+
+    inferences.extend(lesson_0902::annotations(&chart, &app_reference, interactions));
 
     let exact_case_matched = chart == "丁巳 己酉 己卯 乙丑";
     inferences.push(QuantLessonInference {
@@ -838,6 +628,267 @@ fn build_lesson_inferences(
     });
 
     inferences
+}
+
+fn build_20260812_xin_wealth_case_inference(
+    chart: &str,
+    app_reference: &QuantLessonAppReference,
+    interactions: &[QuantModelInteraction],
+) -> QuantLessonInference {
+    let exact_case_matched = chart == "癸卯 乙卯 辛亥 庚寅";
+    let mut evidence = vec![format!("目前四柱：{}。", chart)];
+    if exact_case_matched {
+        evidence.extend([
+            "辛金生於卯月，卯藏乙木；課堂以偏財格作來源命例候選。".to_string(),
+            "年、月兩見卯木，日支亥與卯可見木勢互動；課堂判作身弱財旺候選。".to_string(),
+            "課堂取庚金比劫分財為用神方向、土印扶身為喜神方向；只作命例註記。".to_string(),
+        ]);
+        evidence.extend(
+            interactions
+                .iter()
+                .filter(|interaction| {
+                    matches!(interaction.target.as_str(), "亥卯" | "卯亥")
+                        && interaction.r#type.contains("半合")
+                })
+                .map(|interaction| {
+                    format!(
+                        "互動證據：亥卯 {}（{}；{}；{}）。",
+                        interaction.r#type,
+                        interaction.outcome,
+                        interaction.pillars,
+                        interaction.detail
+                    )
+                }),
+        );
+    } else {
+        evidence
+            .push("精確命例 predicate：癸卯／乙卯／辛亥／庚寅，任一柱不同即不套用。".to_string());
+    }
+
+    QuantLessonInference {
+        rule_id: "20260812-xin-wealth-case".to_string(),
+        title: "2026/08/12 辛金偏財命例比對".to_string(),
+        status: if exact_case_matched {
+            "已比對命例"
+        } else {
+            "未符合本課命例"
+        }
+        .to_string(),
+        source_verification: "transcript_and_whiteboard_confirmed".to_string(),
+        algorithm_status: "candidate".to_string(),
+        match_status: if exact_case_matched {
+            "matched"
+        } else {
+            "not_matched"
+        }
+        .to_string(),
+        output_mode: "annotation_only".to_string(),
+        fixture_scope: "source_case_only".to_string(),
+        agreement_status: if !exact_case_matched {
+            "not_comparable"
+        } else {
+            match (
+                app_reference.ge_ju.contains("偏財"),
+                app_reference.strength_label.contains('弱'),
+            ) {
+                (true, true) => "agree",
+                (true, false) | (false, true) => "partial",
+                (false, false) => "conflict",
+            }
+        }
+        .to_string(),
+        fallback_policy: "preserve_normal_outputs".to_string(),
+        app_reference: app_reference.clone(),
+        lesson_candidate: exact_case_matched.then(|| QuantLessonCandidate {
+            pattern: "偏財格".to_string(),
+            strength: "身弱財旺候選".to_string(),
+            use_elements: vec!["金".to_string()],
+        }),
+        sensitive_claims_policy: "excluded".to_string(),
+        conclusion: if exact_case_matched {
+            format!(
+                "課堂將本造列為偏財格、身弱財旺候選，以金比劫為用神方向、土印為喜神方向。App 普通格仍為「{}」，量化強弱、正式用神及特殊格均維持原值。",
+                app_reference.ge_ju
+            )
+        } else {
+            format!(
+                "目前四柱「{}」不是本課例「癸卯 乙卯 辛亥 庚寅」，不套用偏財格、身弱財旺及金土方向候選。",
+                chart
+            )
+        },
+        evidence,
+        rejected_alternatives: vec![
+            "不把來源命例推廣成所有辛金卯月命造的正式規則。".to_string(),
+            "課堂未定義可運算的旺衰門檻，因此不自動套用「旺神沖衰、衰神沖旺」於大運。".to_string(),
+            "健康、婚姻、事故或其他敏感現實事件不納入自動推論。".to_string(),
+        ],
+    }
+}
+
+fn build_20260812_disease_medicine_case_inference(
+    chart: &str,
+    app_reference: &QuantLessonAppReference,
+) -> QuantLessonInference {
+    let exact_case_matched = chart == "壬戌 己酉 丁丑 甲辰";
+    QuantLessonInference {
+        rule_id: "20260812-disease-medicine-case".to_string(),
+        title: "2026/08/12 財格病藥命例比對".to_string(),
+        status: if exact_case_matched {
+            "已比對命例"
+        } else {
+            "未符合本課命例"
+        }
+        .to_string(),
+        source_verification: "transcript_exact".to_string(),
+        algorithm_status: "candidate".to_string(),
+        match_status: if exact_case_matched {
+            "matched"
+        } else {
+            "not_matched"
+        }
+        .to_string(),
+        output_mode: "annotation_only".to_string(),
+        fixture_scope: "source_case_only".to_string(),
+        agreement_status: "not_comparable".to_string(),
+        fallback_policy: "preserve_normal_outputs".to_string(),
+        app_reference: app_reference.clone(),
+        lesson_candidate: exact_case_matched.then(|| QuantLessonCandidate {
+            pattern: "財格病藥命例".to_string(),
+            strength: "課堂未另定強弱".to_string(),
+            use_elements: vec!["木".to_string()],
+        }),
+        sensitive_claims_policy: "excluded".to_string(),
+        conclusion: if exact_case_matched {
+            format!(
+                "課堂以己土食傷損官為病、甲木印制食傷護官為藥，木為病藥用神方向。App 普通格仍為「{}」，其量化結果不被覆蓋。",
+                app_reference.ge_ju
+            )
+        } else {
+            format!(
+                "目前四柱「{}」不是本課例「壬戌 己酉 丁丑 甲辰」，不套用財格病藥與木用神方向候選。",
+                chart
+            )
+        },
+        evidence: if exact_case_matched {
+            vec![
+                "丁火生於酉月，課堂先以財格為命例背景。".to_string(),
+                "己土食傷損官，課堂將此一作用標作「病」。".to_string(),
+                "甲木印制食傷而護官，並可生助丁火，課堂將甲木標作「藥」。".to_string(),
+            ]
+        } else {
+            vec![
+                format!("目前四柱：{}。", chart),
+                "精確命例 predicate：壬戌／己酉／丁丑／甲辰，任一柱不同即不套用。".to_string(),
+            ]
+        },
+        rejected_alternatives: vec![
+            "病與藥只表示命局中不利作用及其制衡，不對應醫療診斷。".to_string(),
+            "不把此來源命例推廣成所有丁火酉月命造的正式病藥規則。".to_string(),
+            "不以病藥候選覆蓋扶抑方向或 App 既有正式用神。".to_string(),
+        ],
+    }
+}
+
+fn build_20260812_follow_wealth_case_inference(
+    chart: &str,
+    app_reference: &QuantLessonAppReference,
+    interactions: &[QuantModelInteraction],
+) -> QuantLessonInference {
+    let exact_case_matched = chart == "己卯 甲戌 乙未 庚辰";
+    let mut evidence = vec![format!("目前四柱：{}。", chart)];
+    if exact_case_matched {
+        evidence.extend([
+            "乙木生於戌月，課堂以戌月土旺及地支土勢作從財候選背景。".to_string(),
+            "課堂將甲己合、卯戌合、乙庚合與戌未刑放在全局一併觀察，認為木的扶身作用不足。"
+                .to_string(),
+            "本課派結論為從財格候選：土財為用神、火食傷生財為喜神；只作來源命例註記。".to_string(),
+        ]);
+        evidence.extend(
+            interactions
+                .iter()
+                .filter(|interaction| {
+                    matches!(
+                        interaction.target.as_str(),
+                        "甲己" | "己甲" | "卯戌" | "戌卯" | "乙庚" | "庚乙" | "戌未" | "未戌"
+                    )
+                })
+                .map(|interaction| {
+                    let target = match interaction.target.as_str() {
+                        "己甲" => "甲己",
+                        "戌卯" => "卯戌",
+                        "庚乙" => "乙庚",
+                        "未戌" => "戌未",
+                        other => other,
+                    };
+                    format!(
+                        "互動證據：{} {}（{}；{}；{}）。",
+                        target,
+                        interaction.r#type,
+                        interaction.outcome,
+                        interaction.pillars,
+                        interaction.detail
+                    )
+                }),
+        );
+    } else {
+        evidence
+            .push("精確命例 predicate：己卯／甲戌／乙未／庚辰，任一柱不同即不套用。".to_string());
+    }
+
+    QuantLessonInference {
+        rule_id: "20260812-follow-wealth-case".to_string(),
+        title: "2026/08/12 從財格命例比對".to_string(),
+        status: if exact_case_matched {
+            "已比對命例"
+        } else {
+            "未符合本課命例"
+        }
+        .to_string(),
+        source_verification: "transcript_and_whiteboard_confirmed".to_string(),
+        algorithm_status: "candidate".to_string(),
+        match_status: if exact_case_matched {
+            "matched"
+        } else {
+            "not_matched"
+        }
+        .to_string(),
+        output_mode: "annotation_only".to_string(),
+        fixture_scope: "source_case_only".to_string(),
+        agreement_status: if !exact_case_matched {
+            "not_comparable"
+        } else if app_reference.special_pattern.contains("從財") {
+            "agree"
+        } else {
+            "conflict"
+        }
+        .to_string(),
+        fallback_policy: "preserve_normal_outputs".to_string(),
+        app_reference: app_reference.clone(),
+        lesson_candidate: exact_case_matched.then(|| QuantLessonCandidate {
+            pattern: "從財格".to_string(),
+            strength: "本課派從弱候選".to_string(),
+            use_elements: vec!["土".to_string()],
+        }),
+        sensitive_claims_policy: "excluded".to_string(),
+        conclusion: if exact_case_matched {
+            format!(
+                "課堂將本造列為從財格候選，取土財為用神、火食傷生財為喜神。App 普通格仍為「{}」，量化強弱、正式用神及特殊格結果均保持原值並列比較。",
+                app_reference.ge_ju
+            )
+        } else {
+            format!(
+                "目前四柱「{}」不是本課例「己卯 甲戌 乙未 庚辰」，不套用從財格及土火方向候選。",
+                chart
+            )
+        },
+        evidence,
+        rejected_alternatives: vec![
+            "本課例不足以建立通用從財 predicate、合化後根氣門檻或破格規則。".to_string(),
+            "甲己合不涉及乙木日干本身，不直接改稱日主化土。".to_string(),
+            "不覆蓋 App 的普通格、量化強弱、正式用神或既有特殊格結論。".to_string(),
+            "疾病、人格、交友或其他敏感現實事件不納入自動推論。".to_string(),
+        ],
+    }
 }
 
 fn build_20260805_fu_yi_priority_inference(
