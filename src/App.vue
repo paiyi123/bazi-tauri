@@ -60,6 +60,7 @@
           <LuckCyclePanel :result="result" :compact="false" @preview-change="handlePreviewChange" />
           <StrengthComparisonPanel :result="result" />
           <LifeTopicsPanel :result="result" />
+          <TenGodComboPanel :result="result" />
           <FiveElementStrengthPanel :result="result" />
           <CourseContentPanel :result="result" />
           <QuantFivePhasePanel :result="result" :compact="false" @preview-change="handlePreviewChange" />
@@ -104,6 +105,7 @@
               <div class="compact-section-stack">
                 <StrengthComparisonPanel :result="result" />
                 <LifeTopicsPanel :result="result" />
+                <TenGodComboPanel :result="result" />
                 <FiveElementStrengthPanel :result="result" />
                 <CourseContentPanel :result="result" />
                 <TenGodPanel :result="result" />
@@ -159,6 +161,7 @@ import CourseContentPanel from "./components/CourseContentPanel.vue";
 import FiveElementStrengthPanel from "./components/FiveElementStrengthPanel.vue";
 import StrengthComparisonPanel from "./components/StrengthComparisonPanel.vue";
 import LifeTopicsPanel from "./components/LifeTopicsPanel.vue";
+import TenGodComboPanel from "./components/TenGodComboPanel.vue";
 import LuckCyclePanel from "./components/LuckCyclePanel.vue";
 import PillarPanel from "./components/PillarPanel.vue";
 import PillarInputForm from "./components/PillarInputForm.vue";

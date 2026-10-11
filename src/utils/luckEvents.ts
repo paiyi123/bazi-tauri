@@ -12,8 +12,8 @@ export interface LuckEvent {
   label: string;
   level: LuckEventLevel;
   detail: string;
-  /** 婚姻、財運、健康類的提示另外上色。 */
-  topic?: "marriage" | "wealth" | "health";
+  /** 婚姻、財運、健康類與十神動神的提示另外上色。 */
+  topic?: "marriage" | "wealth" | "health" | "move";
 }
 
 export interface LuckEventContext {

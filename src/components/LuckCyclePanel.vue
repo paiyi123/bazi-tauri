@@ -224,7 +224,7 @@
     </div>
 
     <div v-if="selectedEventNotes.length" class="luck-event-notes">
-      <div class="luck-event-notes-title">事件提示（依陸致極兩本教程，只標出容易有事的時機，不代表吉凶）</div>
+      <div class="luck-event-notes-title">事件提示（依陸致極兩本教程與《十神洩天機》，只標出容易有事的時機，不代表吉凶）</div>
       <div v-for="note in selectedEventNotes" :key="note.key" class="luck-event-note">
         <span :class="['fate-event-tag', `is-${note.level}`, note.topic && `is-topic-${note.topic}`]"
           ><b v-if="note.topic" class="topic-mark">{{ TOPIC_MARK[note.topic] }}</b>{{ note.scope }}・{{ note.label }}</span
@@ -307,8 +307,9 @@ import {
 } from "../utils/lessonPreference";
 import { annualEvents, majorLuckEvents, type LuckEvent, type LuckEventContext } from "../utils/luckEvents";
 import { spouseStorageYears, topicEvents, type TopicContext } from "../utils/lifeTopics";
+import { movingGodEvents } from "../utils/tenGodCombos";
 
-const TOPIC_MARK: Record<string, string> = { marriage: "婚", wealth: "財", health: "健" };
+const TOPIC_MARK: Record<string, string> = { marriage: "婚", wealth: "財", health: "健", move: "動" };
 
 const props = defineProps<{
   result: BaziResponse;
@@ -839,7 +840,11 @@ const luckEventsByRow = computed(
     new Map(
       rows.value.map((row) => [
         row.index,
-        [...majorLuckEvents(row.ganZhi, luckEventContext.value), ...topicEvents(row.ganZhi, "運", topicContext.value)],
+        [
+          ...majorLuckEvents(row.ganZhi, luckEventContext.value),
+          ...topicEvents(row.ganZhi, "運", topicContext.value),
+          ...movingGodEvents(row.ganZhi, "運", luckEventContext.value.natal),
+        ],
       ]),
     ),
 );
@@ -873,6 +878,7 @@ const annualEventsByYear = computed(
             ...annualEvents(annual.ganZhi, luck, luckEventContext.value),
             ...spouseStorageEvent(annual.year),
             ...topicEvents(annual.ganZhi, "歲", topicContext.value, luck),
+            ...movingGodEvents(annual.ganZhi, "歲", luckEventContext.value.natal, luck),
           ],
         ];
       }),
@@ -2301,5 +2307,10 @@ watch(expandMonthLane, (expanded) => {
 .fate-event-tag.is-topic-health.is-warn {
   color: #fff;
   background: #0f766e;
+}
+
+.fate-event-tag.is-topic-move {
+  color: #3730a3;
+  background: #e0e7ff;
 }
 </style>
