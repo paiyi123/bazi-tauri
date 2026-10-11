@@ -1,5 +1,5 @@
 {
-  "version": "classroom-2026-09-v1",
+  "version": "classroom-2026-10-v2",
   "status": "insufficient",
   "facts": {
     "title": "排盤事實",
@@ -488,6 +488,9 @@
     "sealInSeason": false,
     "supportStemCount": 0,
     "supportBranchCount": 0,
+    "samePartyCount": 1,
+    "opposingPartyCount": 7,
+    "monthCommandSameParty": false,
     "momentumProxy": false,
     "rootCount": 0,
     "observationCount": 0,
@@ -533,13 +536,13 @@
         "sourceDate": "2026-07-22"
       },
       {
-        "id": "strength-momentum-proxy",
-        "kind": "engineering_proxy",
+        "id": "strength-party-count",
+        "kind": "lesson_rule",
         "pillar": null,
         "hiddenStemLayer": null,
         "interactionId": null,
-        "description": "得勢工程暫估：supportStemCount=0、supportBranchCount=0；任一達 2 即成立，結果=false。",
-        "sourceDate": "2026-07-22"
+        "description": "得勢：八字中同黨（印、比劫）1 個、異黨（食傷、財、官殺）7 個（天干與地支本氣，含日主）；異黨較多，得勢=false。",
+        "sourceDate": "2026-09-02"
       },
       {
         "id": "strength-roots",
@@ -570,7 +573,7 @@
       }
     ],
     "limitations": [
-      "supportStemCount >= 2 OR supportBranchCount >= 2 是工程候選門檻，不是老師數值定義。",
+      "得勢只數八字的五行黨別（地支取本氣），不計干支力量大小與合沖後的變化。",
       "表層剋洩耗與藏干出現分欄；不以藏干反向力量冒稱表層壓力。",
       "互動後有效力量未定；保留初判並標 conditional。"
     ]
@@ -711,7 +714,7 @@
       "note": "App 量化強弱只供比較，不參與課堂三項觀察。"
     },
     "preferences": {
-      "appValue": "木、水",
+      "appValue": "水",
       "lessonValue": "",
       "agreementStatus": "conflict",
       "note": "僅比較元素方向；不把跨方案角色合併成新的正式用神。"

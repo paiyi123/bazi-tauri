@@ -108,22 +108,70 @@ export function combinationElement(text: string): WuXing | undefined {
   return match ? elementFromName(match[1]) : undefined;
 }
 
+export type RelationSide = { char: string; element: WuXing };
+
+const GENERATES: Record<WuXing, WuXing> = { wood: "fire", fire: "earth", earth: "metal", metal: "water", water: "wood" };
+const CONTROLS: Record<WuXing, WuXing> = { wood: "earth", earth: "water", water: "fire", fire: "metal", metal: "wood" };
+
+function strengthened(favor: Favor): Verdict {
+  return favor === "good" ? "good" : favor === "bad" ? "bad" : "neutral";
+}
+
+function weakened(favor: Favor): Verdict {
+  return favor === "good" ? "bad" : favor === "bad" ? "good" : "neutral";
+}
+
+function agree(verdicts: Verdict[]): Verdict {
+  const decided = new Set(verdicts.filter((verdict) => verdict !== "neutral"));
+  return decided.size === 1 ? [...decided][0] : "neutral";
+}
+
+/**
+ * 2026-09-09：地支有合無化。子丑合看作土剋水、寅亥合看作水生木，照五行生剋判斷：
+ * 被生的一方變強、被剋或被洩的一方變弱，再看那一方是喜用還是忌。
+ */
+function judgeBranchCombination(luck: RelationSide, natal: RelationSide, preferences: LessonPreferences): RelationJudgement {
+  const luckPref = preferences.elements[luck.element];
+  const natalPref = preferences.elements[natal.element];
+  const luckLabel = `大運${luck.char}${luckPref.name}（${luckPref.label}）`;
+  const natalLabel = `原局${natal.char}${natalPref.name}（${natalPref.label}）`;
+  const prefix = "地支有合無化，";
+  if (GENERATES[luck.element] === natal.element) {
+    return { favor: strengthened(natalPref.favor), reason: `${prefix}看作${luckLabel}生${natalLabel}` };
+  }
+  if (CONTROLS[luck.element] === natal.element) {
+    return { favor: weakened(natalPref.favor), reason: `${prefix}看作${luckLabel}剋${natalLabel}` };
+  }
+  if (GENERATES[natal.element] === luck.element) {
+    return {
+      favor: agree([weakened(natalPref.favor), strengthened(luckPref.favor)]),
+      reason: `${prefix}看作${natalLabel}生${luckLabel}`,
+    };
+  }
+  if (CONTROLS[natal.element] === luck.element) {
+    return { favor: weakened(luckPref.favor), reason: `${prefix}看作${natalLabel}剋${luckLabel}` };
+  }
+  return { favor: strengthened(natalPref.favor), reason: `${prefix}${luckLabel}與${natalLabel}同五行` };
+}
+
 /**
  * Judges one luck-cycle relation against the natal pillar it touches.
- * - 沖: clashing away a 忌 is 有利, clashing a 喜用 is 不利.
- * - 合: binding a natal 喜用 is 不利, binding a 忌 is 有利; if the natal side has no role, the
- *   combined element decides, worded as conditional because 合 does not always 化.
+ * - 沖: clashing away a 忌 is 有利, clashing a 喜用 is 不利 (2026-09-02、09-23).
+ * - 天干五合: binding a natal 喜用 is 不利, binding a 忌 is 有利; the combined element is
+ *   conditional because 天干合 may or may not 化.
+ * - 地支六合、半合: 有合無化 (2026-09-09), judged as plain 生剋 between the two branches.
  * - 伏吟: the repeated element's role.
- * - 刑、破、害、暗合、暗會: no verdict yet, only which roles are involved.
+ * - 害 is 神煞 and not used in class (2026-09-23); 刑、破、暗合、暗會 get no verdict yet.
  */
 export function judgeLuckRelation(
   text: string,
-  natalChar: string,
-  natalElement: WuXing,
+  scope: "stem" | "branch",
+  luck: RelationSide,
+  natalSide: RelationSide,
   preferences: LessonPreferences,
 ): RelationJudgement {
-  const natal = preferences.elements[natalElement];
-  const natalLabel = `原局${natalChar}${natal.name}（${natal.label}）`;
+  const natal = preferences.elements[natalSide.element];
+  const natalLabel = `原局${natalSide.char}${natal.name}（${natal.label}）`;
   const kind = relationKind(text);
 
   if (kind === "clash") {
@@ -132,16 +180,20 @@ export function judgeLuckRelation(
     return { favor: "neutral", reason: `沖${natalLabel}` };
   }
 
+  if (kind === "combine" && scope === "branch") {
+    return judgeBranchCombination(luck, natalSide, preferences);
+  }
+
   if (kind === "combine") {
     // Two effects: the natal side is bound (合絆), and the pair may turn into the combined element (合化).
-    const bound: Verdict = natal.favor === "good" ? "bad" : natal.favor === "bad" ? "good" : "neutral";
+    const bound = weakened(natal.favor);
     const boundText = natal.favor === "good" ? `合絆${natalLabel}` : natal.favor === "bad" ? `合去${natalLabel}` : `合${natalLabel}`;
     const combined = combinationElement(text);
     if (!combined) {
       return { favor: bound, reason: boundText };
     }
     const result = preferences.elements[combined];
-    const transformed: Verdict = result.favor === "good" || result.favor === "bad" ? result.favor : "neutral";
+    const transformed = strengthened(result.favor);
     const reason = `${boundText}；若合化為${result.name}，${result.name}為${result.label}`;
     if (bound === "neutral" || transformed === "neutral" || bound === transformed) {
       return { favor: bound !== "neutral" ? bound : transformed, reason };
@@ -156,7 +208,11 @@ export function judgeLuckRelation(
     return { favor: "neutral", reason: `${natalLabel}再現` };
   }
 
-  return { favor: "neutral", reason: `涉及${natalLabel}；刑破害、暗合暗會暫不判吉凶` };
+  if (text.includes("害")) {
+    return { favor: "neutral", reason: `涉及${natalLabel}；害屬神煞，課堂不採用` };
+  }
+
+  return { favor: "neutral", reason: `涉及${natalLabel}；刑、破、暗合、暗會暫不判吉凶` };
 }
 
 // Several natal pillars can share one tag (e.g. 午 twice); a single 有利 and 不利 cancel to 中性.

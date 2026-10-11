@@ -18,11 +18,13 @@ after(async () => {
 });
 const { lessonPreferences, judgeLuckRelation, combineJudgements } = await server.ssrLoadModule('/src/utils/lessonPreference.ts');
 
-test('2026-09-02 chart: 金水喜用、木火土忌 across both plans', () => {
+const side = (char, element) => ({ char, element });
+
+test('2026-09-02 chart: 身強，用火財、喜木，忌金水', () => {
   const prefs = lessonPreferences(source);
   assert.deepEqual(
     Object.fromEntries(Object.values(prefs.elements).map((item) => [item.name, item.favor])),
-    { 木: 'bad', 火: 'bad', 土: 'bad', 金: 'good', 水: 'good' },
+    { 木: 'good', 火: 'good', 土: 'neutral', 金: 'bad', 水: 'bad' },
   );
 });
 
@@ -40,18 +42,38 @@ test('no plans means no 喜忌 judgement', () => {
   assert.equal(lessonPreferences(insufficient), null);
 });
 
-test('沖、合、伏吟 follow the natal side and the combined element', () => {
+test('沖 follows the natal side: 沖到喜神不可，沖到忌神可以', () => {
   const prefs = lessonPreferences(source);
-  assert.equal(judgeLuckRelation('子午相沖', '午', 'fire', prefs).favor, 'good');
-  assert.equal(judgeLuckRelation('卯酉相沖', '酉', 'metal', prefs).favor, 'bad');
-  // binds 喜用 癸水 and may turn into 忌 火: both unfavorable.
-  assert.equal(judgeLuckRelation('戊癸合火', '癸', 'water', prefs).favor, 'bad');
-  // removes 忌 午火 but may turn into 忌 火: depends on whether it really 化.
-  const halfFire = judgeLuckRelation('寅午半合火', '午', 'fire', prefs);
-  assert.equal(halfFire.favor, 'neutral');
-  assert.match(halfFire.reason, /看是否成化/);
-  assert.equal(judgeLuckRelation('伏吟', '癸', 'water', prefs).favor, 'good');
-  assert.equal(judgeLuckRelation('卯午相破', '午', 'fire', prefs).favor, 'neutral');
+  // 2026-09-02 己卯運：卯沖酉，忌神（印）受傷 → 有利。
+  assert.equal(judgeLuckRelation('卯酉相沖', 'branch', side('卯', 'wood'), side('酉', 'metal'), prefs).favor, 'good');
+  // 2026-09-02 丙子運：子午沖入夫妻宮喜神財星 → 不利。
+  assert.equal(judgeLuckRelation('子午相沖', 'branch', side('子', 'water'), side('午', 'fire'), prefs).favor, 'bad');
+});
+
+test('地支有合無化：branch combinations are judged as plain 生剋', () => {
+  const prefs = lessonPreferences(source);
+  // 寅亥合看作水生木：亥水（忌）生原局寅木（喜）→ 有利。
+  const yinHai = judgeLuckRelation('寅亥合木', 'branch', side('亥', 'water'), side('寅', 'wood'), prefs);
+  assert.equal(yinHai.favor, 'good');
+  assert.match(yinHai.reason, /地支有合無化/);
+  // 辰酉合看作土生金：辰土生原局酉金（忌）→ 不利。
+  assert.equal(judgeLuckRelation('辰酉合金', 'branch', side('辰', 'earth'), side('酉', 'metal'), prefs).favor, 'bad');
+});
+
+test('天干五合 weighs 合絆 against the possible 合化', () => {
+  const prefs = lessonPreferences(source);
+  // 戊癸合火：合去原局癸水（忌），若化火也是喜用 → 有利。
+  assert.equal(judgeLuckRelation('戊癸合火', 'stem', side('戊', 'earth'), side('癸', 'water'), prefs).favor, 'good');
+  // 甲己合土：合絆原局甲木（喜），化土未列喜忌 → 不利。
+  assert.equal(judgeLuckRelation('甲己合土', 'stem', side('己', 'earth'), side('甲', 'wood'), prefs).favor, 'bad');
+});
+
+test('伏吟 follows the repeated element; 害 is not used', () => {
+  const prefs = lessonPreferences(source);
+  assert.equal(judgeLuckRelation('伏吟', 'stem', side('癸', 'water'), side('癸', 'water'), prefs).favor, 'bad');
+  const harm = judgeLuckRelation('卯辰相害', 'branch', side('辰', 'earth'), side('卯', 'wood'), prefs);
+  assert.equal(harm.favor, 'neutral');
+  assert.match(harm.reason, /神煞/);
 });
 
 test('opposite verdicts on one tag cancel out', () => {

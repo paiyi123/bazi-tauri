@@ -273,6 +273,7 @@ import {
   judgeLuckRelation,
   lessonPreferences,
   type RelationJudgement,
+  type RelationSide,
 } from "../utils/lessonPreference";
 
 const props = defineProps<{
@@ -708,31 +709,39 @@ const luckNatalRelations = computed(
           branchHiddenStems: row.branchHiddenStems,
           branchTenGods: row.branchTenGods,
         };
-        // Keep which natal character each tag touches, so it can be judged against 喜忌.
-        const touched = new Map<string, Array<{ char: string; element: WuXing }>>();
-        const collect = (text: string, char: string, element: WuXing | undefined) => {
+        // Keep which characters each tag touches, so it can be judged against 喜忌.
+        type Touch = { scope: "stem" | "branch"; luck: RelationSide; natal: RelationSide };
+        const touched = new Map<string, Touch[]>();
+        const collect = (text: string, scope: Touch["scope"], luckChar: string, natalChar: string) => {
+          const table = scope === "stem" ? STEM_WUXING : BRANCH_WUXING;
           const list = touched.get(text) ?? [];
-          if (element) {
-            list.push({ char, element });
+          const luckElement = table[luckChar];
+          const natalElement = table[natalChar];
+          if (luckElement && natalElement) {
+            list.push({
+              scope,
+              luck: { char: luckChar, element: luckElement },
+              natal: { char: natalChar, element: natalElement },
+            });
           }
           touched.set(text, list);
         };
         natalItems.value.forEach((natal) => {
-          summarizeStemInteractions(item, natal).forEach((text) => collect(text, natal.stem, STEM_WUXING[natal.stem]));
-          summarizeBranchInteractions(item, natal).forEach((text) =>
-            collect(text, natal.branch, BRANCH_WUXING[natal.branch]),
-          );
+          summarizeStemInteractions(item, natal).forEach((text) => collect(text, "stem", item.stem, natal.stem));
+          summarizeBranchInteractions(item, natal).forEach((text) => collect(text, "branch", item.branch, natal.branch));
         });
         const preferences = lessonFavor.value;
         return [
           row.index,
-          [...touched.entries()].map(([text, natals]): RelationTag => ({
+          [...touched.entries()].map(([text, touches]): RelationTag => ({
             text,
             tone: relationTone(text),
             judgement:
-              preferences && natals.length
+              preferences && touches.length
                 ? combineJudgements(
-                    natals.map((natal) => judgeLuckRelation(text, natal.char, natal.element, preferences)),
+                    touches.map((touch) =>
+                      judgeLuckRelation(text, touch.scope, touch.luck, touch.natal, preferences),
+                    ),
                   )
                 : undefined,
           })),

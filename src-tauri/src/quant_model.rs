@@ -6,7 +6,7 @@ use crate::bazi::{
 };
 use crate::lesson_analysis::{analyze as analyze_lesson, LessonModelReference};
 use std::cmp::Ordering;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use tyme4rs::tyme::sixtycycle::{EarthBranch, HeavenStem, SixtyCycle};
 use tyme4rs::tyme::Culture;
 
@@ -186,6 +186,16 @@ struct ResolvedChartState {
     branch_qi_modifiers: HashMap<usize, BranchQiModifier>,
     stem_combination_effects: HashMap<usize, StemCombinationEffect>,
     stem_clash_effects: HashMap<usize, StemClashEffect>,
+    six_clash_resolution: SixCombinationClashResolution,
+    non_transform_boosts: HashMap<usize, Vec<NonTransformBoost>>,
+}
+
+/// 三合、三會不化時，相關五行專氣的提升量（以「個五行專氣」為單位）。
+#[derive(Debug, Clone)]
+struct NonTransformBoost {
+    element: String,
+    extra_units: f64,
+    note: String,
 }
 
 #[derive(Debug, Clone)]
@@ -219,8 +229,9 @@ impl RootLevel {
         match self {
             RootLevel::None => 0,
             RootLevel::Minor => 1,
-            RootLevel::Middle | RootLevel::Tomb => 2,
-            RootLevel::Lu => 3,
+            RootLevel::Middle => 2,
+            RootLevel::Tomb => 3,
+            RootLevel::Lu => 4,
         }
     }
 }
@@ -1254,7 +1265,11 @@ fn resolve_chart_state(day_master: &str, inputs: &CalculationInputs) -> Resolved
         resolve_half_combination_candidates(&inputs.branches, &inputs.stems, day_master);
 
     let mut branch_transforms =
-        resolve_three_meeting_transforms(&three_meeting_candidates, &inputs.branches);
+        resolve_four_storage_transforms(&inputs.branches, &inputs.stems, day_master);
+    merge_missing_transforms(
+        &mut branch_transforms,
+        resolve_three_meeting_transforms(&three_meeting_candidates, &inputs.branches),
+    );
     merge_missing_transforms(
         &mut branch_transforms,
         resolve_three_combination_transforms(
@@ -1270,6 +1285,8 @@ fn resolve_chart_state(day_master: &str, inputs: &CalculationInputs) -> Resolved
             &three_combination_candidates,
             &three_meeting_candidates,
             &inputs.branches,
+            &inputs.stems,
+            day_master,
         ),
     );
     let current_transforms = branch_transforms.clone();
@@ -1287,25 +1304,40 @@ fn resolve_chart_state(day_master: &str, inputs: &CalculationInputs) -> Resolved
         &inputs.branches,
     );
 
-    let six_combination_effects = resolve_six_combination_effects(
+    let mut six_combination_effects = resolve_six_combination_effects(
         &inputs.branches,
         &half_combination_candidates,
         &three_combination_candidates,
         &three_meeting_candidates,
         &branch_transforms,
     );
-    let branch_prune_effects = resolve_branch_prune_effects(&inputs.branches);
+    let six_clash_resolution = resolve_six_combination_clash_cushions(
+        &inputs.branches,
+        &mut six_combination_effects,
+        &branch_transforms,
+    );
+    let branch_prune_effects = resolve_branch_prune_effects(&inputs.branches, &branch_transforms);
+    let non_transform_boosts = resolve_non_transform_boosts(
+        &inputs.branches,
+        &three_combination_candidates,
+        &three_meeting_candidates,
+        &branch_transforms,
+    );
     let branch_qi_modifiers = resolve_branch_qi_modifiers(
         &inputs.branches,
         &six_combination_effects,
         &three_meeting_candidates,
+        &branch_transforms,
+        &six_clash_resolution,
+        day_master,
     );
-    let stem_combination_effects = resolve_stem_combination_effects(
+    let mut stem_combination_effects = resolve_stem_combination_effects(
         &inputs.stems,
         &inputs.branches[1],
         branch_transforms.get(&1),
     );
-    let stem_clash_effects = resolve_stem_clash_effects(&inputs.stems);
+    let stem_clash_effects =
+        resolve_stem_clash_effects(&inputs.stems, &mut stem_combination_effects);
 
     ResolvedChartState {
         stems: inputs.stems.clone(),
@@ -1319,6 +1351,8 @@ fn resolve_chart_state(day_master: &str, inputs: &CalculationInputs) -> Resolved
         branch_qi_modifiers,
         stem_combination_effects,
         stem_clash_effects,
+        six_clash_resolution,
+        non_transform_boosts,
     }
 }
 
@@ -1380,7 +1414,7 @@ fn score_stems(day_master: &str, state: &ResolvedChartState) -> Vec<QuantModelPi
                 }
                 let mut multiplier = root_multiplier(
                     root.level,
-                    distance(input.position_index, branch.position_index),
+                    stem_branch_distance(input, branch),
                 ) * root.qi_multiplier;
                 let mut extra_reason = String::new();
                 if let Some(effect) = state.six_combination_effects.get(&branch.position_index) {
@@ -1495,7 +1529,7 @@ fn score_branch(
         ));
     }
 
-    let slices = if let Some(transform) = branch_transform {
+    let mut slices = if let Some(transform) = branch_transform {
         build_transformed_branch_qi_slices(input, transform, day_master, weight)
     } else {
         build_natural_branch_qi_slices(
@@ -1508,6 +1542,18 @@ fn score_branch(
             branch_qi_modifier,
         )
     };
+    let boost_slices = build_boost_branch_qi_slices(
+        input,
+        state.non_transform_boosts.get(&input.position_index),
+        day_master,
+        weight,
+    );
+    let boost_raw_total: f64 = boost_slices
+        .iter()
+        .map(|slice| slice.adjusted_raw_contribution)
+        .sum();
+    let boost_position_total: f64 = boost_slices.iter().map(|slice| slice.position_adjusted).sum();
+    slices.extend(boost_slices);
 
     let mut rows = Vec::new();
     let mut adjusted_raw_total = 0.0;
@@ -1583,13 +1629,37 @@ fn score_branch(
         });
     }
 
-    if branch_transform.is_none() && is_element_lu_branch(day_master, &input.branch) {
-        let lu_element = stem_element(day_master);
-        let lu_stem = stem_for_element(&lu_element, is_yang(day_master));
-        adjusted_raw_total = 100.0;
-        let qi_multiplier =
-            branch_score_qi_multiplier(input, &lu_stem, &branch_interaction, branch_qi_modifier);
-        position_adjusted_total = round1(weight * branch_interaction.multiplier * qi_multiplier);
+    let lu_element = stem_element(day_master);
+    let lu_stem = stem_for_element(&lu_element, is_yang(day_master));
+    // 祿支內任一藏干之氣受沖化零，就不再整支 +100，只按剩餘藏干計分
+    // （八字真理上冊 p30 戊申日巳月、p71 己亥日巳月：巳只剩戊 +25）。
+    let lu_branch_qi_zeroed = hidden_stems_of(&input.branch).iter().any(|stem| {
+        branch_score_qi_multiplier(input, stem, &branch_interaction, branch_qi_modifier) <= 0.0
+    });
+    let lu_qi_multiplier = if lu_branch_qi_zeroed {
+        0.0
+    } else if let Some(main_qi) =
+        branch_qi_modifier.and_then(|modifier| modifier.stem_multipliers.get(LU_MAIN_QI_KEY))
+    {
+        *main_qi
+    } else {
+        branch_score_qi_multiplier(input, &lu_stem, &branch_interaction, branch_qi_modifier)
+    };
+    if branch_transform.is_none()
+        && is_element_lu_branch(day_master, &input.branch)
+        && lu_qi_multiplier <= 0.0
+    {
+        details.push("祿支藏干受沖化零：不再以 +100 計，改按剩餘藏干計分".to_string());
+    }
+    if branch_transform.is_none()
+        && is_element_lu_branch(day_master, &input.branch)
+        && lu_qi_multiplier > 0.0
+    {
+        adjusted_raw_total = 100.0 + boost_raw_total;
+        let qi_multiplier = lu_qi_multiplier;
+        position_adjusted_total = round1(
+            weight * branch_interaction.multiplier * qi_multiplier + boost_position_total,
+        );
         details.push("地支到祿：以 +100 直接取代各藏干合值，再另加透干增值".to_string());
         rows = vec![QuantModelSubScore {
             item: input.pillar.clone(),
@@ -1774,39 +1844,81 @@ fn build_transformed_branch_qi_slices(
         .collect()
 }
 
+/// 大運干支依次入局（下冊 p202）：運干掌前五年、運支掌後五年，各自與原局同場裁決，
+/// 運干不得根於運支，運支亦不透於運干。
 fn build_luck_scores(
     day_master: &str,
     natal_total: f64,
     natal_inputs: &CalculationInputs,
     da_yun: &[DaYunDto],
 ) -> Vec<QuantLuckScore> {
+    let natal_cells_base = natal_cells_total(&score_resolved_chart(day_master, natal_inputs));
     da_yun
         .iter()
         .filter_map(|item| {
             let (luck_stem, luck_branch) = split_gan_zhi(&item.gan_zhi)?;
-            let extended_inputs = build_extended_inputs(
-                natal_inputs,
-                Some(&luck_stem),
-                Some(&luck_branch),
-                None,
-                None,
+            let stem_bundle = score_resolved_chart(
+                day_master,
+                &build_extended_inputs(natal_inputs, Some(&luck_stem), None, None, None),
             );
-            let bundle = score_resolved_chart(day_master, &extended_inputs);
-            let luck_stem_pillar = resolve_pillar_score(&bundle.stem_scores, "運干");
-            let luck_branch_pillar = resolve_pillar_score(&bundle.branch_scores, "運支");
+            let branch_bundle = score_resolved_chart(
+                day_master,
+                &build_extended_inputs(natal_inputs, None, Some(&luck_branch), None, None),
+            );
+            let luck_stem_pillar = resolve_pillar_score(&stem_bundle.stem_scores, "運干");
+            let luck_branch_pillar = resolve_pillar_score(&branch_bundle.branch_scores, "運支");
             let stem_score = luck_stem_pillar.map(|item| item.final_score).unwrap_or(0.0);
             let branch_score = luck_branch_pillar
                 .map(|item| item.final_score)
                 .unwrap_or(0.0);
-            let total_score = round1(stem_score + branch_score);
-            let impact_ratio = ratio(total_score, natal_total);
-            let effective_natal_score = round1(natal_total + total_score);
+            let total_score = round1((stem_score + branch_score) / 2.0);
+            // 大運入局對原局的影響（八字真理上冊 p70）：R 值用「運本身得分 + 原局因此而變的分數」。
+            let stem_natal_shift = natal_cells_total(&stem_bundle) - natal_cells_base;
+            let branch_natal_shift = natal_cells_total(&branch_bundle) - natal_cells_base;
+            let stem_impact = round1(stem_score + stem_natal_shift);
+            let branch_impact = round1(branch_score + branch_natal_shift);
+            let total_impact = round1((stem_impact + branch_impact) / 2.0);
+            let impact_ratio = luck_impact_ratio(total_impact, natal_total);
+            let effective_natal_score = luck_effective_natal_score(natal_total, impact_ratio);
+            let stem_ratio = luck_impact_ratio(stem_impact, natal_total);
+            let branch_ratio = luck_impact_ratio(branch_impact, natal_total);
+            let mut overview_lines = vec![
+                format!(
+                    "前五年看運干：{:.1}（R值 {:.2}，作用後命局 {:.1}）",
+                    stem_score,
+                    stem_ratio,
+                    luck_effective_natal_score(natal_total, stem_ratio)
+                ),
+                format!(
+                    "後五年看運支：{:.1}（R值 {:.2}，作用後命局 {:.1}）",
+                    branch_score,
+                    branch_ratio,
+                    luck_effective_natal_score(natal_total, branch_ratio)
+                ),
+            ];
+            for (label, shift, impact) in [
+                ("運干", stem_natal_shift, stem_impact),
+                ("運支", branch_natal_shift, branch_impact),
+            ] {
+                if shift.abs() >= 0.05 {
+                    overview_lines.push(format!(
+                        "{}入局令原局變化 {:+.1}，整體衝擊 {:.1}（R 值以此計）",
+                        label, shift, impact
+                    ));
+                }
+            }
+            overview_lines.push(format!("整柱參考（前後五年平均）：{:.1}", total_score));
+            overview_lines.push(format!("R值：{:.2}", impact_ratio));
+            overview_lines.push(format!("作用後命局：{:.1}", effective_natal_score));
+            overview_lines.extend(luck_wandering_lines(&stem_bundle.resolved_state, "運干"));
+            overview_lines.extend(luck_wandering_lines(&branch_bundle.resolved_state, "運支"));
             let annual_scores = if item.liu_nian.is_empty() {
                 None
             } else {
                 Some(build_annual_scores(
                     day_master,
                     natal_total,
+                    natal_cells_base,
                     natal_inputs,
                     item,
                 ))
@@ -1830,23 +1942,18 @@ fn build_luck_scores(
                 impact_ratio,
                 effective_natal_score,
                 tendency: tendency_label(total_score),
-                overview_lines: Some(vec![
-                    format!("前五年看運干：{:.1}", stem_score),
-                    format!("後五年看運支：{:.1}", branch_score),
-                    format!("整柱參考：{:.1}", total_score),
-                    format!("R值：{:.2}", impact_ratio),
-                    format!("作用後命局：{:.1}", effective_natal_score),
-                ]),
+                overview_lines: Some(overview_lines),
                 interaction_lines: Some(build_pillar_detail_lines(
                     luck_stem_pillar,
                     luck_branch_pillar,
                 )),
                 scoring_lines: Some(vec![
-                    format!("運干列分：{:.1}", stem_score),
-                    format!("運支列分：{:.1}", branch_score),
+                    format!("運干列分（位置分值 60）：{:.1}", stem_score),
+                    format!("運支列分（位置分值 60）：{:.1}", branch_score),
+                    "R = L / √(M² + L²)，L = 運本身得分 + 原局因運而變的分數；身強 M′ = M(1+R)，身弱 M′ = M(1−R)".to_string(),
                 ]),
                 details: format!(
-                    "原局 + 大運同場裁決後，抽出運干 {} 與運支 {} 的列分。",
+                    "運干 {} 與運支 {} 依次入局，各自與原局同場裁決；入局干支得根透干按同柱、沖合按緊貼計。",
                     luck_stem, luck_branch
                 ),
                 annual_scores,
@@ -1855,9 +1962,140 @@ fn build_luck_scores(
         .collect()
 }
 
+/// 原局七格（不含運、歲）的分數合計。
+fn natal_cells_total(bundle: &ResolvedScoreBundle) -> f64 {
+    bundle
+        .stem_scores
+        .iter()
+        .chain(bundle.branch_scores.iter())
+        .filter(|item| !is_floating_pillar(&item.pillar))
+        .map(|item| item.final_score)
+        .sum()
+}
+
+/// 游走的大運（八字真理上冊 p58-60）：運干在天干間、運支在地支間由年柱游到時柱。
+/// 計分仍按緊貼（量化五行力下冊 p202），這裡只補充說明游到各位置時的沖力：
+/// 緊貼或同位化零、隔一位 ×0.75、隔二位 ×8/9，各位置約佔四分之一時間；
+/// 與天干合而不化則被合住在該位置，不再游走（半合不化仍會游走）。
+fn luck_wandering_lines(state: &ResolvedChartState, luck_pillar: &str) -> Vec<String> {
+    let mut lines = Vec::new();
+    if luck_pillar == "運干" {
+        let Some(luck) = state.stems.iter().find(|item| item.pillar == luck_pillar) else {
+            return lines;
+        };
+        let natal: Vec<&StemInput> = state
+            .stems
+            .iter()
+            .filter(|item| !is_floating_pillar(&item.pillar))
+            .collect();
+        if let Some(effect) = state.stem_combination_effects.get(&luck.position_index) {
+            if !effect.transforms {
+                let partners: Vec<String> = natal
+                    .iter()
+                    .filter(|item| resolve_stem_combination(&luck.stem, &item.stem).is_some())
+                    .map(|item| format!("{}{}", item.pillar, item.stem))
+                    .collect();
+                if !partners.is_empty() {
+                    lines.push(format!(
+                        "運干{}與{}合而不化，被合住在該位置，不再游走（八字真理上冊 p60）",
+                        luck.stem,
+                        partners.join("、")
+                    ));
+                    return lines;
+                }
+            }
+        }
+        for item in &natal {
+            if is_stem_clash(&luck.stem, &item.stem) {
+                lines.push(wandering_clash_line(
+                    "運干",
+                    &luck.stem,
+                    &item.pillar,
+                    &item.stem,
+                    item.position_index,
+                ));
+            }
+        }
+    } else {
+        let Some(luck) = state.branches.iter().find(|item| item.pillar == luck_pillar) else {
+            return lines;
+        };
+        if state.branch_transforms.contains_key(&luck.position_index) {
+            return lines;
+        }
+        let natal: Vec<&BranchInput> = state
+            .branches
+            .iter()
+            .filter(|item| !is_floating_pillar(&item.pillar))
+            .collect();
+        for item in &natal {
+            if is_direct_clash(&luck.branch, &item.branch) {
+                lines.push(wandering_clash_line(
+                    "運支",
+                    &luck.branch,
+                    &item.pillar,
+                    &item.branch,
+                    item.position_index,
+                ));
+            }
+        }
+    }
+    lines
+}
+
+fn wandering_clash_line(label: &str, luck: &str, pillar: &str, target: &str, slot: usize) -> String {
+    let mut adjacent = 0;
+    let mut one_apart = 0;
+    let mut two_apart = 0;
+    for position in 0..4usize {
+        match position.abs_diff(slot) {
+            0 | 1 => adjacent += 1,
+            2 => one_apart += 1,
+            _ => two_apart += 1,
+        }
+    }
+    let average = (one_apart as f64 * 0.75 + two_apart as f64 * 8.0 / 9.0) / 4.0;
+    let mut parts = vec![format!("約 {}/4 時間緊貼化零", adjacent)];
+    if one_apart > 0 {
+        parts.push(format!("約 {}/4 時間隔一位剩 0.75", one_apart));
+    }
+    if two_apart > 0 {
+        parts.push(format!("約 {}/4 時間隔二位剩 8/9", two_apart));
+    }
+    format!(
+        "游走的大運：{}{}與{}{}相沖，{}；平均約剩 {:.2}（計分仍按緊貼）",
+        label,
+        luck,
+        pillar,
+        target,
+        parts.join("、"),
+        average
+    )
+}
+
+/// 大運對命局的相對影響（下冊 p199）：R = L / √(M² + L²)。
+fn luck_impact_ratio(luck_score: f64, natal_total: f64) -> f64 {
+    let base = (natal_total * natal_total + luck_score * luck_score).sqrt();
+    if base < 0.1 {
+        0.0
+    } else {
+        round2(luck_score / base)
+    }
+}
+
+/// 身強 M′ = M(1+R)、身弱 M′ = M(1−R)；大運不能使命局由正變負或由負變正（下冊 p199-200）。
+fn luck_effective_natal_score(natal_total: f64, impact_ratio: f64) -> f64 {
+    if natal_total >= 0.0 {
+        round1(natal_total * (1.0 + impact_ratio))
+    } else {
+        round1(natal_total * (1.0 - impact_ratio))
+    }
+}
+
 fn build_annual_scores(
     day_master: &str,
     natal_total: f64,
+    natal_cells_base: f64,
     natal_inputs: &CalculationInputs,
     da_yun: &DaYunDto,
 ) -> Vec<QuantAnnualLuckScore> {
@@ -1871,6 +2109,7 @@ fn build_annual_scores(
             build_annual_score(
                 day_master,
                 natal_total,
+                natal_cells_base,
                 natal_inputs,
                 &luck_stem,
                 &luck_branch,
@@ -1880,27 +2119,51 @@ fn build_annual_scores(
         .collect()
 }
 
+/// 某年運程 = 當值大運（干或支，60）入局之剋應 + 歲運干支（各 20）同時入局之剋應（下冊 p197-198、p202）。
 fn build_annual_score(
     day_master: &str,
     natal_total: f64,
+    natal_cells_base: f64,
     natal_inputs: &CalculationInputs,
     luck_stem: &str,
     luck_branch: &str,
     item: &LiuNianDto,
 ) -> Option<QuantAnnualLuckScore> {
     let (annual_stem, annual_branch) = split_gan_zhi(&item.gan_zhi)?;
-    let extended_inputs = build_extended_inputs(
-        natal_inputs,
-        Some(luck_stem),
-        Some(luck_branch),
-        Some(&annual_stem),
-        Some(&annual_branch),
+    let stem_bundle = score_resolved_chart(
+        day_master,
+        &build_extended_inputs(
+            natal_inputs,
+            Some(luck_stem),
+            None,
+            Some(&annual_stem),
+            Some(&annual_branch),
+        ),
     );
-    let bundle = score_resolved_chart(day_master, &extended_inputs);
-    let annual_stem_pillar = resolve_pillar_score(&bundle.stem_scores, "流年干");
-    let annual_branch_pillar = resolve_pillar_score(&bundle.branch_scores, "流年支");
-    let luck_stem_pillar = resolve_pillar_score(&bundle.stem_scores, "運干");
-    let luck_branch_pillar = resolve_pillar_score(&bundle.branch_scores, "運支");
+    let branch_bundle = score_resolved_chart(
+        day_master,
+        &build_extended_inputs(
+            natal_inputs,
+            None,
+            Some(luck_branch),
+            Some(&annual_stem),
+            Some(&annual_branch),
+        ),
+    );
+    let first_half = item.index < 5;
+    let active_bundle = if first_half {
+        &stem_bundle
+    } else {
+        &branch_bundle
+    };
+    let annual_stem_pillar = resolve_pillar_score(&active_bundle.stem_scores, "流年干");
+    let annual_branch_pillar = resolve_pillar_score(&active_bundle.branch_scores, "流年支");
+    let luck_stem_score = resolve_pillar_score(&stem_bundle.stem_scores, "運干")
+        .map(|item| item.final_score)
+        .unwrap_or(0.0);
+    let luck_branch_score = resolve_pillar_score(&branch_bundle.branch_scores, "運支")
+        .map(|item| item.final_score)
+        .unwrap_or(0.0);
     let annual_stem_score = annual_stem_pillar
         .map(|item| item.final_score)
         .unwrap_or(0.0);
@@ -1908,31 +2171,25 @@ fn build_annual_score(
         .map(|item| item.final_score)
         .unwrap_or(0.0);
     let annual_total_score = round1(annual_stem_score + annual_branch_score);
-    let full_luck_score = round1(
-        luck_stem_pillar.map(|item| item.final_score).unwrap_or(0.0)
-            + luck_branch_pillar
-                .map(|item| item.final_score)
-                .unwrap_or(0.0),
-    );
-    let first_half = item.index < 5;
+    let full_luck_score = round1((luck_stem_score + luck_branch_score) / 2.0);
     let active_luck_label = if first_half {
         format!("大運前五年：運干{}", luck_stem)
     } else {
         format!("大運後五年：運支{}", luck_branch)
     };
     let active_luck_score = if first_half {
-        luck_stem_pillar.map(|item| item.final_score).unwrap_or(0.0)
+        luck_stem_score
     } else {
-        luck_branch_pillar
-            .map(|item| item.final_score)
-            .unwrap_or(0.0)
+        luck_branch_score
     };
     let combined_score = round1(active_luck_score + annual_total_score);
     let full_combined_score = round1(full_luck_score + annual_total_score);
-    let impact_ratio = ratio(combined_score, natal_total);
-    let full_impact_ratio = ratio(full_combined_score, natal_total);
-    let effective_natal_score = round1(natal_total + combined_score);
-    let full_effective_natal_score = round1(natal_total + full_combined_score);
+    // R 值同樣計入原局因運、歲入局而變的分數（八字真理上冊 p70）。
+    let natal_shift = natal_cells_total(active_bundle) - natal_cells_base;
+    let impact_ratio = luck_impact_ratio(combined_score + natal_shift, natal_total);
+    let full_impact_ratio = luck_impact_ratio(full_combined_score + natal_shift, natal_total);
+    let effective_natal_score = luck_effective_natal_score(natal_total, impact_ratio);
+    let full_effective_natal_score = luck_effective_natal_score(natal_total, full_impact_ratio);
 
     Some(QuantAnnualLuckScore {
         index: item.index,
@@ -1961,20 +2218,21 @@ fn build_annual_score(
             format!("流年支：{:.1}", annual_branch_score),
             format!("流年整柱：{:.1}", annual_total_score),
             format!("半運合參：{:.1}", combined_score),
-            format!("整運合參：{:.1}", full_combined_score),
+            format!("整運合參（運干運支平均）：{:.1}", full_combined_score),
         ]),
         interaction_lines: Some(build_pillar_detail_lines(
             annual_stem_pillar,
             annual_branch_pillar,
         )),
         scoring_lines: Some(vec![
+            format!("原局因運、歲入局而變：{:+.1}（已計入 R 值）", natal_shift),
             format!("R值（半運）：{:.2}", impact_ratio),
             format!("R值（整運）：{:.2}", full_impact_ratio),
             format!("作用後命局（半運）：{:.1}", effective_natal_score),
             format!("作用後命局（整運）：{:.1}", full_effective_natal_score),
         ]),
         details: format!(
-            "原局 + 大運 + 流年同場裁決後，抽出流年干 {} 與流年支 {} 的列分。",
+            "原局 + 當值大運一字 + 流年干支同場裁決後，抽出流年干 {} 與流年支 {} 的列分。",
             annual_stem, annual_branch
         ),
     })
@@ -1993,14 +2251,14 @@ fn build_extended_inputs(
         stems.push(StemInput {
             pillar: "運干".to_string(),
             stem: stem.to_string(),
-            position_index: stems.len(),
+            position_index: next_stem_position(&stems),
         });
     }
     if let Some(stem) = annual_stem {
         stems.push(StemInput {
             pillar: "流年干".to_string(),
             stem: stem.to_string(),
-            position_index: stems.len(),
+            position_index: next_stem_position(&stems),
         });
     }
     if let Some(branch) = luck_branch {
@@ -2020,6 +2278,15 @@ fn build_extended_inputs(
         });
     }
     CalculationInputs { stems, branches }
+}
+
+fn next_stem_position(stems: &[StemInput]) -> usize {
+    stems
+        .iter()
+        .map(|item| item.position_index + 1)
+        .max()
+        .unwrap_or(0)
+        .max(4)
 }
 
 fn resolve_pillar_score<'a>(
@@ -2818,7 +3085,7 @@ fn build_natal_interactions(
     add_half_combination_rows(&mut rows, state);
     add_six_combination_rows(&mut rows, state);
     add_static_six_combination_rows(&mut rows, &state.branches);
-    add_stem_clash_rows(&mut rows, &state.stems);
+    add_stem_clash_rows(&mut rows, &state.stems, &state.stem_clash_effects);
     add_branch_clash_rows(&mut rows, state, branch_scores);
     add_informational_pair_rows(&mut rows, &state.branches);
     add_self_punishment_rows(&mut rows, &state.branches);
@@ -3080,16 +3347,23 @@ fn add_static_six_combination_rows(
     }
 }
 
-fn add_stem_clash_rows(rows: &mut Vec<QuantModelInteraction>, stems: &[StemInput]) {
+fn add_stem_clash_rows(
+    rows: &mut Vec<QuantModelInteraction>,
+    stems: &[StemInput],
+    clash_effects: &HashMap<usize, StemClashEffect>,
+) {
     for i in 0..stems.len() {
         for j in (i + 1)..stems.len() {
             let left = &stems[i];
             let right = &stems[j];
-            if !is_stem_clash(&left.stem, &right.stem) {
+            if !is_stem_clash(&left.stem, &right.stem)
+                || !clash_effects.contains_key(&left.position_index)
+                || !clash_effects.contains_key(&right.position_index)
+            {
                 continue;
             }
-            let dist = distance(left.position_index, right.position_index);
-            if !is_supported_stem_clash_distance(left, right, dist) {
+            let dist = stem_pair_distance(left, right);
+            if !is_supported_stem_clash_distance(dist) {
                 continue;
             }
             let remainder = stem_clash_remainder(dist);
@@ -3435,7 +3709,6 @@ fn resolve_three_meeting_candidates(
     stems: &[StemInput],
     day_master: &str,
 ) -> Vec<ThreeMeetingCandidate> {
-    let month_branch = &branches[1];
     let mut candidates = Vec::new();
     for i in 0..branches.len() {
         for j in (i + 1)..branches.len() {
@@ -3445,12 +3718,8 @@ fn resolve_three_meeting_candidates(
                     &branches[j].branch,
                     &branches[k].branch,
                 ) {
-                    let transforms = should_transform_branch_combination(
-                        &element,
-                        month_branch,
-                        stems,
-                        day_master,
-                    );
+                    // 三會成化力量 5.25，月令剋制不住，只要天干見化神即可化（上冊 p133）。
+                    let transforms = has_visible_transforming_stem(&element, stems, day_master);
                     candidates.push(ThreeMeetingCandidate {
                         first_index: branches[i].position_index,
                         second_index: branches[j].position_index,
@@ -3471,7 +3740,6 @@ fn resolve_three_combination_candidates(
     stems: &[StemInput],
     day_master: &str,
 ) -> Vec<ThreeCombinationCandidate> {
-    let month_branch = &branches[1];
     let mut candidates = Vec::new();
     for i in 0..branches.len() {
         for j in (i + 1)..branches.len() {
@@ -3483,7 +3751,12 @@ fn resolve_three_combination_candidates(
                 ) {
                     let transforms = should_transform_branch_combination(
                         &element,
-                        month_branch,
+                        branches,
+                        &[
+                            branches[i].position_index,
+                            branches[j].position_index,
+                            branches[k].position_index,
+                        ],
                         stems,
                         day_master,
                     );
@@ -3507,23 +3780,25 @@ fn resolve_half_combination_candidates(
     stems: &[StemInput],
     day_master: &str,
 ) -> Vec<HalfCombinationCandidate> {
-    let month_branch = &branches[1];
     let mut candidates = Vec::new();
     for i in 0..branches.len() {
         for j in (i + 1)..branches.len() {
-            if distance(branches[i].position_index, branches[j].position_index) > 2 {
-                continue;
-            }
+            let pair_distance = branch_pair_distance(&branches[i], &branches[j]);
             if let Some((element, note, combine_note)) =
                 resolve_half_combination(&branches[i].branch, &branches[j].branch)
             {
-                let transforms =
-                    should_transform_branch_combination(&element, month_branch, stems, day_master);
+                let transforms = should_transform_branch_combination(
+                    &element,
+                    branches,
+                    &[branches[i].position_index, branches[j].position_index],
+                    stems,
+                    day_master,
+                );
                 candidates.push(HalfCombinationCandidate {
                     left_index: branches[i].position_index,
                     right_index: branches[j].position_index,
                     element,
-                    distance: distance(branches[i].position_index, branches[j].position_index),
+                    distance: pair_distance,
                     transforms,
                     note,
                     combine_note,
@@ -3532,6 +3807,55 @@ fn resolve_half_combination_candidates(
         }
     }
     candidates
+}
+
+/// 四庫匯聚：原局四支為辰戌丑未各一（八字真理上冊 p55）。
+fn four_storage_indexes(branches: &[BranchInput]) -> Option<Vec<usize>> {
+    let natal: Vec<&BranchInput> = branches
+        .iter()
+        .filter(|item| !is_floating_pillar(&item.pillar))
+        .collect();
+    let mut names: Vec<&str> = natal.iter().map(|item| item.branch.as_str()).collect();
+    names.sort();
+    let mut expected = vec!["辰", "戌", "丑", "未"];
+    expected.sort();
+    (natal.len() == 4 && names == expected)
+        .then(|| natal.iter().map(|item| item.position_index).collect())
+}
+
+/// 四庫匯聚，天干見土即合化巨土：各支 1.15 個土，旁氣全被化掉，沒有餘氣（上冊 p55）。
+fn resolve_four_storage_transforms(
+    branches: &[BranchInput],
+    stems: &[StemInput],
+    day_master: &str,
+) -> HashMap<usize, BranchTransform> {
+    let mut transforms = HashMap::new();
+    let Some(indexes) = four_storage_indexes(branches) else {
+        return transforms;
+    };
+    if !has_visible_transforming_stem("土", stems, day_master) {
+        return transforms;
+    }
+    for index in indexes {
+        let branch = branches
+            .iter()
+            .find(|item| item.position_index == index)
+            .expect("four storage branch");
+        transforms.insert(
+            index,
+            create_branch_transform(
+                BranchTransformCategory::ThreeMeeting,
+                CombinationBranchRole::Specialist,
+                "土",
+                "四庫匯聚化土",
+                "四庫匯聚化土@meeting",
+                1.15,
+                0.0,
+                branch,
+            ),
+        );
+    }
+    transforms
 }
 
 fn resolve_three_meeting_transforms(
@@ -3614,16 +3938,20 @@ fn resolve_half_combination_transforms(
     three_combination_candidates: &[ThreeCombinationCandidate],
     three_meeting_candidates: &[ThreeMeetingCandidate],
     branches: &[BranchInput],
+    stems: &[StemInput],
+    day_master: &str,
 ) -> HashMap<usize, BranchTransform> {
     let mut transforms = HashMap::new();
     for candidate in candidates.iter().filter(|item| item.transforms) {
-        if is_suppressed_by_direct_clashed_specialist(candidate, branches)
+        if is_overpowered_by_tight_six_transformation(candidate, branches, stems, day_master)
             || is_suppressed_by_stacked_six_combination(candidate, branches)
             || three_combination_candidates.iter().any(|item| {
                 item.involves(candidate.left_index) && item.involves(candidate.right_index)
             })
+            // 三會即使不化，勢力仍大於半合；任一支落在三會之中，半合就不成立
+            // （八字真理下冊 p222 鄧太：申酉戌三會不化，午戌不化火）。
             || three_meeting_candidates.iter().any(|item| {
-                item.involves(candidate.left_index) && item.involves(candidate.right_index)
+                item.involves(candidate.left_index) || item.involves(candidate.right_index)
             })
         {
             continue;
@@ -3655,6 +3983,74 @@ fn resolve_half_combination_transforms(
     transforms
 }
 
+/// 夾合：中間一支左右緊貼兩個相同地支，且與兩側都成六合（如未午未、寅亥寅）。
+/// 回傳兩側地支的 position_index。只看原局四柱。
+fn sandwiched_six_combination_sides(
+    center: &BranchInput,
+    branches: &[BranchInput],
+) -> Option<(usize, usize)> {
+    if is_floating_pillar(&center.pillar) || center.position_index == 0 {
+        return None;
+    }
+    let find = |index: usize| {
+        branches
+            .iter()
+            .find(|item| item.position_index == index && !is_floating_pillar(&item.pillar))
+    };
+    let left = find(center.position_index - 1)?;
+    let right = find(center.position_index + 1)?;
+    (left.branch == right.branch && is_six_combination(&center.branch, &left.branch))
+        .then_some((left.position_index, right.position_index))
+}
+
+/// 夾合中選哪一側合化：取離化神天干較近的一側（八字真理上冊 p52 柯震東：
+/// 化神在日元及時干，故以月日午未六合化土論，年未沒有變化）。
+/// 兩側一樣近時兩側都化（上冊 p49 案例四：化神在日元，辰酉辰兩邊都化金）。
+fn preferred_sandwich_side(
+    left: usize,
+    right: usize,
+    element: &str,
+    stems: &[StemInput],
+    day_master: &str,
+) -> Option<usize> {
+    let mut positions: Vec<usize> = stems
+        .iter()
+        .filter(|stem| stem_element(&stem.stem) == element && !is_floating_pillar(&stem.pillar))
+        .map(|stem| stem.position_index)
+        .collect();
+    if stem_element(day_master) == element {
+        positions.push(2);
+    }
+    let nearest = |index: usize| {
+        positions
+            .iter()
+            .map(|position| position.abs_diff(index))
+            .min()
+            .unwrap_or(usize::MAX)
+    };
+    match nearest(left).cmp(&nearest(right)) {
+        std::cmp::Ordering::Less => Some(left),
+        std::cmp::Ordering::Greater => Some(right),
+        std::cmp::Ordering::Equal => None,
+    }
+}
+
+/// 夾合中心另外還捲入其他合局（半合、三合、三會）時，多個合局互相牽制，均合而不化
+/// （八字真理下冊 p257 例二：二寅夾合亥，又有亥卯半合）。
+fn sandwich_center_has_competing_combination(
+    center: &BranchInput,
+    outer: (usize, usize),
+    half_combination_candidates: &[HalfCombinationCandidate],
+    three_combination_candidates: &[ThreeCombinationCandidate],
+    three_meeting_candidates: &[ThreeMeetingCandidate],
+) -> bool {
+    let index = center.position_index;
+    half_combination_candidates.iter().any(|candidate| {
+        candidate.involves(index) && !candidate.involves(outer.0) && !candidate.involves(outer.1)
+    }) || three_combination_candidates.iter().any(|item| item.involves(index))
+        || three_meeting_candidates.iter().any(|item| item.involves(index))
+}
+
 fn resolve_six_combination_transforms(
     branches: &[BranchInput],
     stems: &[StemInput],
@@ -3664,13 +4060,12 @@ fn resolve_six_combination_transforms(
     three_meeting_candidates: &[ThreeMeetingCandidate],
     existing_transforms: &HashMap<usize, BranchTransform>,
 ) -> HashMap<usize, BranchTransform> {
-    let month_branch = &branches[1];
     let mut transforms = HashMap::new();
     for i in 0..branches.len() {
         for j in (i + 1)..branches.len() {
             let left = &branches[i];
             let right = &branches[j];
-            if distance(left.position_index, right.position_index) != 1
+            if branch_pair_distance(left, right) != 1
                 || !is_six_combination(&left.branch, &right.branch)
             {
                 continue;
@@ -3694,9 +4089,39 @@ fn resolve_six_combination_transforms(
                     branches,
                     half_combination_candidates,
                 )
-                || !should_transform_branch_combination(&element, month_branch, stems, day_master)
+                || !should_transform_branch_combination(
+                    &element,
+                    branches,
+                    &[left.position_index, right.position_index],
+                    stems,
+                    day_master,
+                )
             {
                 continue;
+            }
+            // 夾合：只化靠近化神的一側；中心另有其他合局牽制則都不化。
+            let sandwich = [left, right].into_iter().find_map(|center| {
+                sandwiched_six_combination_sides(center, branches).map(|sides| (center, sides))
+            });
+            if let Some((center, sides)) = sandwich {
+                if sandwich_center_has_competing_combination(
+                    center,
+                    sides,
+                    half_combination_candidates,
+                    three_combination_candidates,
+                    three_meeting_candidates,
+                ) {
+                    continue;
+                }
+                let chosen = preferred_sandwich_side(sides.0, sides.1, &element, stems, day_master);
+                let outer = if center.position_index == left.position_index {
+                    right.position_index
+                } else {
+                    left.position_index
+                };
+                if chosen.is_some_and(|chosen| chosen != outer) {
+                    continue;
+                }
             }
             let pair = format_branch_pair(left.position_index, right.position_index, branches);
             for branch in [left, right] {
@@ -3738,7 +4163,7 @@ fn resolve_six_combination_effects(
         for j in (i + 1)..branches.len() {
             let left = &branches[i];
             let right = &branches[j];
-            if distance(left.position_index, right.position_index) != 1
+            if branch_pair_distance(left, right) != 1
                 || branch_transforms.contains_key(&left.position_index)
                 || branch_transforms.contains_key(&right.position_index)
                 || !is_six_combination(&left.branch, &right.branch)
@@ -3750,13 +4175,21 @@ fn resolve_six_combination_effects(
             }
             let pair = format_branch_pair(left.position_index, right.position_index, branches);
             let element = resolve_six_combination_element(&left.branch, &right.branch);
+            // 夾合而不化：兩個六合各耗中支 0.48，中支只剩 0.04（下冊 p168-169 假從女命）。
+            let remainder_for = |branch: &BranchInput| {
+                if sandwiched_six_combination_sides(branch, branches).is_some() {
+                    0.04
+                } else {
+                    0.52
+                }
+            };
             effects.insert(
                 left.position_index,
                 SixCombinationEffect {
                     other_index: right.position_index,
                     pair: pair.clone(),
                     element: element.clone(),
-                    remainder: 0.52,
+                    remainder: remainder_for(left),
                 },
             );
             effects.insert(
@@ -3765,7 +4198,7 @@ fn resolve_six_combination_effects(
                     other_index: left.position_index,
                     pair,
                     element,
-                    remainder: 0.52,
+                    remainder: remainder_for(right),
                 },
             );
         }
@@ -3773,14 +4206,23 @@ fn resolve_six_combination_effects(
     effects
 }
 
-fn resolve_branch_prune_effects(branches: &[BranchInput]) -> HashMap<usize, BranchPruneEffect> {
+fn resolve_branch_prune_effects(
+    branches: &[BranchInput],
+    branch_transforms: &HashMap<usize, BranchTransform>,
+) -> HashMap<usize, BranchPruneEffect> {
     let mut effects = HashMap::new();
     for i in 0..branches.len() {
         for j in (i + 1)..branches.len() {
             let left = &branches[i];
             let right = &branches[j];
+            // 合化局力量勝過墓庫沖，化局成立時沖不需理會（上冊 p138）。
+            if branch_transforms.contains_key(&left.position_index)
+                || branch_transforms.contains_key(&right.position_index)
+            {
+                continue;
+            }
             if is_chen_xu_pair(&left.branch, &right.branch)
-                && distance(left.position_index, right.position_index) == 1
+                && branch_pair_distance(left, right) == 1
             {
                 effects.insert(
                     left.position_index,
@@ -3805,6 +4247,12 @@ fn resolve_branch_prune_effects(branches: &[BranchInput]) -> HashMap<usize, Bran
         let left = &branches[i];
         let middle = &branches[i + 1];
         let right = &branches[i + 2];
+        if [left, middle, right]
+            .iter()
+            .any(|item| is_floating_pillar(&item.pillar))
+        {
+            continue;
+        }
         if left.branch == "寅" && middle.branch == "申" && right.branch == "寅" {
             effects.insert(
                 middle.position_index,
@@ -3819,19 +4267,299 @@ fn resolve_branch_prune_effects(branches: &[BranchInput]) -> HashMap<usize, Bran
     effects
 }
 
+/// 六合不化逢專氣緊貼沖（上冊 p139）：以沖論，但合力 0.48 把受沖支拉回，
+/// 二沖支各 ×0.48，六合另一支不變。回傳被緩和的沖（以位置配對表示）。
+/// 三合不化：專氣支提升至 1.1，其他二支相關支氣由 0.25 提升至 0.4（上冊 p133）。
+/// 三會不化：專氣支與長生支主氣提升至 1.45，墓庫支相關支氣由 0.25 提升至 0.5（上冊 p134）。
+fn resolve_non_transform_boosts(
+    branches: &[BranchInput],
+    three_combination_candidates: &[ThreeCombinationCandidate],
+    three_meeting_candidates: &[ThreeMeetingCandidate],
+    branch_transforms: &HashMap<usize, BranchTransform>,
+) -> HashMap<usize, Vec<NonTransformBoost>> {
+    let mut boosts: HashMap<usize, Vec<NonTransformBoost>> = HashMap::new();
+    // 四庫匯聚而不化：各支土氣由 0.5 提升至 0.7（上冊 p55）。
+    if let Some(indexes) = four_storage_indexes(branches) {
+        if indexes.iter().all(|index| !branch_transforms.contains_key(index)) {
+            for index in indexes {
+                let branch = &branches[index];
+                let share = element_share_in_branch(&branch.branch, "土");
+                boosts.entry(index).or_default().push(NonTransformBoost {
+                    element: "土".to_string(),
+                    extra_units: 0.7 - share,
+                    note: format!(
+                        "辰戌丑未四庫匯聚不化，{}之土氣由 {} 提升至 0.7",
+                        branch.branch,
+                        round3_string(share)
+                    ),
+                });
+            }
+        }
+    }
+    // 兩個三合同時不化而互相重疊（量化五行力下冊 p183-184 阿儀：申子辰子）：
+    // 局中水氣按合化局的六成推算，二子各提升至 1.3、申辰各提升至 0.5，每支只提升一次。
+    let open_combinations: Vec<&ThreeCombinationCandidate> = three_combination_candidates
+        .iter()
+        .filter(|item| !item.transforms)
+        .filter(|candidate| {
+            !three_meeting_candidates.iter().any(|meeting| {
+                meeting.involves(candidate.first_index)
+                    || meeting.involves(candidate.second_index)
+                    || meeting.involves(candidate.third_index)
+            })
+        })
+        .collect();
+    let doubled_combination = |candidate: &ThreeCombinationCandidate| {
+        let own = [candidate.first_index, candidate.second_index, candidate.third_index];
+        open_combinations.iter().any(|other| {
+            !std::ptr::eq(*other, candidate)
+                && other.element == candidate.element
+                && [other.first_index, other.second_index, other.third_index]
+                    .iter()
+                    .any(|index| own.contains(index))
+        })
+    };
+    let mut add_group = |indexes: [usize; 3],
+                         element: &str,
+                         label: &str,
+                         meeting: bool,
+                         doubled: bool| {
+        if indexes
+            .iter()
+            .any(|index| branch_transforms.contains_key(index))
+        {
+            return;
+        }
+        for index in indexes {
+            let branch = &branches[index];
+            let share = element_share_in_branch(&branch.branch, element);
+            if share <= 0.0 {
+                continue;
+            }
+            let role = branch_role(label, &branch.branch);
+            let target = match (meeting, role) {
+                (false, CombinationBranchRole::Specialist) if doubled => 1.3,
+                (false, _) if doubled => 0.5,
+                (false, CombinationBranchRole::Specialist) => 1.1,
+                (false, _) => 0.4,
+                (true, CombinationBranchRole::Specialist | CombinationBranchRole::Growth) => 1.45,
+                (true, _) => 0.5,
+            };
+            let extra_units = target - share;
+            if extra_units <= 0.0 {
+                continue;
+            }
+            // 同一支被兩個三會（如兩未夾巳午）或兩個三合重複牽涉時只提升一次（八字真理上冊 p52）。
+            if (meeting || doubled)
+                && boosts
+                    .get(&index)
+                    .is_some_and(|items| items.iter().any(|item| item.element == element))
+            {
+                continue;
+            }
+            boosts.entry(index).or_default().push(NonTransformBoost {
+                element: element.to_string(),
+                extra_units,
+                note: format!(
+                    "{}{}不化，{}之{}氣由 {} 提升至 {}",
+                    label,
+                    if meeting { "三會" } else { "三合" },
+                    branch.branch,
+                    element,
+                    round3_string(share),
+                    round3_string(target)
+                ),
+            });
+        }
+    };
+    for candidate in three_meeting_candidates.iter().filter(|item| !item.transforms) {
+        add_group(
+            [candidate.first_index, candidate.second_index, candidate.third_index],
+            &candidate.element,
+            &candidate.label,
+            true,
+            false,
+        );
+    }
+    for candidate in &open_combinations {
+        add_group(
+            [candidate.first_index, candidate.second_index, candidate.third_index],
+            &candidate.element,
+            &candidate.label,
+            false,
+            doubled_combination(candidate),
+        );
+    }
+    boosts
+}
+
+fn element_share_in_branch(branch: &str, element: &str) -> f64 {
+    let hidden_stems = hidden_stems_of(branch);
+    let ratios = hidden_ratios(hidden_stems.len());
+    hidden_stems
+        .iter()
+        .zip(ratios)
+        .filter(|(stem, _)| stem_element(stem) == element)
+        .map(|(_, ratio)| ratio)
+        .sum()
+}
+
+fn build_boost_branch_qi_slices(
+    input: &BranchInput,
+    boosts: Option<&Vec<NonTransformBoost>>,
+    day_master: &str,
+    weight: f64,
+) -> Vec<BranchQiSlice> {
+    let Some(boosts) = boosts else {
+        return Vec::new();
+    };
+    let hidden_stems = hidden_stems_of(&input.branch);
+    boosts
+        .iter()
+        .filter_map(|boost| {
+            let (index, stem) = hidden_stems
+                .iter()
+                .enumerate()
+                .find(|(_, stem)| stem_element(stem) == boost.element)?;
+            let ten_god = resolve_ten_god(day_master, stem);
+            let raw_score = resolve_ten_god_score(&ten_god) * boost.extra_units;
+            let position_adjusted = round1(raw_score / 100.0 * weight);
+            Some(BranchQiSlice {
+                display_stem: stem.clone(),
+                ten_god,
+                ratio: boost.extra_units,
+                row_raw_score: raw_score,
+                adjusted_raw_contribution: raw_score,
+                position_adjusted,
+                base_interaction: "不化提升".to_string(),
+                base_note: format!("{} → 位調後 {:+.1}", boost.note, position_adjusted),
+                transformed: false,
+                hidden_stem_index: index as isize,
+                transparency_key: stem.clone(),
+                transparency_base: position_adjusted,
+                transform_slice_kind: BranchTransformSliceKind::Residual,
+            })
+        })
+        .collect()
+}
+
+fn is_pinched_by_specialist_clash(
+    center: &BranchInput,
+    branches: &[BranchInput],
+    branch_transforms: &HashMap<usize, BranchTransform>,
+) -> bool {
+    branches
+        .iter()
+        .filter(|other| {
+            other.position_index != center.position_index
+                && !is_floating_pillar(&other.pillar)
+                && !is_floating_pillar(&center.pillar)
+                && !branch_transforms.contains_key(&other.position_index)
+                && branch_pair_distance(center, other) == 1
+                && is_direct_clash(&center.branch, &other.branch)
+                && classify_branch_clash(&center.branch, &other.branch)
+                    == BranchClashType::Specialist
+        })
+        .count()
+        >= 2
+}
+
+#[derive(Debug, Clone, Default)]
+struct SixCombinationClashResolution {
+    /// 專氣沖遇六合不化：以沖論，但合力緩沖，受沖二支 ×0.48（下冊 p139）。
+    cushioned: HashSet<(usize, usize)>,
+    /// 長生、墓庫沖遇六合不化：沖勝合，但六合力 0.48 抵消部分沖力（下冊 p190 B女士）。
+    /// 值為受合之中心支。
+    buffered: HashMap<(usize, usize), usize>,
+    /// 失效的六合（被抵消，或兩支各自受沖）。
+    voided_pairs: HashSet<(usize, usize)>,
+}
+
+fn ordered_pair(a: usize, b: usize) -> (usize, usize) {
+    (a.min(b), a.max(b))
+}
+
+fn resolve_six_combination_clash_cushions(
+    branches: &[BranchInput],
+    six_combination_effects: &mut HashMap<usize, SixCombinationEffect>,
+    branch_transforms: &HashMap<usize, BranchTransform>,
+) -> SixCombinationClashResolution {
+    let mut resolution = SixCombinationClashResolution::default();
+    let mut pairs: Vec<(usize, usize)> = six_combination_effects
+        .iter()
+        .map(|(index, effect)| ordered_pair(*index, effect.other_index))
+        .collect();
+    pairs.sort();
+    pairs.dedup();
+    let clashes_on = |index: usize, partner: usize| -> Vec<(usize, BranchClashType)> {
+        let center = &branches[index];
+        branches
+            .iter()
+            .filter(|other| {
+                other.position_index != index
+                    && other.position_index != partner
+                    && !branch_transforms.contains_key(&other.position_index)
+                    && branch_pair_distance(center, other) == 1
+                    && is_direct_clash(&center.branch, &other.branch)
+            })
+            .map(|other| {
+                (
+                    other.position_index,
+                    classify_branch_clash(&center.branch, &other.branch),
+                )
+            })
+            .collect()
+    };
+    for (left, right) in pairs {
+        let left_clashes = clashes_on(left, right);
+        let right_clashes = clashes_on(right, left);
+        if left_clashes.is_empty() && right_clashes.is_empty() {
+            continue;
+        }
+        resolution.voided_pairs.insert((left, right));
+        if !left_clashes.is_empty() && !right_clashes.is_empty() {
+            // 六合二支各自受沖：沖力壓倒合力，以沖論、不計合（八字真理上冊 p30 沖剋男命）。
+            continue;
+        }
+        let (center, clashes) = if left_clashes.is_empty() {
+            (right, right_clashes)
+        } else {
+            (left, left_clashes)
+        };
+        for (other, clash_type) in clashes {
+            let key = ordered_pair(center, other);
+            if clash_type == BranchClashType::Specialist {
+                resolution.cushioned.insert(key);
+            } else {
+                resolution.buffered.insert(key, center);
+            }
+        }
+    }
+    for (left, right) in &resolution.voided_pairs {
+        six_combination_effects.remove(left);
+        six_combination_effects.remove(right);
+    }
+    resolution
+}
+
 fn resolve_branch_qi_modifiers(
     branches: &[BranchInput],
     six_combination_effects: &HashMap<usize, SixCombinationEffect>,
     three_meeting_candidates: &[ThreeMeetingCandidate],
+    branch_transforms: &HashMap<usize, BranchTransform>,
+    six_clash_resolution: &SixCombinationClashResolution,
+    day_master: &str,
 ) -> HashMap<usize, BranchQiModifier> {
     let mut modifiers = HashMap::new();
     for i in 0..branches.len() {
         for j in (i + 1)..branches.len() {
             let left = &branches[i];
             let right = &branches[j];
-            let dist = distance(left.position_index, right.position_index);
+            let dist = branch_pair_distance(left, right);
             if !is_direct_clash(&left.branch, &right.branch)
                 || dist > 2
+                || branch_transforms.contains_key(&left.position_index)
+                || branch_transforms.contains_key(&right.position_index)
                 || should_suppress_clash_by_six_combination(left, right, six_combination_effects)
                 || should_suppress_clash_by_three_meeting(
                     left,
@@ -3843,42 +4571,95 @@ fn resolve_branch_qi_modifiers(
                 continue;
             }
             let clash_type = classify_branch_clash(&left.branch, &right.branch);
-            let affected_multiplier = branch_clash_affected_multiplier(dist);
-            merge_branch_qi_modifier_into(
-                &mut modifiers,
-                left.position_index,
-                build_branch_clash_qi_modifier(
-                    &left.branch,
-                    &right.branch,
+            let base_multiplier = branch_clash_affected_multiplier(dist);
+            let clash_key = ordered_pair(left.position_index, right.position_index);
+            let buffered_multiplier = six_clash_resolution
+                .buffered
+                .get(&clash_key)
+                .map(|center| {
+                    let (center, other) = if *center == left.position_index {
+                        (left, right)
+                    } else {
+                        (right, left)
+                    };
+                    buffered_clash_multiplier(&center.branch, &other.branch)
+                });
+            let cushioned = six_clash_resolution.cushioned.contains(&clash_key);
+            for (branch, other) in [(left, right), (right, left)] {
+                // 二支同沖一支：被沖之支只按較近的一支計沖。
+                // 一般情況較遠的沖者不受影響（上冊 p161 李國寶年卯、p71 阮玲玉時亥）；
+                // 兩個沖者都是日元祿支時（下冊 p250 二巳沖一亥），按沖力分攤反作用：
+                // 緊貼為 2 個專氣沖力、隔一位為 0.5 個，月巳承擔八成、年巳承擔二成。
+                let target_far_dist =
+                    second_clasher_distance(other, branch, branches, branch_transforms)
+                        .filter(|other_dist| *other_dist < dist);
+                let clasher_far_dist =
+                    second_clasher_distance(branch, other, branches, branch_transforms)
+                        .filter(|other_dist| *other_dist < dist);
+                if target_far_dist.is_some() {
+                    continue;
+                }
+                if clasher_far_dist.is_some() && !is_element_lu_branch(day_master, &branch.branch)
+                {
+                    continue;
+                }
+                let shared_multiplier = if is_element_lu_branch(day_master, &branch.branch) {
+                    second_clasher_distance(branch, other, branches, branch_transforms).map(
+                        |second_dist| {
+                            let own = clash_force_by_distance(dist);
+                            1.0 - own / (own + clash_force_by_distance(second_dist))
+                        },
+                    )
+                } else {
+                    None
+                };
+                let affected_multiplier = if let Some(multiplier) = shared_multiplier {
+                    multiplier
+                } else if let Some(multiplier) = buffered_multiplier {
+                    multiplier
+                } else if cushioned {
+                    0.48
+                } else if dist == 1
+                    && clash_type == BranchClashType::Specialist
+                    && is_pinched_by_specialist_clash(other, branches, branch_transforms)
+                {
+                    // 左沖右沖（夾沖，上冊 p145）：中間專氣支化零，兩側各只受一半之沖，×0.5。
+                    0.5
+                } else {
+                    base_multiplier
+                };
+                let mut modifier = build_branch_clash_qi_modifier(
+                    &branch.branch,
+                    &other.branch,
                     clash_type,
                     affected_multiplier,
                     dist,
-                ),
-            );
-            merge_branch_qi_modifier_into(
-                &mut modifiers,
-                right.position_index,
-                build_branch_clash_qi_modifier(
-                    &right.branch,
-                    &left.branch,
-                    clash_type,
-                    affected_multiplier,
-                    dist,
-                ),
-            );
+                );
+                // 承擔大半沖力的祿支已無法壓制旁氣，藏干各自獨立推算，不再以 +100 計（下冊 p250 月巳）。
+                if shared_multiplier.is_some_and(|multiplier| multiplier < 0.5) {
+                    modifier.stem_multipliers.insert(LU_MAIN_QI_KEY.to_string(), 0.0);
+                }
+                merge_branch_qi_modifier_into(&mut modifiers, branch.position_index, modifier);
+            }
         }
     }
     for i in 0..branches.len().saturating_sub(2) {
         let left = &branches[i];
         let middle = &branches[i + 1];
         let right = &branches[i + 2];
+        if [left, middle, right]
+            .iter()
+            .any(|item| is_floating_pillar(&item.pillar))
+        {
+            continue;
+        }
         if left.branch == "寅" && middle.branch == "申" && right.branch == "寅" {
-            let mut stem_multipliers = HashMap::new();
-            stem_multipliers.insert("甲".to_string(), 0.5);
-            stem_multipliers.insert("丙".to_string(), 0.5);
+            let mut element_multipliers = HashMap::new();
+            element_multipliers.insert("木".to_string(), 0.5);
+            element_multipliers.insert("火".to_string(), 0.5);
             let modifier = BranchQiModifier {
-                stem_multipliers,
-                element_multipliers: HashMap::new(),
+                stem_multipliers: HashMap::new(),
+                element_multipliers,
                 note: "二寅夾沖申：寅中木火之氣減半".to_string(),
             };
             merge_branch_qi_modifier_into(&mut modifiers, left.position_index, modifier.clone());
@@ -3898,16 +4679,15 @@ fn resolve_stem_combination_effects(
         for j in (i + 1)..stems.len() {
             let left = &stems[i];
             let right = &stems[j];
-            if distance(left.position_index, right.position_index) > 1 {
+            if stem_pair_distance(left, right) != 1 {
                 continue;
             }
             let Some((pair, target_element)) = resolve_stem_combination(&left.stem, &right.stem)
             else {
                 continue;
             };
-            let month_element =
-                resolve_stem_combination_month_element(month_branch, month_transform);
-            let transforms = month_element == target_element;
+            let transforms =
+                month_allows_stem_transformation(&target_element, month_branch, month_transform);
             let effect = StemCombinationEffect {
                 pair: pair.clone(),
                 target_element: target_element.clone(),
@@ -3927,7 +4707,10 @@ fn resolve_stem_combination_effects(
     effects
 }
 
-fn resolve_stem_clash_effects(stems: &[StemInput]) -> HashMap<usize, StemClashEffect> {
+fn resolve_stem_clash_effects(
+    stems: &[StemInput],
+    combination_effects: &mut HashMap<usize, StemCombinationEffect>,
+) -> HashMap<usize, StemClashEffect> {
     let mut effects = HashMap::new();
     for i in 0..stems.len() {
         for j in (i + 1)..stems.len() {
@@ -3936,8 +4719,11 @@ fn resolve_stem_clash_effects(stems: &[StemInput]) -> HashMap<usize, StemClashEf
             if !is_stem_clash(&left.stem, &right.stem) {
                 continue;
             }
-            let dist = distance(left.position_index, right.position_index);
-            if !is_supported_stem_clash_distance(left, right, dist) {
+            let dist = stem_pair_distance(left, right);
+            if !is_supported_stem_clash_distance(dist) {
+                continue;
+            }
+            if dist == 2 && soften_combination_by_distant_clash(left, right, combination_effects) {
                 continue;
             }
             let remainder = stem_clash_remainder(dist);
@@ -4147,11 +4933,11 @@ fn resolve_branch_transparencies(
         ) {
             break;
         }
-        let visible_element = stem_element(&stem.stem);
+        let visible_element = effective_stem_element(stem, stem_combination_effects);
         if visible_element != hidden_element {
             continue;
         }
-        let dist = distance(branch.position_index, stem.position_index);
+        let dist = stem_branch_distance(stem, branch);
         let mut multiplier = transparency_multiplier(dist);
         let mut kind = if stem.stem == hidden_stem {
             "同干透出".to_string()
@@ -4180,6 +4966,17 @@ fn resolve_branch_transparencies(
     matches
 }
 
+/// 天干合化成功後按化後五行論得透（上冊 p36）。
+fn effective_stem_element(
+    stem: &StemInput,
+    stem_combination_effects: &HashMap<usize, StemCombinationEffect>,
+) -> String {
+    match stem_combination_effects.get(&stem.position_index) {
+        Some(effect) if effect.transforms => effect.target_element.clone(),
+        _ => stem_element(&stem.stem),
+    }
+}
+
 fn resolve_transformed_branch_transparencies(
     transformed_element: &str,
     slice_kind: BranchTransformSliceKind,
@@ -4191,10 +4988,10 @@ fn resolve_transformed_branch_transparencies(
 ) -> Vec<TransparencyApplication> {
     let mut matches = Vec::new();
     for stem in stems {
-        if stem_element(&stem.stem) != transformed_element {
+        if effective_stem_element(stem, stem_combination_effects) != transformed_element {
             continue;
         }
-        let dist = distance(branch.position_index, stem.position_index);
+        let dist = stem_branch_distance(stem, branch);
         let mut multiplier = transparency_multiplier(dist);
         let mut kind = match slice_kind {
             BranchTransformSliceKind::Primary => "主化同五行透干".to_string(),
@@ -4242,7 +5039,7 @@ fn resolve_branch_interaction(
         {
             continue;
         }
-        let dist = distance(input.position_index, other.position_index);
+        let dist = branch_pair_distance(input, other);
         if is_direct_clash(&input.branch, &other.branch) {
             if is_chen_xu_pair(&input.branch, &other.branch) && dist >= 2 {
                 continue;
@@ -4276,7 +5073,19 @@ fn resolve_branch_interaction(
             continue;
         }
         if is_six_combination(&input.branch, &other.branch) {
-            if has_stronger_three_combination(input, other, &state.three_combination_candidates)
+            let in_cushioned_clash = state
+                .six_clash_resolution
+                .cushioned
+                .iter()
+                .any(|(left, right)| [*left, *right].iter().any(|index| {
+                    *index == input.position_index || *index == other.position_index
+                }))
+                || state
+                    .six_clash_resolution
+                    .voided_pairs
+                    .contains(&ordered_pair(input.position_index, other.position_index));
+            if in_cushioned_clash
+                || has_stronger_three_combination(input, other, &state.three_combination_candidates)
                 || has_stronger_three_meeting(input, other, &state.three_meeting_candidates)
                 || has_stronger_half_combination(
                     input,
@@ -4287,10 +5096,9 @@ fn resolve_branch_interaction(
             {
                 continue;
             }
+            // 六合屬偶合，須緊貼才論合而不化（×0.52）；隔一位之合不需理會（上冊 p46、p128）。
             let candidate = if dist <= 1 {
-                BranchInteraction::combine("近合".to_string(), 0.85, other)
-            } else if dist == 2 {
-                BranchInteraction::combine("隔柱合".to_string(), 0.9, other)
+                BranchInteraction::combine("近合".to_string(), 0.52, other)
             } else {
                 continue;
             };
@@ -4321,16 +5129,64 @@ fn stronger_root(current: RootApplication, candidate: RootApplication) -> RootAp
 
 fn should_transform_branch_combination(
     target_element: &str,
-    month_branch: &BranchInput,
+    branches: &[BranchInput],
+    participants: &[usize],
     stems: &[StemInput],
     day_master: &str,
 ) -> bool {
     if !has_visible_transforming_stem(target_element, stems, day_master) {
         return false;
     }
+    let Some(month_branch) = branches.iter().find(|item| item.pillar == "月支") else {
+        return true;
+    };
     let month_main_stem = resolve_month_main_stem(month_branch);
     let month_element = stem_element(&month_main_stem);
-    !controls(&month_element, target_element)
+    if controls(&month_element, target_element)
+        && month_can_block_transformation(month_branch, branches, participants)
+    {
+        return false;
+    }
+    !stems_block_transformation(target_element, stems)
+}
+
+/// 月令主氣能否擋住合化（八字真理下冊 p235 作者補充）：
+/// （月令本身參與合局時仍以其主氣論，如上冊 p109 巳月巳酉半合不化）；
+/// 專氣月令受鄰支沖則受損，不能阻化，合而不化仍可阻化；
+/// 非專氣月令與鄰支相沖或相合，力量少於 0.5 個專氣，不能阻化（下冊 p238）。
+fn month_can_block_transformation(
+    month_branch: &BranchInput,
+    branches: &[BranchInput],
+    participants: &[usize],
+) -> bool {
+    let specialist = matches!(month_branch.branch.as_str(), "子" | "午" | "卯" | "酉");
+    let neighbours = branches.iter().filter(|other| {
+        other.position_index != month_branch.position_index
+            && !is_floating_pillar(&other.pillar)
+            && !participants.contains(&other.position_index)
+            && branch_pair_distance(month_branch, other) == 1
+    });
+    for other in neighbours {
+        if is_direct_clash(&month_branch.branch, &other.branch) {
+            return false;
+        }
+        if !specialist && is_six_combination(&month_branch.branch, &other.branch) {
+            return false;
+        }
+    }
+    true
+}
+
+/// 年月二干或月時二干同剋化神，份量相加達月令的 100，可擋住地支合化
+/// （八字真理上冊 p94-95、下冊 p222 阿宏：丙丁緊貼，辰酉、酉丑均不可化金）。
+fn stems_block_transformation(target_element: &str, stems: &[StemInput]) -> bool {
+    let weight: f64 = stems
+        .iter()
+        .filter(|stem| !is_floating_pillar(&stem.pillar))
+        .filter(|stem| controls(&stem_element(&stem.stem), target_element))
+        .map(|stem| position_weight(&stem.pillar))
+        .sum();
+    weight >= 100.0
 }
 
 fn has_visible_transforming_stem(
@@ -4504,30 +5360,34 @@ fn can_participate_in_second_transform(
         && is_specialist_branch(original_branch)
 }
 
-fn is_suppressed_by_direct_clashed_specialist(
+/// 半合隔二位化只有 1.625 個五行專氣，不敵緊貼六合化的 1.65-1.8（上冊 p130）。
+fn is_overpowered_by_tight_six_transformation(
     candidate: &HalfCombinationCandidate,
     branches: &[BranchInput],
+    stems: &[StemInput],
+    day_master: &str,
 ) -> bool {
-    let left = &branches[candidate.left_index];
-    let right = &branches[candidate.right_index];
-    specialist_branch_blocked_by_direct_clash(left, &candidate.element, branches)
-        || specialist_branch_blocked_by_direct_clash(right, &candidate.element, branches)
-}
-
-fn specialist_branch_blocked_by_direct_clash(
-    branch: &BranchInput,
-    target_element: &str,
-    branches: &[BranchInput],
-) -> bool {
-    if !is_half_combination_specialist(&branch.branch, target_element) {
+    if normalize_distance(candidate.distance) < 3 {
         return false;
     }
-    branches.iter().any(|other| {
-        other.position_index != branch.position_index
-            && distance(branch.position_index, other.position_index) == 1
-            && is_direct_clash(&branch.branch, &other.branch)
-            && classify_branch_clash(&branch.branch, &other.branch) == BranchClashType::Specialist
-    })
+    [candidate.left_index, candidate.right_index]
+        .into_iter()
+        .any(|index| {
+            let branch = &branches[index];
+            branches.iter().any(|other| {
+                other.position_index != branch.position_index
+                    && !candidate.involves(other.position_index)
+                    && branch_pair_distance(branch, other) == 1
+                    && is_six_combination(&branch.branch, &other.branch)
+                    && should_transform_branch_combination(
+                        &resolve_six_combination_element(&branch.branch, &other.branch),
+                        branches,
+                        &[branch.position_index, other.position_index],
+                        stems,
+                        day_master,
+                    )
+            })
+        })
 }
 
 fn is_suppressed_by_stacked_six_combination(
@@ -4552,6 +5412,7 @@ fn has_active_stronger_half_combination(
                 && candidate.involves(right.position_index))
             && stacked_six_combination_power_for_pair(left, right, branches)
                 < half_combination_power(candidate)
+            && normalize_distance(candidate.distance) < 3
             && (candidate.distance <= 1 || candidate.transforms)
     })
 }
@@ -4584,15 +5445,15 @@ fn has_stronger_three_combination(
     })
 }
 
+/// 三會不化仍有 3.41 個五行專氣，勝過六合化（上冊 p134），
+/// 包括六合二支本身就在三會之中（如巳午未中的午未）。
 fn has_stronger_three_meeting(
     input: &BranchInput,
     other: &BranchInput,
     candidates: &[ThreeMeetingCandidate],
 ) -> bool {
     candidates.iter().any(|candidate| {
-        (candidate.involves(input.position_index) || candidate.involves(other.position_index))
-            && !(candidate.involves(input.position_index)
-                && candidate.involves(other.position_index))
+        candidate.involves(input.position_index) || candidate.involves(other.position_index)
     })
 }
 
@@ -4601,7 +5462,7 @@ fn should_suppress_clash_by_six_combination(
     other: &BranchInput,
     effects: &HashMap<usize, SixCombinationEffect>,
 ) -> bool {
-    distance(input.position_index, other.position_index) > 1
+    branch_pair_distance(input, other) > 1
         && (effects.contains_key(&input.position_index)
             || effects.contains_key(&other.position_index))
 }
@@ -4628,6 +5489,31 @@ fn is_protected_by_non_transform_three_meeting(
     candidates
         .iter()
         .any(|candidate| !candidate.transforms && candidate.involves(input.position_index))
+}
+
+/// 緊貼五合不化又遇隔一位相沖（上冊 p146）：合力 0.48 抵消沖力 0.125，
+/// 合中二干只承受 0.355 個合力，各 ×0.645；隔位沖干的沖力已被消弭，不扣分。
+fn soften_combination_by_distant_clash(
+    left: &StemInput,
+    right: &StemInput,
+    combination_effects: &mut HashMap<usize, StemCombinationEffect>,
+) -> bool {
+    let combined = [left, right].into_iter().find(|stem| {
+        combination_effects
+            .get(&stem.position_index)
+            .is_some_and(|effect| !effect.transforms)
+    });
+    let Some(combined) = combined else {
+        return false;
+    };
+    let pair = combination_effects[&combined.position_index].pair.clone();
+    for effect in combination_effects.values_mut() {
+        if effect.pair == pair && !effect.transforms {
+            effect.remainder = 0.645;
+            effect.note = format!("{}合而不化，又受隔一位沖，合力抵消後各×0.645", pair);
+        }
+    }
+    true
 }
 
 fn merge_stem_clash_effect_into(
@@ -4698,6 +5584,66 @@ fn merge_branch_qi_modifier(
     }
 }
 
+/// 六合力緩沖長生、墓庫沖（下冊 p190 B女士）：中心支受沖的份量 f（巳亥沖時亥受沖 0.75），
+/// 抵消 0.48 個合力後，受沖支氣只損 (f − 0.48) / f，兩支受沖之氣同乘此餘力。
+/// 丑未沖遇子丑合時 f = 0.5，幾乎完全抵消（八字真理上冊 p136 胡適：以無沖無合推算）。
+/// 與 clasher 同字、同沖 target、但距離不同的另一支：回傳該支與 target 的距離。
+fn second_clasher_distance(
+    clasher: &BranchInput,
+    target: &BranchInput,
+    branches: &[BranchInput],
+    branch_transforms: &HashMap<usize, BranchTransform>,
+) -> Option<usize> {
+    let own_dist = branch_pair_distance(clasher, target);
+    branches
+        .iter()
+        .filter(|item| {
+            item.position_index != clasher.position_index
+                && item.position_index != target.position_index
+                && item.branch == clasher.branch
+                && !is_floating_pillar(&item.pillar)
+                && !branch_transforms.contains_key(&item.position_index)
+        })
+        .map(|item| branch_pair_distance(item, target))
+        .find(|dist| (1..=2).contains(dist) && *dist != own_dist)
+}
+
+fn clash_force_by_distance(dist: usize) -> f64 {
+    if dist <= 1 {
+        2.0
+    } else {
+        0.5
+    }
+}
+
+fn buffered_clash_multiplier(center: &str, other: &str) -> f64 {
+    let affected: f64 = ["木", "火", "金", "水"]
+        .iter()
+        .map(|element| {
+            element_share_in_branch(center, element)
+                .min(element_share_in_branch(other, clash_opponent_element(element)))
+        })
+        .sum();
+    if affected <= 0.48 {
+        1.0
+    } else {
+        1.0 - (affected - 0.48) / affected
+    }
+}
+
+const LU_MAIN_QI_KEY: &str = "祿主氣";
+
+/// 長生、墓庫沖中互沖的五行：木↔金、火↔水。
+fn clash_opponent_element(element: &str) -> &'static str {
+    match element {
+        "木" => "金",
+        "金" => "木",
+        "火" => "水",
+        "水" => "火",
+        _ => "",
+    }
+}
+
 fn build_branch_clash_qi_modifier(
     branch: &str,
     other_branch: &str,
@@ -4705,64 +5651,54 @@ fn build_branch_clash_qi_modifier(
     affected_multiplier: f64,
     dist: usize,
 ) -> BranchQiModifier {
-    let stem_multipliers = match clash_type {
-        BranchClashType::Specialist => hidden_stems_of(branch)
-            .into_iter()
-            .map(|stem| (stem, affected_multiplier))
-            .collect(),
-        BranchClashType::Growth => match branch {
-            "寅" => vec![
-                ("甲".to_string(), affected_multiplier),
-                ("丙".to_string(), affected_multiplier),
-            ],
-            "申" => vec![
-                ("庚".to_string(), affected_multiplier),
-                ("壬".to_string(), affected_multiplier),
-            ],
-            "巳" => vec![
-                ("丙".to_string(), affected_multiplier),
-                ("庚".to_string(), affected_multiplier),
-            ],
-            "亥" => vec![
-                ("壬".to_string(), affected_multiplier),
-                ("甲".to_string(), affected_multiplier),
-            ],
+    // 量化五行力不分陰陽（上冊 p20、p28）：受沖支氣按五行折減，
+    // 例如寅申沖時寅中木火之氣化零，乙在寅亦不能再得根。
+    let affected_elements: Vec<String> = match clash_type {
+        BranchClashType::Specialist => {
+            let mut elements = vec![resolve_branch_element(branch)];
+            for hidden in hidden_stems_of(branch) {
+                elements.push(stem_element(&hidden));
+            }
+            elements
+        }
+        // 長生沖：主氣與一旁氣化零，戊土旁氣不受影響；墓庫沖：二旁氣化零，主氣土不受影響。
+        BranchClashType::Growth | BranchClashType::Storage => match branch {
+            "寅" => vec!["木", "火"],
+            "申" => vec!["金", "水"],
+            "巳" => vec!["火", "金"],
+            "亥" => vec!["水", "木"],
+            "辰" => vec!["木", "水"],
+            "戌" => vec!["金", "火"],
+            "丑" => vec!["水", "金"],
+            "未" => vec!["火", "木"],
             _ => Vec::new(),
         }
         .into_iter()
-        .collect(),
-        BranchClashType::Storage => match branch {
-            "辰" => vec![
-                ("乙".to_string(), affected_multiplier),
-                ("癸".to_string(), affected_multiplier),
-            ],
-            "戌" => vec![
-                ("辛".to_string(), affected_multiplier),
-                ("丁".to_string(), affected_multiplier),
-            ],
-            "丑" => vec![
-                ("癸".to_string(), affected_multiplier),
-                ("辛".to_string(), affected_multiplier),
-            ],
-            "未" => vec![
-                ("丁".to_string(), affected_multiplier),
-                ("乙".to_string(), affected_multiplier),
-            ],
-            _ => Vec::new(),
-        }
-        .into_iter()
+        .map(str::to_string)
         .collect(),
     };
-    let element_multipliers = if clash_type == BranchClashType::Specialist {
-        let mut map = HashMap::new();
-        map.insert(resolve_branch_element(branch), affected_multiplier);
-        for hidden in hidden_stems_of(branch) {
-            map.insert(stem_element(&hidden), affected_multiplier);
-        }
-        map
-    } else {
-        HashMap::new()
-    };
+    let mut stem_multipliers = HashMap::new();
+    // 祿支以主氣論：主氣受沖，祿神亦按沖的倍率折減（下冊 p171：亥為壬祿，主氣受沖，本分 ×0.75）。
+    if affected_elements.contains(&resolve_branch_element(branch)) {
+        stem_multipliers.insert(LU_MAIN_QI_KEY.to_string(), affected_multiplier);
+    }
+    let mut element_multipliers = HashMap::new();
+    for element in affected_elements {
+        // 長生沖拆成干沖（巳亥沖 = 丙壬沖 + 甲庚沖）：一氣只受對方相沖之氣的份量影響
+        // （下冊 p171 N女士：亥中甲 0.37，只被巳中庚 0.25 所沖，甲剩 0.25×0.75 + 0.12 = 0.308）。
+        let multiplier = if clash_type == BranchClashType::Growth {
+            let own = element_share_in_branch(branch, &element);
+            let opponent = element_share_in_branch(other_branch, clash_opponent_element(&element));
+            if own > opponent && own > 0.0 {
+                (opponent * affected_multiplier + (own - opponent)) / own
+            } else {
+                affected_multiplier
+            }
+        } else {
+            affected_multiplier
+        };
+        element_multipliers.insert(element, multiplier);
+    }
     let note = match clash_type {
         BranchClashType::Specialist => {
             clash_type_distance_note("專氣相沖", dist, affected_multiplier)
@@ -4770,7 +5706,6 @@ fn build_branch_clash_qi_modifier(
         BranchClashType::Growth => clash_type_distance_note("長生相沖", dist, affected_multiplier),
         BranchClashType::Storage => clash_type_distance_note("墓庫相沖", dist, affected_multiplier),
     };
-    let _ = other_branch;
     BranchQiModifier {
         stem_multipliers,
         element_multipliers,
@@ -5197,8 +6132,8 @@ fn resolve_three_meeting(a: &str, b: &str, c: &str) -> Option<(String, String)> 
     match sorted_triplet(a, b, c).as_str() {
         "卯寅辰" => Some(("木".to_string(), "寅卯辰".to_string())),
         "午巳未" => Some(("火".to_string(), "巳午未".to_string())),
-        "申戌酉" => Some(("金".to_string(), "申酉戌".to_string())),
-        "亥子丑" => Some(("水".to_string(), "亥子丑".to_string())),
+        "戌申酉" => Some(("金".to_string(), "申酉戌".to_string())),
+        "丑亥子" => Some(("水".to_string(), "亥子丑".to_string())),
         _ => None,
     }
 }
@@ -5251,13 +6186,14 @@ fn position_weight(pillar: &str) -> f64 {
         "年干" => 45.0,
         "月干" => 55.0,
         "時干" => 50.0,
-        "運干" => 35.0,
+        // 大運當值一字 60，歲運干支各 20（下冊 p197-198）。
+        "運干" => 60.0,
         "流年干" => 20.0,
         "年支" => 45.0,
         "月支" => 100.0,
         "日支" => 55.0,
         "時支" => 50.0,
-        "運支" => 25.0,
+        "運支" => 60.0,
         "流年支" => 20.0,
         _ => 0.0,
     }
@@ -5453,6 +6389,37 @@ fn distance(a: usize, b: usize) -> usize {
     a.abs_diff(b)
 }
 
+/// 大運、歲運游走於四柱之間（《量化五行力》下冊 p202）。
+fn is_floating_pillar(pillar: &str) -> bool {
+    matches!(pillar, "運干" | "運支" | "流年干" | "流年支")
+}
+
+/// 干支之間的沖合距離：大運、歲運入局一律以緊貼論。
+fn interaction_distance(left_pillar: &str, left: usize, right_pillar: &str, right: usize) -> usize {
+    if is_floating_pillar(left_pillar) || is_floating_pillar(right_pillar) {
+        1
+    } else {
+        distance(left, right)
+    }
+}
+
+fn branch_pair_distance(left: &BranchInput, right: &BranchInput) -> usize {
+    interaction_distance(&left.pillar, left.position_index, &right.pillar, right.position_index)
+}
+
+fn stem_pair_distance(left: &StemInput, right: &StemInput) -> usize {
+    interaction_distance(&left.pillar, left.position_index, &right.pillar, right.position_index)
+}
+
+/// 得根、透干距離：大運、歲運入局一律以同柱論。
+fn stem_branch_distance(stem: &StemInput, branch: &BranchInput) -> usize {
+    if is_floating_pillar(&stem.pillar) || is_floating_pillar(&branch.pillar) {
+        0
+    } else {
+        distance(stem.position_index, branch.position_index)
+    }
+}
+
 fn normalize_distance(distance: usize) -> usize {
     distance.min(3)
 }
@@ -5536,36 +6503,30 @@ fn resolve_half_combination_residual_factor(
     }
 }
 
+/// 三合化：專氣支 1.4，其他二支 1.02，化後沒有餘氣（上冊 p132）。
 fn resolve_three_combination_factor(_label: &str, role: CombinationBranchRole) -> f64 {
     if role == CombinationBranchRole::Specialist {
         1.4
     } else {
-        1.0
+        1.02
     }
 }
 
-fn resolve_three_combination_residual_factor(_label: &str, role: CombinationBranchRole) -> f64 {
-    if role == CombinationBranchRole::Specialist {
-        0.0
-    } else {
-        0.08
-    }
+fn resolve_three_combination_residual_factor(_label: &str, _role: CombinationBranchRole) -> f64 {
+    0.0
 }
 
+/// 三會化：專氣支及長生支 2.1，墓庫支 1.05，化後沒有餘氣（上冊 p132）。
 fn resolve_three_meeting_factor(_label: &str, role: CombinationBranchRole) -> f64 {
     match role {
         CombinationBranchRole::Specialist | CombinationBranchRole::Growth => 2.1,
-        CombinationBranchRole::Storage => 1.0,
+        CombinationBranchRole::Storage => 1.05,
         CombinationBranchRole::Other => 1.0,
     }
 }
 
-fn resolve_three_meeting_residual_factor(_label: &str, role: CombinationBranchRole) -> f64 {
-    if role == CombinationBranchRole::Storage {
-        0.2
-    } else {
-        0.0
-    }
+fn resolve_three_meeting_residual_factor(_label: &str, _role: CombinationBranchRole) -> f64 {
+    0.0
 }
 
 fn is_six_combination_specialist(branch: &str, target_element: &str) -> bool {
@@ -5594,12 +6555,12 @@ fn is_stem_clash(a: &str, b: &str) -> bool {
     )
 }
 
-fn is_supported_stem_clash_distance(left: &StemInput, right: &StemInput, dist: usize) -> bool {
-    dist == 1
-        || (dist == 2
-            && left.pillar == "月干"
-            && right.pillar == "時干"
-            && sorted_pair(&left.stem, &right.stem) == "庚甲")
+/// 天干隔一位相沖採簡化法（上冊 p147）：只計緊貼沖，隔一位不計。
+/// 改成 false 即回到精算法（下冊 p148：隔一位各 ×0.875，合而不化又被隔位沖 ×0.645）。
+const STEM_CLASH_SIMPLIFIED: bool = true;
+
+fn is_supported_stem_clash_distance(dist: usize) -> bool {
+    dist == 1 || (!STEM_CLASH_SIMPLIFIED && dist == 2)
 }
 
 fn stem_clash_remainder(dist: usize) -> f64 {
@@ -5644,23 +6605,18 @@ fn classify_branch_clash(a: &str, b: &str) -> BranchClashType {
     }
 }
 
-fn branch_clash_score_multiplier(clash_type: BranchClashType, dist: usize) -> f64 {
-    if clash_type == BranchClashType::Specialist {
-        match dist {
-            1 => 0.0,
-            2 => 0.75,
-            _ => 0.89,
-        }
-    } else {
-        1.0
-    }
+/// 地支相沖的耗損一律由支氣折減（BranchQiModifier）處理，這裡不再整支相乘，
+/// 避免專氣沖被扣兩次（上冊 p45：隔一位相沖只 ×0.75）。
+fn branch_clash_score_multiplier(_clash_type: BranchClashType, _dist: usize) -> f64 {
+    1.0
 }
 
+/// 受沖支氣餘量：緊貼化零、隔一位 ×0.75、隔二位不計（上冊 p45-46、p147）。
 fn branch_clash_affected_multiplier(dist: usize) -> f64 {
     match dist {
         1 => 0.0,
         2 => 0.75,
-        _ => 0.89,
+        _ => 1.0,
     }
 }
 
@@ -5669,24 +6625,24 @@ fn branch_clash_note(clash_type: BranchClashType, dist: usize) -> String {
         BranchClashType::Specialist => match dist {
             1 => "近沖".to_string(),
             2 => "隔一位沖".to_string(),
-            _ => "隔二位沖".to_string(),
+            _ => "隔二位沖（不計）".to_string(),
         },
         BranchClashType::Growth => match dist {
             1 => "近沖（長生受沖支氣化零）".to_string(),
             2 => "隔一位沖（長生受沖支氣×0.75）".to_string(),
-            _ => "隔二位沖（長生受沖支氣×0.89）".to_string(),
+            _ => "隔二位沖（不計）".to_string(),
         },
         BranchClashType::Storage => match dist {
             1 => "近沖（墓庫旁氣化零）".to_string(),
             2 => "隔一位沖（墓庫旁氣×0.75）".to_string(),
-            _ => "隔二位沖（墓庫旁氣×0.89）".to_string(),
+            _ => "隔二位沖（不計）".to_string(),
         },
     }
 }
 
-fn clash_type_distance_note(prefix: &str, dist: usize, affected_multiplier: f64) -> String {
-    match dist {
-        1 => format!("{}：受沖支氣化零，未受沖主氣不變", prefix),
+fn clash_type_distance_note(prefix: &str, _dist: usize, affected_multiplier: f64) -> String {
+    match affected_multiplier {
+        value if value <= 0.0 => format!("{}：受沖支氣化零，未受沖主氣不變", prefix),
         _ => format!(
             "{}：受沖支氣×{}，未受沖主氣不變",
             prefix,
@@ -5754,7 +6710,15 @@ fn root_multiplier(root_level: RootLevel, dist: usize) -> f64 {
             2 => 0.3,
             _ => 0.2,
         },
-        RootLevel::Middle | RootLevel::Tomb => match normalize_distance(dist) {
+        // 中根：亥中甲、午中己，0.5 × 0.37 = 0.185（上冊 p29-30）。
+        RootLevel::Middle => match normalize_distance(dist) {
+            0 => 0.185,
+            1 => 0.148,
+            2 => 0.111,
+            _ => 0.074,
+        },
+        // 墓庫根：戊己得辰戌丑未主氣，0.5 × 0.5 = 0.25（上冊 p30）。
+        RootLevel::Tomb => match normalize_distance(dist) {
             0 => 0.25,
             1 => 0.2,
             2 => 0.15,
@@ -5816,15 +6780,43 @@ fn resolve_month_main_stem(month_branch: &BranchInput) -> String {
     }
 }
 
-fn resolve_stem_combination_month_element(
+/// 天干合化需月令有化神（主氣或旁氣均可），且月令主氣不剋化神（上冊 p99、p101）。
+/// 月令若半合或六合化，化前支氣仍可作化神，但剋制與否改看化後五行；
+/// 月令若三合或三會化，已無餘氣，只看化後五行。
+fn month_allows_stem_transformation(
+    target_element: &str,
     month_branch: &BranchInput,
     month_transform: Option<&BranchTransform>,
-) -> String {
-    if month_transform.is_some_and(|transform| transform.combine_note.contains("@half")) {
-        month_transform.unwrap().element.clone()
+) -> bool {
+    let (has_transforming_qi, controlling_element) = match month_transform {
+        Some(transform)
+            if matches!(
+                transform.category,
+                BranchTransformCategory::ThreeCombination | BranchTransformCategory::ThreeMeeting
+            ) =>
+        {
+            (transform.element == target_element, transform.element.clone())
+        }
+        Some(transform) => (
+            transform.element == target_element
+                || month_hidden_elements(month_branch).contains(&target_element.to_string()),
+            transform.element.clone(),
+        ),
+        None => (
+            month_hidden_elements(month_branch).contains(&target_element.to_string()),
+            stem_element(&resolve_month_main_stem(month_branch)),
+        ),
+    };
+    has_transforming_qi && !controls(&controlling_element, target_element)
+}
+
+fn month_hidden_elements(month_branch: &BranchInput) -> Vec<String> {
+    let hidden_stems = if month_branch.hidden_stems.is_empty() {
+        hidden_stems_of(&month_branch.branch)
     } else {
-        stem_element(&resolve_month_main_stem(month_branch))
-    }
+        month_branch.hidden_stems.clone()
+    };
+    hidden_stems.iter().map(|stem| stem_element(stem)).collect()
 }
 
 fn is_chen_xu_pair(a: &str, b: &str) -> bool {
@@ -5871,11 +6863,14 @@ fn stacked_six_combination_power_for_pair(
 
 fn is_stacked_six_combination_center(branch: &BranchInput, branches: &[BranchInput]) -> bool {
     let index = branch.position_index;
-    if index == 0 || index >= branches.len() - 1 {
+    if index == 0 || index >= branches.len() - 1 || is_floating_pillar(&branch.pillar) {
         return false;
     }
     let left = &branches[index - 1];
     let right = &branches[index + 1];
+    if is_floating_pillar(&left.pillar) || is_floating_pillar(&right.pillar) {
+        return false;
+    }
     is_six_combination(&left.branch, &branch.branch)
         && is_six_combination(&branch.branch, &right.branch)
         && resolve_six_combination_element(&left.branch, &branch.branch)
@@ -5940,15 +6935,6 @@ fn tendency_label(score: f64) -> String {
     }
 }
 
-fn ratio(delta: f64, natal_total: f64) -> f64 {
-    let base = natal_total.abs();
-    if base < 0.1 {
-        0.0
-    } else {
-        round2(delta / base)
-    }
-}
-
 fn element_relation_score(
     day_element: tyme4rs::tyme::culture::Element,
     target_element: tyme4rs::tyme::culture::Element,
@@ -5991,4 +6977,326 @@ fn round3(value: f64) -> f64 {
 fn round3_string(value: f64) -> String {
     let s = format!("{:.3}", round3(value));
     s.trim_end_matches('0').trim_end_matches('.').to_string()
+}
+
+#[cfg(test)]
+mod book_tests {
+    //! 《八字算命之量化五行力》上下冊的書上案例與規則回歸。
+    use super::*;
+
+    /// 四柱依年、月、日、時輸入，如 ["癸未", "壬戌", "乙丑", "丙子"]。
+    fn chart(pillars: [&str; 4]) -> (String, CalculationInputs) {
+        let stem = |index: usize| pillars[index].chars().next().unwrap().to_string();
+        let branch = |index: usize| pillars[index].chars().nth(1).unwrap().to_string();
+        let stems = vec![
+            StemInput { pillar: "年干".into(), stem: stem(0), position_index: 0 },
+            StemInput { pillar: "月干".into(), stem: stem(1), position_index: 1 },
+            StemInput { pillar: "時干".into(), stem: stem(3), position_index: 3 },
+        ];
+        let branches = ["年支", "月支", "日支", "時支"]
+            .iter()
+            .enumerate()
+            .map(|(index, pillar)| BranchInput {
+                pillar: pillar.to_string(),
+                branch: branch(index),
+                hidden_stems: hidden_stems_of(&branch(index)),
+                position_index: index,
+            })
+            .collect();
+        (stem(2), CalculationInputs { stems, branches })
+    }
+
+    fn scores(pillars: [&str; 4]) -> HashMap<String, f64> {
+        let (day_master, inputs) = chart(pillars);
+        let bundle = score_resolved_chart(&day_master, &inputs);
+        let mut map: HashMap<String, f64> = bundle
+            .stem_scores
+            .iter()
+            .chain(bundle.branch_scores.iter())
+            .map(|item| (item.pillar.clone(), item.final_score))
+            .collect();
+        let total = round1(map.values().sum());
+        map.insert("總分".into(), total);
+        map
+    }
+
+    fn assert_score(map: &HashMap<String, f64>, pillar: &str, expected: f64) {
+        let actual = map[pillar];
+        assert!(
+            (actual - expected).abs() < 0.051,
+            "{} expected {:+.1}, got {:+.1}",
+            pillar,
+            expected,
+            actual
+        );
+    }
+
+    #[test]
+    fn s_case_matches_book() {
+        // 上冊 p52-54 S先生，簡化法略去丙壬隔一位沖，總分 +24。
+        let map = scores(["癸未", "壬戌", "乙丑", "丙子"]);
+        assert_score(&map, "年干", 41.1);
+        assert_score(&map, "月干", 53.2);
+        assert_score(&map, "總分", 24.1);
+    }
+
+    #[test]
+    fn special_male_case_matches_book() {
+        // 下冊第七篇特殊命例：巳午未三會不化。書上用精算法（甲庚隔一位 ×0.875）得 +14.5；
+        // 本程式採簡化法略去隔一位干沖，地支各列仍與書相同。
+        let map = scores(["癸巳", "甲子", "己未", "庚午"]);
+        assert_score(&map, "年干", -37.8);
+        assert_score(&map, "月支", -84.0);
+        assert_score(&map, "年支", 78.2);
+        assert_score(&map, "時支", 82.8);
+        assert_score(&map, "總分", 5.3);
+    }
+
+    #[test]
+    fn clashed_lu_branch_keeps_only_remaining_hidden_stems() {
+        // 八字真理上冊 p71 阮玲玉：己日巳月被亥緊貼沖，巳只剩戊 +25。
+        let map = scores(["庚戌", "辛巳", "己亥", "乙亥"]);
+        assert_score(&map, "月支", 25.0);
+    }
+
+    #[test]
+    fn three_meeting_boost_is_not_repeated_by_second_wei() {
+        // 八字真理上冊 p52 柯震東（己巳時）：兩未各與巳午成三會不化，巳午只提升一次。
+        let map = scores(["辛未", "甲午", "己未", "己巳"]);
+        assert_score(&map, "年支", 33.2);
+        assert_score(&map, "日支", 46.1);
+        assert_score(&map, "時支", 93.2);
+    }
+
+    #[test]
+    fn shen_you_xu_and_hai_zi_chou_meetings_are_detected() {
+        // 八字真理下冊 p211：亥子丑三會化水，總分 +380。
+        let map = scores(["丙子", "己亥", "乙丑", "壬午"]);
+        assert_score(&map, "總分", 380.1);
+        // 下冊 p222 鄧太：申酉戌三會不化，午戌半合不成立。
+        let map = scores(["丙申", "戊戌", "癸酉", "戊午"]);
+        assert_score(&map, "時支", -47.8);
+        assert_score(&map, "總分", -129.9);
+    }
+
+    #[test]
+    fn yin_shen_clash_case_matches_book() {
+        // 下冊第七篇案例一：寅申近沖，總分 +9（天干 +81.1、月令 -18.8）。
+        let map = scores(["壬申", "壬寅", "壬午", "甲辰"]);
+        assert_score(&map, "月支", -18.8);
+        assert_score(&map, "總分", 9.4);
+    }
+
+    #[test]
+    fn middle_root_uses_0_185() {
+        // 上冊 p32：時干戊得中根在年支午、墓庫根在月令丑、微根在日支申，得 +53。
+        let map = scores(["辛午", "辛丑", "庚申", "戊卯"]);
+        assert_score(&map, "時干", 53.0);
+    }
+
+    #[test]
+    fn hidden_stem_transparency_example() {
+        // 上冊 p34：日支巳藏丙戊庚，各自透干，得 +4.5。
+        let map = scores(["辛卯", "戊辰", "辛巳", "丙寅"]);
+        assert_score(&map, "日支", 4.5);
+    }
+
+    #[test]
+    fn lu_branch_keeps_hidden_stem_transparency() {
+        // 上冊 p35：月令寅為乙之祿，+100 再加甲丙戊透干增值，得 +103.3。
+        let map = scores(["己卯", "丙寅", "乙酉", "甲子"]);
+        assert_score(&map, "月支", 103.3);
+    }
+
+    #[test]
+    fn separated_specialist_clash_is_counted_once() {
+        // 上冊 p45：子午隔一位相沖，二支各 ×0.75（不是 ×0.75×0.75）。
+        let map = scores(["壬子", "乙卯", "庚午", "丁丑"]);
+        assert_score(&map, "年支", -22.8);
+    }
+
+    #[test]
+    fn clashed_growth_branch_loses_qi_regardless_of_polarity() {
+        // 量化五行力不分陰陽（p20）；寅申緊貼沖，寅中木火化零（p45），乙在寅不再得根。
+        let (day_master, inputs) = chart(["乙丑", "戊寅", "壬申", "辛丑"]);
+        let bundle = score_resolved_chart(&day_master, &inputs);
+        let year_stem = &bundle.stem_scores[0];
+        assert_eq!(year_stem.bonus_score, Some(0.0), "{}", year_stem.details);
+        // 乙日主月令寅被申緊貼沖：祿氣化零，只剩戊土旁氣 -60 × 0.25。
+        let map = scores(["壬申", "壬寅", "乙酉", "丁丑"]);
+        assert_score(&map, "月支", -15.0);
+    }
+
+    #[test]
+    fn six_combination_cushions_specialist_clash() {
+        // 上冊 p139：卯酉沖遇辰酉合，以沖論，卯酉各 ×0.48，辰不變。
+        let map = scores(["癸辰", "丁酉", "癸卯", "己未"]);
+        assert_score(&map, "月支", 38.4);
+        assert_score(&map, "日支", -11.9);
+    }
+
+    #[test]
+    fn pinched_specialist_clash_halves_outer_branches() {
+        // 上冊 p145：酉受二卯夾沖，酉化零，二卯各 ×0.5。
+        let map = scores(["甲子", "乙卯", "丙酉", "己卯"]);
+        assert_score(&map, "日支", 0.0);
+        assert_score(&map, "月支", 76.0);
+    }
+
+    #[test]
+    fn separated_six_combination_is_ignored() {
+        // 上冊 p46、p128：六合隔一位不需理會。
+        let (day_master, inputs) = chart(["甲子", "丙寅", "己丑", "丙寅"]);
+        let bundle = score_resolved_chart(&day_master, &inputs);
+        assert_eq!(bundle.branch_scores[0].clash_adjustment, Some(0.0));
+        assert_eq!(bundle.branch_scores[2].clash_adjustment, Some(0.0));
+    }
+
+    #[test]
+    fn stem_combination_can_use_month_side_qi_as_transforming_god() {
+        // 上冊 p99：月令主氣或旁氣有化神即可；亥中甲木為化神，壬水不剋木，丁壬合化木。
+        let (day_master, inputs) = chart(["丁亥", "壬亥", "丙戌", "己丑"]);
+        let state = resolve_chart_state(&day_master, &inputs);
+        assert!(state.stem_combination_effects[&0].transforms);
+    }
+
+    #[test]
+    fn luck_pillar_enters_beside_every_natal_pillar() {
+        // 下冊 p202：大運入局得根透干按同柱、沖合按緊貼。
+        let (day_master, natal) = chart(["甲子", "丁卯", "己巳", "丙寅"]);
+        let inputs = build_extended_inputs(&natal, Some("庚"), None, None, None);
+        let state = resolve_chart_state(&day_master, &inputs);
+        assert_eq!(state.stem_clash_effects[&0].remainder, 0.5);
+        let luck = inputs.stems.iter().find(|item| item.pillar == "運干").unwrap();
+        assert_eq!(stem_branch_distance(luck, &inputs.branches[0]), 0);
+        assert_ne!(luck.position_index, 3);
+    }
+
+    #[test]
+    fn luck_impact_uses_relative_formula() {
+        // 下冊 p199-200：M=+100、L=-50 → R=-0.45、M′=+55；M=-100、L=-50 → M′=-145。
+        assert_eq!(luck_impact_ratio(-50.0, 100.0), -0.45);
+        assert_eq!(luck_effective_natal_score(100.0, -0.45), 55.0);
+        assert_eq!(luck_effective_natal_score(-100.0, -0.45), -145.0);
+        // 大運不能使命局翻號。
+        let ratio = luck_impact_ratio(-500.0, 10.0);
+        assert!(luck_effective_natal_score(10.0, ratio) >= 0.0);
+    }
+    fn luck_overview(pillars: [&str; 4], gan_zhi: &str) -> QuantLuckScore {
+        let (day_master, natal) = chart(pillars);
+        let natal_total = natal_cells_total(&score_resolved_chart(&day_master, &natal));
+        let da_yun = DaYunDto {
+            index: 1,
+            start_age: None,
+            end_age: None,
+            start_year: None,
+            end_year: None,
+            gan_zhi: gan_zhi.into(),
+            stem_ten_god: String::new(),
+            branch_hidden_stems: vec![],
+            branch_ten_gods: vec![],
+            xun: String::new(),
+            xun_kong: String::new(),
+            liu_nian: vec![],
+        };
+        build_luck_scores(&day_master, natal_total, &natal, &[da_yun]).remove(0)
+    }
+
+    #[test]
+    fn luck_impact_includes_natal_change() {
+        // 八字真理上冊 p70：己運 −45，合甲令原局 −77，整體衝擊 −122；M=+100 時 R 由 0.41 變 0.77。
+        assert_eq!(luck_impact_ratio(-45.0, 100.0), -0.41);
+        assert_eq!(luck_impact_ratio(-122.0, 100.0), -0.77);
+        let luck = luck_overview(["戊子", "丙申", "丙辰", "庚寅"], "辛卯");
+        let lines = luck.overview_lines.unwrap();
+        assert!(lines.iter().any(|line| line.starts_with("運干入局令原局變化 -200.7")));
+        // 運干 −77.3 與原局 −200.7 合計 −278，運支 +69.6 與 +63.3 合計 +132.9，平均 −72.6。
+        assert_eq!(luck.impact_ratio, luck_impact_ratio(-72.6, luck_natal_total(["戊子", "丙申", "丙辰", "庚寅"])));
+    }
+
+    fn luck_natal_total(pillars: [&str; 4]) -> f64 {
+        let (day_master, natal) = chart(pillars);
+        natal_cells_total(&score_resolved_chart(&day_master, &natal))
+    }
+
+    #[test]
+    fn wandering_luck_notes_clash_time_share_and_held_combination() {
+        // 八字真理上冊 p58-60：酉運沖月支卯，約 3/4 時間化零、1/4 時間隔一位 ×0.75；
+        // 運干與局中天干合而不化，被合住在該位置。
+        let clash = luck_overview(["戊子", "甲卯", "丙辰", "庚寅"], "辛酉");
+        assert!(clash.overview_lines.unwrap().iter().any(|line| line
+            .contains("運支酉與月支卯相沖，約 3/4 時間緊貼化零、約 1/4 時間隔一位剩 0.75")));
+        let held = luck_overview(["戊子", "甲戌", "丙午", "庚寅"], "己酉");
+        assert!(held
+            .overview_lines
+            .unwrap()
+            .iter()
+            .any(|line| line.contains("運干己與月干甲合而不化，被合住在該位置")));
+        assert_eq!(
+            wandering_clash_line("運支", "午", "時支", "子", 3),
+            "游走的大運：運支午與時支子相沖，約 2/4 時間緊貼化零、約 1/4 時間隔一位剩 0.75、約 1/4 時間隔二位剩 8/9；平均約剩 0.41（計分仍按緊貼）"
+        );
+    }
+    #[test]
+    fn six_combination_cushions_growth_and_storage_clash() {
+        // 量化五行力下冊 p190-191 B女士：寅亥六合不化緩沖巳亥沖，亥、巳受沖之氣 ×0.64，書 −9。
+        assert_score(&scores(["丙寅", "己亥", "辛巳", "辛卯"]), "總分", -8.6);
+        // 八字真理上冊 p136 胡適：丑未沖遇子丑合，合可緩沖，幾近以無沖無合推算，書 −67。
+        assert_score(&scores(["辛卯", "庚子", "丁丑", "丁未"]), "總分", -67.6);
+        // 上冊 p30 沖剋男命：寅亥合的兩支都被沖，以沖不以合論；巳只剩戊 +25、申只剩戊 +13.8。
+        let map = scores(["乙亥", "辛巳", "戊申", "甲寅"]);
+        assert_score(&map, "月支", 25.0);
+        assert_score(&map, "日支", 13.8);
+    }
+
+    #[test]
+    fn sandwiched_six_combination_follows_book() {
+        // 量化五行力下冊第七篇假從女命：未午未夾合不化，午只餘 0.04，書 −63。
+        assert_score(&scores(["丁未", "丙午", "辛未", "庚寅"]), "總分", -65.1);
+        // 八字真理上冊 p52 柯震東戊辰時：午只和靠近化神（時干戊）的日未化土，年未不變，書 +266。
+        assert_score(&scores(["辛未", "甲午", "己未", "戊辰"]), "總分", 273.4);
+        // 下冊 p257 例二：二寅夾合亥，互相牽制，全部合而不化，書 −109。
+        assert_score(&scores(["癸卯", "甲寅", "己亥", "丙寅"]), "總分", -108.5);
+    }
+
+    #[test]
+    fn damaged_month_or_strong_stems_change_transformation() {
+        // 八字真理下冊 p238：卯戌六合不化傷了月令戌，月令擋不住子辰半合化水，書 +32。
+        assert_score(&scores(["辛卯", "戊戌", "壬子", "甲辰"]), "總分", 31.4);
+        // 下冊 p222 阿宏：年月丙丁剋金，辰酉、酉丑都不化，書 −201。
+        assert_score(&scores(["丙辰", "丁酉", "乙丑", "庚辰"]), "總分", -200.8);
+    }
+
+    #[test]
+    fn four_storage_gathering_transforms_or_boosts_earth() {
+        // 八字真理上冊 p55：辰戌丑未齊全、天干見土，合化巨土，各支 1.15 個土。
+        let map = scores(["戊辰", "乙丑", "甲戌", "辛未"]);
+        assert_score(&map, "年支", -46.7);
+        assert_score(&map, "總分", -286.9);
+        // 天干不見土：合而不化，各支土氣由 0.5 提升到 0.7。
+        let map = scores(["壬辰", "癸丑", "甲戌", "乙未"]);
+        assert_score(&map, "總分", 80.1);
+    }
+
+    #[test]
+    fn two_clashers_share_force_only_for_lu_branches() {
+        // 八字真理下冊 p250：二巳沖一亥，月巳擔八成沖力、年巳擔二成；年巳 +38.6、酉 −30 與書相同。
+        // 月巳書 +4.9、程式 −5.2，總分書 +9、程式 −1.7（月巳藏干的獨立推算細節書上沒列出）。
+        let map = scores(["癸巳", "丁巳", "丁亥", "己酉"]);
+        assert_score(&map, "年支", 38.6);
+        assert_score(&map, "時支", -30.0);
+        // 上冊 p161 李國寶：二卯沖一酉，年卯隔一位不受影響，書 +49。
+        assert_score(&scores(["己卯", "丁卯", "己酉", "甲戌"]), "總分", 48.6);
+        // 上冊 p71 阮玲玉：時亥隔二位不受影響，書 −38.8。
+        assert_score(&scores(["庚戌", "辛巳", "己亥", "乙亥"]), "時支", -39.8);
+    }
+
+    #[test]
+    fn two_open_three_combinations_raise_water_to_sixty_percent() {
+        // 量化五行力下冊 p183-184 阿儀：申子辰子兩個三合不化，二子各 1.3、申辰各 0.5，書 −7。
+        let map = scores(["戊子", "丙辰", "戊子", "庚申"]);
+        assert_score(&map, "年支", -35.1);
+        assert_score(&map, "月支", 21.2);
+        assert_score(&map, "總分", -7.3);
+    }
 }

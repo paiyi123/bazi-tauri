@@ -18,7 +18,7 @@ fn reference() -> LessonModelReference {
 fn three_step_facts_keep_hidden_layers_and_exclude_day_stem_transparency() {
     let result = analyze(&chart(["戊申", "丙辰", "庚午", "癸未"]), &reference(), &[]);
 
-    assert_eq!(result.version, "classroom-2026-09-v1");
+    assert_eq!(result.version, "classroom-2026-10-v2");
     assert_eq!(result.facts.day_master.stem, "庚");
     assert_eq!(result.facts.month_command.main_stem, "戊");
     assert_eq!(
@@ -67,16 +67,56 @@ fn strength_separates_same_season_from_seal_and_keeps_support_boundary_literal()
 }
 
 #[test]
-fn support_proxy_is_false_at_one_and_true_at_two_visible_support_stems() {
-    let one = analyze(&chart(["甲午", "丁丑", "甲午", "丙戌"]), &reference(), &[]);
-    let two = analyze(&chart(["甲午", "丁丑", "甲午", "甲戌"]), &reference(), &[]);
+fn momentum_counts_eight_characters_by_party_and_breaks_ties_by_month_command() {
+    // 2026-07-22 例6：同黨六、異黨二 → 得勢；得地，衰中轉強。
+    let majority = analyze(&chart(["甲寅", "癸酉", "甲子", "丁卯"]), &reference(), &[]);
+    assert_eq!(majority.strength.same_party_count, 6);
+    assert_eq!(majority.strength.opposing_party_count, 2);
+    assert!(majority.strength.momentum_proxy);
+    assert_eq!(majority.strength.classification, "強候選");
 
-    assert_eq!(one.strength.support_stem_count, 1);
-    assert_eq!(one.strength.support_branch_count, 0);
-    assert!(!one.strength.momentum_proxy);
-    assert_eq!(two.strength.support_stem_count, 2);
-    assert_eq!(two.strength.support_branch_count, 0);
-    assert!(two.strength.momentum_proxy);
+    // 2026-09-02 學員命例二：同黨三、異黨五 → 只得地，身弱。
+    let minority = analyze(&chart(["丁丑", "癸丑", "壬申", "甲辰"]), &reference(), &[]);
+    assert_eq!(minority.strength.same_party_count, 3);
+    assert!(!minority.strength.momentum_proxy);
+    assert_eq!(minority.strength.classification, "弱候選");
+
+    // Two visible support stems no longer count as 得勢 when the other party is larger.
+    let stems_only = analyze(&chart(["甲午", "丁丑", "甲午", "甲戌"]), &reference(), &[]);
+    assert_eq!(stems_only.strength.support_stem_count, 2);
+    assert_eq!(stems_only.strength.same_party_count, 3);
+    assert!(!stems_only.strength.momentum_proxy);
+}
+
+#[test]
+fn four_to_four_tie_goes_to_the_party_holding_the_month_command() {
+    // 2026-09-02 學員命例一：金水對木火四比四，金得令 → 身強，雖然未得時、未得地。
+    let source = analyze(&chart(["甲寅", "癸酉", "壬午", "癸卯"]), &reference(), &[]);
+    assert_eq!(source.strength.same_party_count, 4);
+    assert_eq!(source.strength.opposing_party_count, 4);
+    assert!(source.strength.month_command_same_party);
+    assert!(source.strength.momentum_proxy);
+    assert!(!source.strength.same_season_element);
+    assert_eq!(source.strength.root_count, 0);
+    assert_eq!(source.strength.classification, "強候選");
+    assert!(source.strength.conclusion.contains("得令者為旺"));
+    // 官藏財顯：the classroom's 財 plan is among the strong-side plans.
+    assert!(source
+        .preferences
+        .plans
+        .iter()
+        .any(|plan| plan.rule_id == "strong-hidden-officer-visible-wealth"));
+
+    // 2026-09-09 兩神相剋：四土四水，水得令 → 財旺身弱。
+    let water_month = analyze(&chart(["戊戌", "癸亥", "戊戌", "癸亥"]), &reference(), &[]);
+    assert!(!water_month.strength.month_command_same_party);
+    assert!(!water_month.strength.momentum_proxy);
+    assert_eq!(water_month.strength.classification, "弱候選");
+
+    // 2026-09-09 兩神相剋：四木四土，木得令 → 建祿身旺。
+    let wood_month = analyze(&chart(["乙未", "己卯", "乙未", "己卯"]), &reference(), &[]);
+    assert!(wood_month.strength.momentum_proxy);
+    assert_eq!(wood_month.strength.classification, "旺候選");
 }
 
 #[test]
@@ -183,7 +223,7 @@ fn references_change_comparison_but_not_classroom_core() {
 
 #[test]
 fn strength_comparison_requires_recognized_categories_on_both_sides() {
-    let weak_chart = chart(["甲寅", "癸酉", "壬午", "癸卯"]);
+    let weak_chart = chart(["丁丑", "癸丑", "壬申", "甲辰"]);
     let unrecognized_app = analyze(
         &weak_chart,
         &LessonModelReference {
@@ -245,7 +285,7 @@ fn strong_chart_without_a_detailed_branch_gets_a_guarded_fuyi_fallback() {
 
 #[test]
 fn seasonal_assessment_stays_plan_specific_for_competing_roles() {
-    let result = analyze(&chart(["戊申", "丙午", "庚午", "癸未"]), &reference(), &[]);
+    let result = analyze(&chart(["庚申", "丙午", "庚申", "癸未"]), &reference(), &[]);
     let notes = serde_json::to_value(&result.preferences.seasonal_compatibility).unwrap();
     let notes = notes
         .as_array()

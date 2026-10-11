@@ -24,7 +24,7 @@
 
       <article class="lesson-step">
         <h4>{{ analysis.strength.title }}</h4><p>{{ analysis.strength.conclusion }}</p>
-        <div class="fact-grid"><span>分類：{{ statusLabel(analysis.strength.classification) }}</span><span>同氣得時：{{ yesNo(analysis.strength.sameSeasonElement) }}</span><span>印當令：{{ yesNo(analysis.strength.sealInSeason) }}</span><span>得勢暫估：{{ yesNo(analysis.strength.momentumProxy) }}</span><span>根氣：{{ analysis.strength.rootCount }} 處</span></div>
+        <div class="fact-grid"><span>分類：{{ statusLabel(analysis.strength.classification) }}</span><span>同氣得時：{{ yesNo(analysis.strength.sameSeasonElement) }}</span><span>印當令：{{ yesNo(analysis.strength.sealInSeason) }}</span><span>得勢：{{ yesNo(analysis.strength.momentumProxy) }}（同黨 {{ analysis.strength.samePartyCount }}：異黨 {{ analysis.strength.opposingPartyCount }}）</span><span>根氣：{{ analysis.strength.rootCount }} 處</span></div>
         <p v-if="analysis.strength.interactions.length" class="notice">互動存在，互動後有效力量未定。</p>
         <details><summary>強弱證據、互動與工程細節</summary>
           <ul><li v-for="interaction in analysis.strength.interactions" :key="interaction.id">{{ interaction.interactionType }}：{{ interaction.target }}（{{ interaction.outcome }}）— {{ statusLabel(interaction.assessment) }}</li></ul>

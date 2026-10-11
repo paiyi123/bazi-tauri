@@ -33,16 +33,39 @@ pub(super) fn build_strength(
             )
         })
         .count();
-    let momentum_proxy = support_stem_count >= 2 || support_branch_count >= 2;
+    // 得勢 (2026-09-02, 2026-09-09): count all eight characters (stems and branch main qi, day
+    // master included) as 同黨 (印、比劫) or 異黨 (食傷、財、官殺). The larger party wins; on a tie
+    // 「得令者為旺」: the party holding the month command wins.
+    let is_same_party = |element: &str| {
+        matches!(
+            family_for_element(&day_element, &Element::from_name(element)),
+            "印" | "比劫"
+        )
+    };
+    let same_party_count = facts
+        .pillars
+        .iter()
+        .flat_map(|pillar| [pillar.stem_element.as_str(), pillar.branch_main_element.as_str()])
+        .filter(|element| is_same_party(element))
+        .count();
+    let opposing_party_count = facts.pillars.len() * 2 - same_party_count;
+    let month_command_same_party = is_same_party(&facts.month_command.element);
+    let party_tie = same_party_count == opposing_party_count;
+    let momentum_proxy =
+        same_party_count > opposing_party_count || (party_tie && month_command_same_party);
     let rooted = !facts.roots.is_empty();
     let observation_count =
         usize::from(same_season_element) + usize::from(momentum_proxy) + usize::from(rooted);
     let pressure_families_surface = pressure_families(facts, true);
     let pressure_families_hidden = pressure_families(facts, false);
+    // On a 四比四 tie the teacher reads the month-command party as decisive (2026-09-02 source
+    // chart: 金得令 → 身強), even when 得時 and 得地 are both missing.
+    let tie_won_by_month = party_tie && month_command_same_party;
     let classification = match observation_count {
         3 if pressure_families_surface.is_empty() => "旺極候選",
         3 => "旺候選",
         2 => "強候選",
+        1 if tie_won_by_month => "強候選",
         1 => "弱候選",
         _ if PRESSURE_FAMILIES
             .iter()
@@ -88,15 +111,25 @@ pub(super) fn build_strength(
             source_date: Some("2026-07-22".to_string()),
         },
         LessonEvidence {
-            id: "strength-momentum-proxy".to_string(),
-            kind: "engineering_proxy".to_string(),
+            id: "strength-party-count".to_string(),
+            kind: "lesson_rule".to_string(),
             pillar: None,
             hidden_stem_layer: None,
             interaction_id: None,
             description: format!(
-                "得勢工程暫估：supportStemCount={support_stem_count}、supportBranchCount={support_branch_count}；任一達 2 即成立，結果={momentum_proxy}。"
+                "得勢：八字中同黨（印、比劫）{same_party_count} 個、異黨（食傷、財、官殺）{opposing_party_count} 個（天干與地支本氣，含日主）；{}，得勢={momentum_proxy}。",
+                if party_tie {
+                    format!(
+                        "數量相同，依「得令者為旺」看月令，月令屬{}",
+                        if month_command_same_party { "同黨" } else { "異黨" }
+                    )
+                } else if same_party_count > opposing_party_count {
+                    "同黨較多".to_string()
+                } else {
+                    "異黨較多".to_string()
+                }
             ),
-            source_date: Some("2026-07-22".to_string()),
+            source_date: Some("2026-09-02".to_string()),
         },
         LessonEvidence {
             id: "strength-roots".to_string(),
@@ -133,10 +166,15 @@ pub(super) fn build_strength(
         "conditional"
     };
     let mut limitations = vec![
-        "supportStemCount >= 2 OR supportBranchCount >= 2 是工程候選門檻，不是老師數值定義。"
-            .to_string(),
+        "得勢只數八字的五行黨別（地支取本氣），不計干支力量大小與合沖後的變化。".to_string(),
         "表層剋洩耗與藏干出現分欄；不以藏干反向力量冒稱表層壓力。".to_string(),
     ];
+    if tie_won_by_month && observation_count == 1 {
+        limitations.push(
+            "同黨異黨四比四、月令屬同黨：依 2026-09-02 課堂「得令者為旺」判強，即使未得時、未得地。"
+                .to_string(),
+        );
+    }
     if !interaction_rows.is_empty() {
         limitations.push("互動後有效力量未定；保留初判並標 conditional。".to_string());
     }
@@ -144,13 +182,18 @@ pub(super) fn build_strength(
     LessonStrengthAnalysis {
         title: "第二步：日主強弱".to_string(),
         conclusion: format!(
-            "三項觀察命中 {observation_count} 項；表層剋洩耗家族為{}，初判{}。",
+            "三項觀察命中 {observation_count} 項；表層剋洩耗家族為{}，初判{}{}。",
             if pressure_families_surface.is_empty() {
                 "無".to_string()
             } else {
                 pressure_families_surface.join("、")
             },
-            classification
+            classification,
+            if tie_won_by_month && observation_count == 1 {
+                "（同黨異黨四比四，得令者為旺）"
+            } else {
+                ""
+            }
         ),
         status: status.to_string(),
         classification,
@@ -158,6 +201,9 @@ pub(super) fn build_strength(
         seal_in_season,
         support_stem_count,
         support_branch_count,
+        same_party_count,
+        opposing_party_count,
+        month_command_same_party,
         momentum_proxy,
         root_count: facts.roots.len(),
         observation_count,

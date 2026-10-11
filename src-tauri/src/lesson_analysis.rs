@@ -45,7 +45,7 @@ pub(crate) fn analyze(
     let comparison = build_comparison(&pattern, &strength, &preferences, reference);
 
     LessonThreeStepAnalysis {
-        version: "classroom-2026-09-v1".to_string(),
+        version: "classroom-2026-10-v2".to_string(),
         status: status.to_string(),
         facts,
         pattern,

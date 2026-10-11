@@ -1,5 +1,7 @@
 # 特殊命例：巳午未三會不化與甲庚隔一位沖
 
+> 2026-10-10 依書修正 `quant_model.rs` 後：本例各干支與總分 `+14.5` 和書完全相同，已有 Rust 測試 `book_tests::special_male_case_matches_book`。
+
 ## 四柱
 
 - 年柱：`癸巳`

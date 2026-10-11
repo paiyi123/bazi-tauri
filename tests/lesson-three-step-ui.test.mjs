@@ -55,9 +55,9 @@ test('renders graceful absent-analysis state', async () => {
   assert.match(html, /此結果尚無三步分析/);
 });
 
-test('renders the four 0902 source cards with evidence layers beside the differing engineering result', async () => {
+test('renders the four 0902 source cards with evidence layers beside the engineering result', async () => {
   const html = await render('/src/components/CourseContentPanel.vue', { result: { quantModel: { lessonContent: lesson0902 } } });
-  for (const text of ['本命：正印格與取用對照', '戊寅：喜木為何未直接判好', '己卯：沖忌印的課堂解釋', '庚辰：保留結論與證據缺口', '事實：', '本課派說法：', '補充推論：', 'D:/Data/20260902.txt', '字元', '作用鏈未交代', '弱候選', '身強', '用神候選：火']) {
+  for (const text of ['本命：正印格與取用對照', '戊寅：喜木為何未直接判好', '己卯：沖忌印的課堂解釋', '庚辰：保留結論與證據缺口', '事實：', '本課派說法：', '補充推論：', 'D:/Data/20260902.txt', '字元', '作用鏈未交代', '強候選', '身強', '用神候選：火']) {
     assert.ok(html.includes(text), `missing 0902 content: ${text}`);
   }
   assert.equal((html.match(/2026\/09\/02 男命原例｜/g) || []).length, 4);

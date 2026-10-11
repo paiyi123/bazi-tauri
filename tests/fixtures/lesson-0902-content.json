@@ -296,7 +296,7 @@
       ],
       "rejectedAlternatives": [
         "本課例不套從格或專旺；用火喜木依賴老師的身強判斷。",
-        "課堂三步演算法可判弱候選；不為了與老師一致而改寫一般強弱門檻或正式用神。",
+        "課堂三步演算法依 0902 口訣『同黨異黨四比四，得令者為旺』判強候選；這是一般得勢規則，不是只為本例特判。",
         "課堂現場回饋與原始推測須分開；不能把事後解釋當作預測通過。",
         "適用範圍：只比對本課四柱原例；大運序列照錄男命課例，未驗算生日與交運日期，不表示目前正行該運。"
       ]
@@ -427,7 +427,7 @@
     }
   ],
   "threeStepAnalysis": {
-    "version": "classroom-2026-09-v1",
+    "version": "classroom-2026-10-v2",
     "status": "conditional",
     "facts": {
       "title": "排盤事實",
@@ -806,13 +806,16 @@
     },
     "strength": {
       "title": "第二步：日主強弱",
-      "conclusion": "三項觀察命中 1 項；表層剋洩耗家族為食傷、財，初判弱候選。",
+      "conclusion": "三項觀察命中 1 項；表層剋洩耗家族為食傷、財，初判強候選（同黨異黨四比四，得令者為旺）。",
       "status": "conditional",
-      "classification": "弱候選",
+      "classification": "強候選",
       "sameSeasonElement": false,
       "sealInSeason": true,
       "supportStemCount": 2,
       "supportBranchCount": 1,
+      "samePartyCount": 4,
+      "opposingPartyCount": 4,
+      "monthCommandSameParty": true,
       "momentumProxy": true,
       "rootCount": 0,
       "observationCount": 1,
@@ -868,13 +871,13 @@
           "sourceDate": "2026-07-22"
         },
         {
-          "id": "strength-momentum-proxy",
-          "kind": "engineering_proxy",
+          "id": "strength-party-count",
+          "kind": "lesson_rule",
           "pillar": null,
           "hiddenStemLayer": null,
           "interactionId": null,
-          "description": "得勢工程暫估：supportStemCount=2、supportBranchCount=1；任一達 2 即成立，結果=true。",
-          "sourceDate": "2026-07-22"
+          "description": "得勢：八字中同黨（印、比劫）4 個、異黨（食傷、財、官殺）4 個（天干與地支本氣，含日主）；數量相同，依「得令者為旺」看月令，月令屬同黨，得勢=true。",
+          "sourceDate": "2026-09-02"
         },
         {
           "id": "strength-roots",
@@ -914,124 +917,167 @@
         }
       ],
       "limitations": [
-        "supportStemCount >= 2 OR supportBranchCount >= 2 是工程候選門檻，不是老師數值定義。",
+        "得勢只數八字的五行黨別（地支取本氣），不計干支力量大小與合沖後的變化。",
         "表層剋洩耗與藏干出現分欄；不以藏干反向力量冒稱表層壓力。",
+        "同黨異黨四比四、月令屬同黨：依 2026-09-02 課堂「得令者為旺」判強，即使未得時、未得地。",
         "互動後有效力量未定；保留初判並標 conditional。"
       ]
     },
     "preferences": {
       "title": "第三步：用神與喜忌",
-      "conclusion": "依實際表層與根氣位置保留 2 個條件方案；排序不代表優先。",
+      "conclusion": "依實際表層與根氣位置保留 3 個條件方案；排序不代表優先。",
       "status": "conditional",
       "plans": [
         {
-          "ruleId": "weak-output-use-seal",
-          "title": "身弱食傷：印制食傷扶身",
+          "ruleId": "strong-hidden-officer-visible-wealth",
+          "title": "官藏財顯：財候選",
           "applicability": "conditional",
-          "condition": "若按普通格論，食傷確為主要洩身壓力，且印未受制時",
+          "condition": "若按普通格論，官殺藏支且財在天干或支本氣可見，財確能承擔耗身時",
           "useDirections": [
             {
-              "family": "印",
-              "element": "金",
+              "family": "財",
+              "element": "火",
               "role": "use",
-              "reason": "印家族依日主五行換算為金。"
+              "reason": "財家族依日主五行換算為火。"
             }
           ],
           "favorableDirections": [
             {
-              "family": "比劫",
-              "element": "水",
+              "family": "食傷",
+              "element": "木",
               "role": "favorable",
-              "reason": "比劫家族依日主五行換算為水。"
+              "reason": "食傷家族依日主五行換算為木。"
             }
           ],
           "unfavorableDirections": [
             {
-              "family": "財",
-              "element": "火",
+              "family": "比劫",
+              "element": "水",
               "role": "unfavorable",
-              "reason": "財家族依日主五行換算為火。"
+              "reason": "比劫家族依日主五行換算為水。"
             },
             {
-              "family": "食傷",
-              "element": "木",
+              "family": "印",
+              "element": "金",
               "role": "unfavorable",
-              "reason": "食傷家族依日主五行換算為木。"
+              "reason": "印家族依日主五行換算為金。"
             }
           ],
           "conditionalDirections": [],
           "evidenceIds": [
             "fact-hidden-1-1",
-            "fact-hidden-2-1",
+            "fact-hidden-1-2",
+            "fact-hidden-1-3",
+            "fact-hidden-3-1",
+            "fact-hidden-3-2",
+            "fact-hidden-4-1",
+            "fact-stem-1"
+          ],
+          "rejections": [
+            "支本氣顯露不冒稱透干",
+            "財可見不代表已認證有效力量"
+          ],
+          "sources": [
+            "2026-09-02"
+          ]
+        },
+        {
+          "ruleId": "strong-peer-use-output",
+          "title": "強旺比劫：食傷洩比",
+          "applicability": "conditional",
+          "condition": "若按普通格論，且比劫為主導問題，食傷可見並有財承接時",
+          "useDirections": [
+            {
+              "family": "食傷",
+              "element": "木",
+              "role": "use",
+              "reason": "食傷家族依日主五行換算為木。"
+            }
+          ],
+          "favorableDirections": [
+            {
+              "family": "財",
+              "element": "火",
+              "role": "favorable",
+              "reason": "財家族依日主五行換算為火。"
+            }
+          ],
+          "unfavorableDirections": [
+            {
+              "family": "印",
+              "element": "金",
+              "role": "unfavorable",
+              "reason": "印家族依日主五行換算為金。"
+            }
+          ],
+          "conditionalDirections": [],
+          "evidenceIds": [
+            "fact-hidden-1-1",
+            "fact-hidden-1-2",
+            "fact-hidden-3-1",
             "fact-hidden-4-1",
             "fact-stem-1",
             "fact-stem-2",
             "fact-stem-4"
           ],
           "rejections": [
-            "印可能受制",
-            "食傷生財可能加重耗身"
+            "印可能制食傷",
+            "財的承接能力尚未量化"
           ],
           "sources": [
             "2026-08-26"
           ]
         },
         {
-          "ruleId": "weak-wealth-use-peer",
-          "title": "身弱財旺：比劫分財",
+          "ruleId": "strong-seal-use-wealth",
+          "title": "強旺印多：財制印",
           "applicability": "conditional",
-          "condition": "若按普通格論，財確為主要耗身壓力，比劫不受官殺制時",
+          "condition": "若按普通格論，且印確為本局主導問題，財具位置與承接能力時",
           "useDirections": [
             {
-              "family": "比劫",
-              "element": "水",
+              "family": "財",
+              "element": "火",
               "role": "use",
-              "reason": "比劫家族依日主五行換算為水。"
+              "reason": "財家族依日主五行換算為火。"
             }
           ],
           "favorableDirections": [
             {
-              "family": "印",
-              "element": "金",
+              "family": "食傷",
+              "element": "木",
               "role": "favorable",
-              "reason": "印家族依日主五行換算為金。"
+              "reason": "食傷家族依日主五行換算為木。"
             }
           ],
           "unfavorableDirections": [
             {
-              "family": "食傷",
-              "element": "木",
+              "family": "比劫",
+              "element": "水",
               "role": "unfavorable",
-              "reason": "食傷家族依日主五行換算為木。"
+              "reason": "比劫家族依日主五行換算為水。"
             },
             {
-              "family": "官殺",
-              "element": "土",
+              "family": "印",
+              "element": "金",
               "role": "unfavorable",
-              "reason": "官殺家族依日主五行換算為土。"
-            },
-            {
-              "family": "財",
-              "element": "火",
-              "role": "unfavorable",
-              "reason": "財家族依日主五行換算為火。"
+              "reason": "印家族依日主五行換算為金。"
             }
           ],
           "conditionalDirections": [],
           "evidenceIds": [
+            "fact-hidden-1-1",
             "fact-hidden-1-2",
             "fact-hidden-2-1",
             "fact-hidden-3-1",
-            "fact-stem-2",
-            "fact-stem-4"
+            "fact-hidden-4-1",
+            "fact-stem-1"
           ],
           "rejections": [
-            "食傷可能生財",
-            "官殺可能制比",
-            "財可能破印"
+            "財僅出現不代表能制印",
+            "比劫可能制財",
+            "印可能制食傷"
           ],
           "sources": [
-            "2026-08-12",
             "2026-08-26"
           ]
         }
@@ -1131,22 +1177,31 @@
       ],
       "medicineNotes": [
         {
-          "protectedPlanRuleId": "weak-output-use-seal",
-          "protectedFamily": "印",
-          "protectedElement": "金",
-          "hindranceFamily": "財",
-          "medicineFamily": "比劫",
+          "protectedPlanRuleId": "strong-hidden-officer-visible-wealth",
+          "protectedFamily": "財",
+          "protectedElement": "火",
+          "hindranceFamily": "比劫",
+          "medicineFamily": "食傷",
           "status": "conditional",
-          "explanation": "只在方案 weak-output-use-seal 中保護印方向；財是否為病、比劫是否能護用尚須比較力量。"
+          "explanation": "只在方案 strong-hidden-officer-visible-wealth 中保護財方向；比劫是否為病、食傷是否能護用尚須比較力量。"
         },
         {
-          "protectedPlanRuleId": "weak-wealth-use-peer",
-          "protectedFamily": "比劫",
-          "protectedElement": "水",
-          "hindranceFamily": "食傷",
-          "medicineFamily": "印",
+          "protectedPlanRuleId": "strong-peer-use-output",
+          "protectedFamily": "食傷",
+          "protectedElement": "木",
+          "hindranceFamily": "印",
+          "medicineFamily": "財",
           "status": "conditional",
-          "explanation": "只在方案 weak-wealth-use-peer 中保護比劫方向；食傷是否為病、印是否能護用尚須比較力量。"
+          "explanation": "只在方案 strong-peer-use-output 中保護食傷方向；印是否為病、財是否能護用尚須比較力量。"
+        },
+        {
+          "protectedPlanRuleId": "strong-seal-use-wealth",
+          "protectedFamily": "財",
+          "protectedElement": "火",
+          "hindranceFamily": "比劫",
+          "medicineFamily": "食傷",
+          "status": "conditional",
+          "explanation": "只在方案 strong-seal-use-wealth 中保護財方向；比劫是否為病、食傷是否能護用尚須比較力量。"
         }
       ],
       "seasonalCompatibility": [
@@ -1161,22 +1216,31 @@
       ],
       "evidence": [
         {
-          "id": "preference-weak-output-use-seal",
+          "id": "preference-strong-hidden-officer-visible-wealth",
           "kind": "lesson_rule",
           "pillar": null,
           "hiddenStemLayer": null,
           "interactionId": null,
-          "description": "身弱食傷：印制食傷扶身；若按普通格論，食傷確為主要洩身壓力，且印未受制時。",
+          "description": "官藏財顯：財候選；若按普通格論，官殺藏支且財在天干或支本氣可見，財確能承擔耗身時。",
+          "sourceDate": "2026-09-02"
+        },
+        {
+          "id": "preference-strong-peer-use-output",
+          "kind": "lesson_rule",
+          "pillar": null,
+          "hiddenStemLayer": null,
+          "interactionId": null,
+          "description": "強旺比劫：食傷洩比；若按普通格論，且比劫為主導問題，食傷可見並有財承接時。",
           "sourceDate": "2026-08-26"
         },
         {
-          "id": "preference-weak-wealth-use-peer",
+          "id": "preference-strong-seal-use-wealth",
           "kind": "lesson_rule",
           "pillar": null,
           "hiddenStemLayer": null,
           "interactionId": null,
-          "description": "身弱財旺：比劫分財；若按普通格論，財確為主要耗身壓力，比劫不受官殺制時。",
-          "sourceDate": "2026-08-12"
+          "description": "強旺印多：財制印；若按普通格論，且印確為本局主導問題，財具位置與承接能力時。",
+          "sourceDate": "2026-08-26"
         }
       ],
       "limitations": [
@@ -1194,14 +1258,14 @@
       },
       "strength": {
         "appValue": "偏強",
-        "lessonValue": "弱候選",
-        "agreementStatus": "conflict",
+        "lessonValue": "強候選",
+        "agreementStatus": "agree",
         "note": "App 量化強弱只供比較，不參與課堂三項觀察。"
       },
       "preferences": {
         "appValue": "木、火",
-        "lessonValue": "水、金",
-        "agreementStatus": "conflict",
+        "lessonValue": "木、火",
+        "agreementStatus": "partial",
         "note": "僅比較元素方向；不把跨方案角色合併成新的正式用神。"
       }
     },

@@ -1,11 +1,11 @@
 # Classroom UI fixtures
 
-These JSON files are **unaltered `quantModel.lessonContent.threeStepAnalysis` subtrees** of complete production `analyze_pillars` responses, exported by the test-only `LESSON_QA_OUTPUT_DIR` opt-in in `src-tauri/src/bazi.rs`. Other response fields, not analysis fields, are omitted. Exported 2026-09-07; rule version `classroom-2026-09-v1`.
+These JSON files are **unaltered `quantModel.lessonContent.threeStepAnalysis` subtrees** of complete production `analyze_pillars` responses, exported by the test-only `LESSON_QA_OUTPUT_DIR` opt-in in `src-tauri/src/bazi.rs`. Other response fields, not analysis fields, are omitted. Exported 2026-09-07 and regenerated 2026-10-10; rule version `classroom-2026-10-v2`.
 
 | File | Four pillars (year / month / day / hour) | Provenance and purpose |
 | --- | --- | --- |
 | lesson-general.json | 戊申 / 丙辰 / 庚午 / 癸未 | Synthetic structural input; four separate conditional plans |
-| lesson-source.json | 甲寅 / 癸酉 / 壬午 / 癸卯 | 2026-09-02 source chart; selected ordinary candidate. Teacher strong and engineering weak differ; this is not a teacher-validation golden answer |
+| lesson-source.json | 甲寅 / 癸酉 / 壬午 / 癸卯 | 2026-09-02 source chart; selected ordinary candidate. Since `classroom-2026-10-v2` the 四比四「得令者為旺」rule gives 強候選, matching the teacher |
 | lesson-single.json | 甲寅 / 甲寅 / 甲寅 / 甲寅 | Synthetic structural input; single guarded ordinary fallback, not a dated real-life chart |
 | lesson-insufficient.json | 戊戌 / 己丑 / 甲午 / 丁巳 | Synthetic structural input; actual insufficient strength/preferences and no plans |
 

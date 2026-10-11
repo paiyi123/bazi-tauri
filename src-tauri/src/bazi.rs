@@ -1129,7 +1129,7 @@ mod tests {
 
         assert_eq!(
             json["quantModel"]["lessonContent"]["threeStepAnalysis"]["version"],
-            "classroom-2026-09-v1"
+            "classroom-2026-10-v2"
         );
     }
 
@@ -1274,7 +1274,7 @@ mod tests {
         assert!(geng.conclusion.contains("作用鏈未交代"));
         assert!(geng.lesson_candidate.is_none());
         // The source conclusion must coexist with, not replace, the engineering result.
-        assert_eq!(content.three_step_analysis.as_ref().unwrap().strength.classification, "弱候選");
+        assert_eq!(content.three_step_analysis.as_ref().unwrap().strength.classification, "強候選");
         assert_eq!(response.ge_ju, "直輸四柱分析");
         let serialized = serde_json::to_string(&cases).unwrap();
         for forbidden in ["不能結婚", "必然賺錢", "不能合夥", "健康預測"] {
