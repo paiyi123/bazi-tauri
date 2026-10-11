@@ -83,6 +83,16 @@
                   ><span v-else-if="tag.judgement?.favor === 'bad'" class="favor-mark">▼</span>
                 </span>
               </div>
+              <div v-if="luckEventsByRow.get(row.index)?.length" class="fate-event-list">
+                <span
+                  v-for="event in luckEventsByRow.get(row.index)"
+                  :key="`luck-event-${row.index}-${event.kind}`"
+                  :class="['fate-event-tag', `is-${event.level}`]"
+                  :title="event.detail"
+                >
+                  {{ event.label }}
+                </span>
+              </div>
             </button>
           </div>
         </el-scrollbar>
@@ -133,6 +143,16 @@
                 >
                   <span :class="['wuxing-char', `wuxing-${stemElement(item.stem)}`]">{{ item.stem }}</span>
                   <span class="hidden-ten-god-text">{{ item.tenGod }}</span>
+                </span>
+              </div>
+              <div v-if="annualEventsByYear.get(annual.year)?.length" class="fate-event-list">
+                <span
+                  v-for="event in annualEventsByYear.get(annual.year)"
+                  :key="`annual-event-${annual.year}-${event.kind}`"
+                  :class="['fate-event-tag', `is-${event.level}`]"
+                  :title="event.detail"
+                >
+                  {{ event.label }}
                 </span>
               </div>
               <div class="fate-cell-meta">{{ annual.age }}歲</div>
@@ -201,6 +221,14 @@
       <span>目前大運：{{ selectedLuckRow.ganZhi }}（{{ selectedLuckRow.ageRange }}歲 / {{ selectedLuckRow.yearRange }}）</span>
       <span v-if="showAnnualLane && selectedAnnualRow">目前流年：{{ selectedAnnualRow.year }} {{ selectedAnnualRow.ganZhi }}（{{ selectedAnnualRow.age }}歲）</span>
       <span v-if="showMonthLane && selectedMonthRow">目前流月：{{ formatLiuYueLabel(selectedMonthRow.month) }} {{ selectedMonthRow.ganZhi }}</span>
+    </div>
+
+    <div v-if="selectedEventNotes.length" class="luck-event-notes">
+      <div class="luck-event-notes-title">事件提示（依陸致極兩本教程，只標出容易有事的時機，不代表吉凶）</div>
+      <div v-for="note in selectedEventNotes" :key="note.key" class="luck-event-note">
+        <span :class="['fate-event-tag', `is-${note.level}`]">{{ note.scope }}・{{ note.label }}</span>
+        <span>{{ note.detail }}</span>
+      </div>
     </div>
 
     <div class="interaction-matrix-shell">
@@ -275,6 +303,7 @@ import {
   type RelationJudgement,
   type RelationSide,
 } from "../utils/lessonPreference";
+import { annualEvents, majorLuckEvents, type LuckEventContext } from "../utils/luckEvents";
 
 const props = defineProps<{
   result: BaziResponse;
@@ -776,6 +805,46 @@ const selectedMonthRow = computed(
 );
 
 const displayedAnnualRows = computed(() => descendingDisplayRows(selectedLuckRow.value?.liuNian));
+
+const luckEventContext = computed<LuckEventContext>(() => {
+  const lu = props.result.quantModel?.luStrength;
+  return {
+    natal: natalItems.value.slice(0, 4).map((item) => `${item.stem}${item.branch}`),
+    strength: lu?.category,
+    rootless: lu ? lu.roots.length === 0 : undefined,
+  };
+});
+
+const luckEventsByRow = computed(
+  () => new Map(rows.value.map((row) => [row.index, majorLuckEvents(row.ganZhi, luckEventContext.value)])),
+);
+
+const annualEventsByYear = computed(
+  () =>
+    new Map(
+      (selectedLuckRow.value?.liuNian ?? []).map((annual) => [
+        annual.year,
+        annualEvents(annual.ganZhi, selectedLuckRow.value?.ganZhi ?? "", luckEventContext.value),
+      ]),
+    ),
+);
+
+const selectedEventNotes = computed(() => {
+  const notes: { key: string; scope: string; label: string; level: string; detail: string }[] = [];
+  const luck = selectedLuckRow.value;
+  if (luck) {
+    (luckEventsByRow.value.get(luck.index) ?? []).forEach((event) =>
+      notes.push({ key: `luck-${event.kind}`, scope: `大運${luck.ganZhi}`, ...event }),
+    );
+  }
+  const annual = showAnnualLane.value ? selectedAnnualRow.value : null;
+  if (annual) {
+    (annualEventsByYear.value.get(annual.year) ?? []).forEach((event) =>
+      notes.push({ key: `annual-${event.kind}`, scope: `${annual.year}${annual.ganZhi}`, ...event }),
+    );
+  }
+  return notes;
+});
 
 const displayedMonthRows = computed(() => descendingDisplayRows(selectedAnnualRow.value?.liuYue));
 
@@ -1565,6 +1634,55 @@ watch(expandMonthLane, (expanded) => {
   font-size: calc(13px * var(--app-font-scale));
 }
 
+.fate-event-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 3px;
+}
+
+.fate-event-tag {
+  padding: 0 5px;
+  border-radius: 6px;
+  font-size: calc(11px * var(--app-font-scale));
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.fate-event-tag.is-warn {
+  color: #fff;
+  background: #b45309;
+}
+
+.fate-event-tag.is-info {
+  color: #44403c;
+  background: #e7e5e4;
+}
+
+.luck-event-notes {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(180, 83, 9, 0.06);
+  font-size: calc(13px * var(--app-font-scale));
+  color: #44403c;
+}
+
+.luck-event-notes-title {
+  color: #78716c;
+  font-size: calc(12px * var(--app-font-scale));
+}
+
+.luck-event-note {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  line-height: 1.55;
+}
+
 .interaction-matrix-shell {
   margin-top: 10px;
   overflow-x: auto;
@@ -2075,5 +2193,28 @@ watch(expandMonthLane, (expanded) => {
 .interaction-matrix-shell {
   border-color: var(--bazi-border);
   background: rgba(255, 250, 243, 0.82);
+}
+
+/* 流年格子會多出事件提示，高度隨內容延伸（同一列的格子會一起拉齊）。 */
+.fate-cell.fate-cell-annual {
+  height: auto;
+  min-height: 240px;
+  grid-template-rows: auto minmax(72px, auto) minmax(72px, auto);
+  grid-auto-rows: auto;
+  align-content: start;
+}
+
+.luck-panel.is-compact .fate-cell.fate-cell-annual {
+  height: auto;
+  min-height: 286px;
+}
+
+.luck-panel.is-compact .fate-event-tag {
+  padding: 0 3px;
+  font-size: calc(9px * var(--app-font-scale));
+}
+
+.luck-event-note .fate-event-tag {
+  flex-shrink: 0;
 }
 </style>
