@@ -1,5 +1,6 @@
 mod bazi;
 mod lesson_analysis;
+mod lu_strength;
 mod print_template;
 mod quant_model;
 mod shen_sha;

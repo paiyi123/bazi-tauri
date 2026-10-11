@@ -359,6 +359,7 @@ export interface QuantModelResponse {
   specialPattern?: QuantSpecialPattern;
   shaYin?: QuantShaYin;
   lessonContent?: QuantLessonContent;
+  luStrength?: LuStrengthAnalysis;
   interactions?: QuantModelInteraction[];
   stemScores: QuantModelPillarScore[];
   branchScores: QuantModelPillarScore[];
@@ -471,4 +472,42 @@ export interface PrintContext {
   inputText: string;
   timeLabel?: string;
   note?: string;
+}
+
+export interface LuStrengthCheck {
+  item: string;
+  result: string;
+  points: number;
+  detail: string;
+}
+
+export interface LuStrengthRoot {
+  pillar: string;
+  branch: string;
+  hiddenStem: string;
+  grade: string;
+  weight: number;
+  note: string;
+}
+
+export interface LuStrengthFlag {
+  kind: string;
+  title: string;
+  detail: string;
+}
+
+export interface LuStrengthAnalysis {
+  method: string;
+  verdict: string;
+  category: string;
+  score: number;
+  threshold: number;
+  monthState: string;
+  samePartyCount: number;
+  checks: LuStrengthCheck[];
+  roots: LuStrengthRoot[];
+  flags: LuStrengthFlag[];
+  conclusion: string;
+  sources: string[];
+  limitations: string[];
 }

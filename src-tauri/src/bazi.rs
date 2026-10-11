@@ -472,6 +472,7 @@ pub struct QuantModelResponse {
     pub special_pattern: Option<QuantSpecialPattern>,
     pub sha_yin: Option<QuantShaYin>,
     pub lesson_content: Option<QuantLessonContent>,
+    pub lu_strength: Option<crate::lu_strength::LuStrengthAnalysis>,
     pub interactions: Option<Vec<QuantModelInteraction>>,
     pub stem_scores: Vec<QuantModelPillarScore>,
     pub branch_scores: Vec<QuantModelPillarScore>,

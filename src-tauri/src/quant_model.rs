@@ -413,6 +413,7 @@ pub(crate) fn build_quant_model_response(
         special_pattern,
         sha_yin,
         lesson_content,
+        lu_strength: Some(crate::lu_strength::analyze(natal_cycles)),
         interactions: Some(interactions),
         stem_scores: bundle.stem_scores,
         branch_scores: bundle.branch_scores,
