@@ -432,6 +432,7 @@ export interface BaziResponse {
   luckStart: LuckStart;
   daYun: DaYun[];
   quantModel?: QuantModelResponse;
+  gender?: Gender;
 }
 
 export interface LunarMonthOption {

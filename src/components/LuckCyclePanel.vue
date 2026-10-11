@@ -87,10 +87,10 @@
                 <span
                   v-for="event in luckEventsByRow.get(row.index)"
                   :key="`luck-event-${row.index}-${event.kind}`"
-                  :class="['fate-event-tag', `is-${event.level}`]"
+                  :class="['fate-event-tag', `is-${event.level}`, event.topic && `is-topic-${event.topic}`]"
                   :title="event.detail"
                 >
-                  {{ event.label }}
+                  <b v-if="event.topic" class="topic-mark">{{ TOPIC_MARK[event.topic] }}</b>{{ event.label }}
                 </span>
               </div>
             </button>
@@ -149,10 +149,10 @@
                 <span
                   v-for="event in annualEventsByYear.get(annual.year)"
                   :key="`annual-event-${annual.year}-${event.kind}`"
-                  :class="['fate-event-tag', `is-${event.level}`]"
+                  :class="['fate-event-tag', `is-${event.level}`, event.topic && `is-topic-${event.topic}`]"
                   :title="event.detail"
                 >
-                  {{ event.label }}
+                  <b v-if="event.topic" class="topic-mark">{{ TOPIC_MARK[event.topic] }}</b>{{ event.label }}
                 </span>
               </div>
               <div class="fate-cell-meta">{{ annual.age }}歲</div>
@@ -226,7 +226,9 @@
     <div v-if="selectedEventNotes.length" class="luck-event-notes">
       <div class="luck-event-notes-title">事件提示（依陸致極兩本教程，只標出容易有事的時機，不代表吉凶）</div>
       <div v-for="note in selectedEventNotes" :key="note.key" class="luck-event-note">
-        <span :class="['fate-event-tag', `is-${note.level}`]">{{ note.scope }}・{{ note.label }}</span>
+        <span :class="['fate-event-tag', `is-${note.level}`, note.topic && `is-topic-${note.topic}`]"
+          ><b v-if="note.topic" class="topic-mark">{{ TOPIC_MARK[note.topic] }}</b>{{ note.scope }}・{{ note.label }}</span
+        >
         <span>{{ note.detail }}</span>
       </div>
     </div>
@@ -303,7 +305,10 @@ import {
   type RelationJudgement,
   type RelationSide,
 } from "../utils/lessonPreference";
-import { annualEvents, majorLuckEvents, type LuckEventContext } from "../utils/luckEvents";
+import { annualEvents, majorLuckEvents, type LuckEvent, type LuckEventContext } from "../utils/luckEvents";
+import { spouseStorageYears, topicEvents, type TopicContext } from "../utils/lifeTopics";
+
+const TOPIC_MARK: Record<string, string> = { marriage: "婚", wealth: "財", health: "健" };
 
 const props = defineProps<{
   result: BaziResponse;
@@ -815,22 +820,67 @@ const luckEventContext = computed<LuckEventContext>(() => {
   };
 });
 
-const luckEventsByRow = computed(
-  () => new Map(rows.value.map((row) => [row.index, majorLuckEvents(row.ganZhi, luckEventContext.value)])),
+const topicContext = computed<TopicContext>(() => ({
+  natal: luckEventContext.value.natal,
+  gender: props.result.gender,
+  strength: luckEventContext.value.strength,
+}));
+
+// 配偶星只藏在庫中時，沖開該庫的流年依時間順序分成婚期候選與婚變留意（命例 98）。
+const spouseStorageByYear = computed(() =>
+  spouseStorageYears(
+    topicContext.value,
+    rows.value.flatMap((row) => row.liuNian ?? []).map((annual) => ({ year: annual.year, ganZhi: annual.ganZhi, age: annual.age })),
+  ),
 );
 
-const annualEventsByYear = computed(
+const luckEventsByRow = computed(
   () =>
     new Map(
-      (selectedLuckRow.value?.liuNian ?? []).map((annual) => [
-        annual.year,
-        annualEvents(annual.ganZhi, selectedLuckRow.value?.ganZhi ?? "", luckEventContext.value),
+      rows.value.map((row) => [
+        row.index,
+        [...majorLuckEvents(row.ganZhi, luckEventContext.value), ...topicEvents(row.ganZhi, "運", topicContext.value)],
       ]),
     ),
 );
 
+function spouseStorageEvent(year: number): LuckEvent[] {
+  const state = spouseStorageByYear.value.get(year);
+  if (!state) return [];
+  const star = props.result.gender === "FEMALE" ? "夫星" : "妻星";
+  return [
+    {
+      kind: "marriage-open-storage",
+      label: state === "first" ? `沖開${star}庫` : `再沖${star}庫`,
+      level: state === "first" ? "info" : "warn",
+      topic: "marriage",
+      detail:
+        state === "first"
+          ? `${star}只藏在庫中，這是二十歲後第一次被流年沖開：作者觀察常是結婚時機（命例 98）。`
+          : `${star}庫再次被沖：作者觀察已婚者此時往往婚變（命例 98）。`,
+    },
+  ];
+}
+
+const annualEventsByYear = computed(
+  () =>
+    new Map(
+      (selectedLuckRow.value?.liuNian ?? []).map((annual) => {
+        const luck = selectedLuckRow.value?.ganZhi ?? "";
+        return [
+          annual.year,
+          [
+            ...annualEvents(annual.ganZhi, luck, luckEventContext.value),
+            ...spouseStorageEvent(annual.year),
+            ...topicEvents(annual.ganZhi, "歲", topicContext.value, luck),
+          ],
+        ];
+      }),
+    ),
+);
+
 const selectedEventNotes = computed(() => {
-  const notes: { key: string; scope: string; label: string; level: string; detail: string }[] = [];
+  const notes: { key: string; scope: string; label: string; level: string; detail: string; topic?: string }[] = [];
   const luck = selectedLuckRow.value;
   if (luck) {
     (luckEventsByRow.value.get(luck.index) ?? []).forEach((event) =>
@@ -2216,5 +2266,40 @@ watch(expandMonthLane, (expanded) => {
 
 .luck-event-note .fate-event-tag {
   flex-shrink: 0;
+}
+
+.topic-mark {
+  margin-right: 2px;
+  font-weight: 800;
+}
+
+.fate-event-tag.is-topic-marriage {
+  color: #9d174d;
+  background: #fce7f3;
+}
+
+.fate-event-tag.is-topic-marriage.is-warn {
+  color: #fff;
+  background: #be185d;
+}
+
+.fate-event-tag.is-topic-wealth {
+  color: #854d0e;
+  background: #fef3c7;
+}
+
+.fate-event-tag.is-topic-wealth.is-warn {
+  color: #fff;
+  background: #a16207;
+}
+
+.fate-event-tag.is-topic-health {
+  color: #115e59;
+  background: #ccfbf1;
+}
+
+.fate-event-tag.is-topic-health.is-warn {
+  color: #fff;
+  background: #0f766e;
 }
 </style>

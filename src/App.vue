@@ -59,6 +59,7 @@
           <FiveElementFlowPanel :result="result" :compact="false" />
           <LuckCyclePanel :result="result" :compact="false" @preview-change="handlePreviewChange" />
           <StrengthComparisonPanel :result="result" />
+          <LifeTopicsPanel :result="result" />
           <FiveElementStrengthPanel :result="result" />
           <CourseContentPanel :result="result" />
           <QuantFivePhasePanel :result="result" :compact="false" @preview-change="handlePreviewChange" />
@@ -102,6 +103,7 @@
             <el-tab-pane label="分析" name="analysis" lazy>
               <div class="compact-section-stack">
                 <StrengthComparisonPanel :result="result" />
+                <LifeTopicsPanel :result="result" />
                 <FiveElementStrengthPanel :result="result" />
                 <CourseContentPanel :result="result" />
                 <TenGodPanel :result="result" />
@@ -156,6 +158,7 @@ import BirthForm from "./components/BirthForm.vue";
 import CourseContentPanel from "./components/CourseContentPanel.vue";
 import FiveElementStrengthPanel from "./components/FiveElementStrengthPanel.vue";
 import StrengthComparisonPanel from "./components/StrengthComparisonPanel.vue";
+import LifeTopicsPanel from "./components/LifeTopicsPanel.vue";
 import LuckCyclePanel from "./components/LuckCyclePanel.vue";
 import PillarPanel from "./components/PillarPanel.vue";
 import PillarInputForm from "./components/PillarInputForm.vue";

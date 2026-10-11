@@ -514,6 +514,7 @@ pub struct BaziResponse {
     pub luck_start: LuckStartDto,
     pub da_yun: Vec<DaYunDto>,
     pub quant_model: Option<QuantModelResponse>,
+    pub gender: Gender,
 }
 
 #[derive(Debug, Clone)]
@@ -737,6 +738,7 @@ pub fn calculate_bazi(request: BaziRequest) -> Result<BaziResponse, String> {
         luck_start,
         da_yun,
         quant_model,
+        gender: request.gender.clone(),
     };
     response.shen_sha = Some(analyze_shen_sha(&response));
     Ok(finalize_bazi_response(response))
@@ -835,6 +837,7 @@ pub fn analyze_pillars(request: PillarAnalyzeRequest) -> Result<BaziResponse, St
         },
         da_yun,
         quant_model,
+        gender: gender.clone(),
     };
     response.shen_sha = Some(analyze_shen_sha(&response));
     Ok(finalize_bazi_response(response))
