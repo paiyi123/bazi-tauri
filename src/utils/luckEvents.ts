@@ -23,6 +23,10 @@ export interface LuckEventContext {
   strength?: string;
   /** 日主在原局是否無根。 */
   rootless?: boolean;
+  /** 陸致極強弱檢核的細分等級（很強、強、稍強……很弱）。 */
+  verdict?: string;
+  /** 《基礎教程》主導勢力取的格局，例如「七殺格」。 */
+  pattern?: string;
 }
 
 const PILLAR_NAMES = ["年", "月", "日", "時"];
@@ -40,6 +44,13 @@ const THREE_PUNISHMENTS = ["寅巳申", "丑戌未"];
 const LU: Record<string, string> = { 甲: "寅", 乙: "卯", 丙: "巳", 丁: "午", 戊: "巳", 己: "午", 庚: "申", 辛: "酉", 壬: "亥", 癸: "子" };
 const REN: Record<string, string> = { 甲: "卯", 丙: "午", 戊: "午", 庚: "酉", 壬: "子" };
 const STORAGE = "辰戌丑未";
+/** 表 10.1 十干敗亡：日主很弱時忌運歲地支逢之（基礎 p207；動態 p188–189）。 */
+const BAI_WANG: Record<string, string> = { 甲: "申", 乙: "酉", 丙: "子", 丁: "亥", 戊: "寅", 己: "卯", 庚: "午", 辛: "巳", 壬: "辰戌", 癸: "丑未" };
+/** 五行之墓：木未、火戌、金丑、水土辰。 */
+const TOMB: Record<string, string> = { 木: "未", 火: "戌", 金: "丑", 水: "辰", 土: "辰" };
+const STEM_COMBINE = ["甲己", "乙庚", "丙辛", "丁壬", "戊癸"];
+const SIX_COMBINE = ["子丑", "寅亥", "卯戌", "辰酉", "巳申", "午未"];
+const FOUR_CLASH = "寅申巳亥";
 
 const stemOf = (ganZhi: string) => ganZhi.charAt(0);
 const branchOf = (ganZhi: string) => ganZhi.charAt(1);
@@ -58,6 +69,13 @@ function stemControls(a: string, b: string): boolean {
 export function isHeavenEarthClash(a: string, b: string): boolean {
   const stemFight = stemControls(stemOf(a), stemOf(b)) || stemControls(stemOf(b), stemOf(a));
   return stemFight && isClash(branchOf(a), branchOf(b));
+}
+
+const pairIn = (pairs: string[], a: string, b: string) => pairs.some((pair) => pair === a + b || pair === b + a);
+
+/** 天合地合：天干五合且地支六合。 */
+export function isHeavenEarthCombine(a: string, b: string): boolean {
+  return pairIn(STEM_COMBINE, stemOf(a), stemOf(b)) && pairIn(SIX_COMBINE, branchOf(a), branchOf(b));
 }
 
 function mainElement(branch: string): string | undefined {
@@ -145,6 +163,36 @@ function commonEvents(incoming: string, who: "運" | "歲", ctx: LuckEventContex
       detail: `原局日主無根，${whoName}${branch}帶來強根（本氣同類）。作者提醒無根者運歲見根，反而可能招剋（動態 p187，命例 54）。`,
     });
   }
+
+  if ((ctx.verdict === "很弱" || ctx.rootless) && BAI_WANG[dayStem]?.includes(branch)) {
+    events.push({
+      kind: "bai-wang",
+      label: "敗亡地",
+      level: "warn",
+      detail: `日主${ctx.verdict === "很弱" ? "很弱" : "無根"}，${whoName}${branch}是${dayStem}的敗亡之地（表 10.1）。很弱的命最忌運歲走到十干敗亡（基礎 p207）。`,
+    });
+  }
+
+  if (ctx.verdict === "很強" && REN[dayStem] === branch) {
+    events.push({
+      kind: "strong-meets-ren",
+      label: "很強逢刃",
+      level: "warn",
+      detail: `日主很強，${whoName}${branch}又是日干的陽刃。很強的命忌比劫、陽刃再來強身；洪丕謨乙酉年逢庚刃而亡（基礎 p204–206）。`,
+    });
+  }
+
+  if (ctx.pattern === "七殺格") {
+    const killElement = Object.keys(CONTROLS).find((element) => CONTROLS[element] === STEM_ELEMENT[dayStem]);
+    if (killElement && TOMB[killElement] === branch) {
+      events.push({
+        kind: "kill-into-tomb",
+        label: "旺殺投墓",
+        level: "warn",
+        detail: `七殺格，${whoName}${branch}是七殺（${killElement}）的墓庫。毛澤東七殺格，丙辰年大運流年俱見辰，「旺殺投墓，住壽難延」（基礎 p211–212）。`,
+      });
+    }
+  }
   return events;
 }
 
@@ -165,6 +213,16 @@ function groupEvents(natalBranches: string[], incoming: string[], whoName: strin
         });
       }
     }
+  }
+  const fourComplete = FOUR_CLASH.split("").every((member) => all.includes(member));
+  const fourNatal = FOUR_CLASH.split("").every((member) => natalBranches.includes(member));
+  if (fourComplete && !fourNatal && incoming.some((item) => FOUR_CLASH.includes(item))) {
+    events.push({
+      kind: "four-clash",
+      label: "四沖",
+      level: "warn",
+      detail: `${whoName}使寅申巳亥四字俱全，彼此互沖。張大千癸亥年寅巳申三刑加寅申巳亥四沖而逝（基礎 p261–262）。`,
+    });
   }
   for (const group of THREE_PUNISHMENTS) {
     const members = group.split("");
@@ -221,6 +279,38 @@ export function annualEvents(annual: string, luck: string, ctx: LuckEventContext
       detail: `日干${dayStem}剋流年天干${stemOf(annual)}。太歲剋日主即使有災也不是大害；日主剋太歲可能引起大災，叫「日犯歲君」（進階 第四章）。`,
     });
   }
+
+  if (luck && isHeavenEarthClash(annual, luck) && ctx.natal.some((pillar) => isHeavenEarthClash(luck, pillar))) {
+    const hit = ctx.natal.findIndex((pillar) => isHeavenEarthClash(luck, pillar));
+    events.push({
+      kind: "triple-clash",
+      label: "三連環沖",
+      level: "warn",
+      detail: `大運${luck}與${PILLAR_NAMES[hit]}柱天剋地沖，流年${annual}又與大運天剋地沖，構成「三連環」。作者認為運歲的沖剋可以不顧五行喜忌（張作霖，基礎 p214–216）。`,
+    });
+  }
+
+  [2, 3].forEach((index) => {
+    if (isHeavenEarthCombine(annual, ctx.natal[index])) {
+      events.push({
+        kind: `hui-qi-${index}`,
+        label: `晦氣(${PILLAR_NAMES[index]})`,
+        level: "info",
+        detail: `流年${annual}與${PILLAR_NAMES[index]}柱${ctx.natal[index]}天合地合，《三命通會》稱晦氣之年；對太歲而言，合與同禍較輕，剋與沖禍較重（基礎 p214–215）。`,
+      });
+    }
+  });
+
+  ctx.natal.forEach((pillar, index) => {
+    if (stemOf(annual) === stemOf(pillar) && isClash(branchOf(annual), branchOf(pillar))) {
+      events.push({
+        kind: `same-stem-clash-${index}`,
+        label: `天比地沖(${PILLAR_NAMES[index]})`,
+        level: "info",
+        detail: `流年${annual}與${PILLAR_NAMES[index]}柱${pillar}天干相同、地支相沖，也算衝撞柱子；瞿鴻禨丁未年與時柱丁丑上比下沖而罷官（基礎 p256）。`,
+      });
+    }
+  });
 
   events.push(...commonEvents(annual, "歲", ctx));
   const incoming = [branchOf(annual)];

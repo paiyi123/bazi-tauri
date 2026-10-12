@@ -359,9 +359,16 @@ export function climateScore(natal: string[]): ClimateScore {
 
 interface OrganState {
   element: Element;
-  kind: "weak" | "strong" | "hurt";
+  kind: "weak" | "strong" | "hurt" | "imbalance";
   reason: string;
   parts: string[];
+}
+
+/** 表 3.1 旺相休囚死（辰戌丑未月以土為當令）。 */
+function seasonState(element: Element, monthBranch: string): string {
+  const lead: Element = "寅卯".includes(monthBranch) ? "木" : "巳午".includes(monthBranch) ? "火" : "申酉".includes(monthBranch) ? "金" : "亥子".includes(monthBranch) ? "水" : "土";
+  const order: Element[] = ["木", "火", "土", "金", "水"];
+  return ["旺", "相", "死", "囚", "休"][(order.indexOf(element) - order.indexOf(lead) + 5) % 5];
 }
 
 /** 弱臟、強臟（進階 p305–315）。 */
@@ -429,6 +436,30 @@ export function organStates(natal: string[]): OrganState[] {
       }
     }
   });
+  // 《基礎教程》p289–293：字數最少又處月令死位者為最弱臟；同一五行陰陽兩干懸殊為太過、不及。
+  const allStems = natal.flatMap((pillar) => [stemOf(pillar), ...(HIDDEN[branchOf(pillar)] ?? [])]);
+  const stemCount = (stem: string) => allStems.filter((item) => item === stem).length;
+  (["木", "火", "土", "金", "水"] as Element[]).forEach((element) => {
+    const [yang, yin] = STEMS.split("").filter((stem) => STEM_ELEMENT[stem] === element);
+    const total = stemCount(yang) + stemCount(yin);
+    if (total <= 1 && seasonState(element, branches[1]) === "死" && !states.some((state) => state.element === element && state.kind === "weak")) {
+      states.push({
+        element,
+        kind: "weak",
+        reason: `${element}在干支與藏干中只有 ${total} 個，又處月令${branches[1]}的死位；剋它的${CONTROLLED_BY[element]}${seasonState(CONTROLLED_BY[element], branches[1]) === "旺" ? "正當令" : "若旺則更危"}（基礎 p290–293）`,
+        parts: [],
+      });
+    }
+    const [many, few] = stemCount(yang) >= stemCount(yin) ? [yang, yin] : [yin, yang];
+    if (stemCount(many) >= 3 && stemCount(few) === 0) {
+      states.push({
+        element,
+        kind: "imbalance",
+        reason: `${many}（${STEM_ORGAN[many]}）有 ${stemCount(many)} 個，${few}（${STEM_ORGAN[few]}）一個都沒有，${STEM_ORGAN[many]}太過而${STEM_ORGAN[few]}不及（命例 36，基礎 p293）`,
+        parts: [],
+      });
+    }
+  });
   return states;
 }
 
@@ -456,11 +487,23 @@ export function natalHealth(ctx: TopicContext): TopicSection {
   const states = organStates(natal);
   states.forEach((state) => {
     const label =
-      state.kind === "weak" ? `弱臟：${ORGAN[state.element]}（${state.element}）` : state.kind === "strong" ? `強臟：${ORGAN[state.element]}（${state.element}）` : `受剋：${ORGAN[state.element]}（${state.element}）`;
+      state.kind === "weak"
+        ? `弱臟：${ORGAN[state.element]}（${state.element}）`
+        : state.kind === "strong"
+          ? `強臟：${ORGAN[state.element]}（${state.element}）`
+          : state.kind === "imbalance"
+            ? `陰陽失衡：${ORGAN[state.element]}（${state.element}）`
+            : `受剋：${ORGAN[state.element]}（${state.element}）`;
     items.push({
       label,
       detail: `${state.reason}。${state.parts.length ? `對應：${state.parts.join("、")}。` : ""}${
-        state.kind === "weak" ? "書中歸納弱臟所對應的臟腑往往是先天疾病因子，運歲再剋時多為發病期（進階 p310）。" : state.kind === "strong" ? "五行太過的強臟本身也可能致病（進階 p310–314）。" : "強臟所剋之臟也容易得病（進階 p314）。"
+        state.kind === "weak"
+          ? "書中歸納弱臟所對應的臟腑往往是先天疾病因子，運歲再剋時多為發病期（進階 p310）。"
+          : state.kind === "strong"
+            ? "五行太過的強臟本身也可能致病（進階 p310–314）。"
+            : state.kind === "imbalance"
+              ? "同一五行的臟與腑一陰一陽，懸殊時一邊太過、一邊不及。"
+              : "強臟所剋之臟也容易得病（進階 p314）。"
       }`,
       tone: "bad",
     });

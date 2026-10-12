@@ -308,6 +308,7 @@ import {
 import { annualEvents, majorLuckEvents, type LuckEvent, type LuckEventContext } from "../utils/luckEvents";
 import { spouseStorageYears, topicEvents, type TopicContext } from "../utils/lifeTopics";
 import { movingGodEvents } from "../utils/tenGodCombos";
+import { basicStructure, patternLuckEvents } from "../utils/basicStructure";
 
 const TOPIC_MARK: Record<string, string> = { marriage: "婚", wealth: "財", health: "健", move: "動" };
 
@@ -812,12 +813,19 @@ const selectedMonthRow = computed(
 
 const displayedAnnualRows = computed(() => descendingDisplayRows(selectedLuckRow.value?.liuNian));
 
+const basicPattern = computed(() => {
+  const natal = natalItems.value.slice(0, 4).map((item) => `${item.stem}${item.branch}`);
+  return natal.length === 4 ? basicStructure(natal, props.result.quantModel?.luStrength?.verdict).pattern.name : "";
+});
+
 const luckEventContext = computed<LuckEventContext>(() => {
   const lu = props.result.quantModel?.luStrength;
   return {
     natal: natalItems.value.slice(0, 4).map((item) => `${item.stem}${item.branch}`),
     strength: lu?.category,
     rootless: lu ? lu.roots.length === 0 : undefined,
+    verdict: lu?.verdict,
+    pattern: basicPattern.value,
   };
 });
 
@@ -844,6 +852,7 @@ const luckEventsByRow = computed(
           ...majorLuckEvents(row.ganZhi, luckEventContext.value),
           ...topicEvents(row.ganZhi, "運", topicContext.value),
           ...movingGodEvents(row.ganZhi, "運", luckEventContext.value.natal),
+          ...patternLuckEvents(row.ganZhi, "運", luckEventContext.value.natal, basicPattern.value),
         ],
       ]),
     ),
@@ -879,6 +888,7 @@ const annualEventsByYear = computed(
             ...spouseStorageEvent(annual.year),
             ...topicEvents(annual.ganZhi, "歲", topicContext.value, luck),
             ...movingGodEvents(annual.ganZhi, "歲", luckEventContext.value.natal, luck),
+            ...patternLuckEvents(annual.ganZhi, "歲", luckEventContext.value.natal, basicPattern.value),
           ],
         ];
       }),
