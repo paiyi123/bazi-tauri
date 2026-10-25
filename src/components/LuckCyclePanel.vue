@@ -309,6 +309,7 @@ import { annualEvents, majorLuckEvents, type LuckEvent, type LuckEventContext } 
 import { spouseStorageYears, topicEvents, type TopicContext } from "../utils/lifeTopics";
 import { movingGodEvents } from "../utils/tenGodCombos";
 import { basicStructure, patternLuckEvents } from "../utils/basicStructure";
+import { specialPatternLuckEvents } from "../utils/specialPatterns";
 
 const TOPIC_MARK: Record<string, string> = { marriage: "婚", wealth: "財", health: "健", move: "動" };
 
@@ -756,7 +757,7 @@ const luckNatalRelations = computed(
           if (luckElement && natalElement) {
             list.push({
               scope,
-              luck: { char: luckChar, element: luckElement },
+              luck: { char: luckChar, element: luckElement, ...(scope === "stem" ? { seat: item.branch } : {}) },
               natal: { char: natalChar, element: natalElement },
             });
           }
@@ -853,6 +854,7 @@ const luckEventsByRow = computed(
           ...topicEvents(row.ganZhi, "運", topicContext.value),
           ...movingGodEvents(row.ganZhi, "運", luckEventContext.value.natal),
           ...patternLuckEvents(row.ganZhi, "運", luckEventContext.value.natal, basicPattern.value),
+          ...specialPatternLuckEvents(row.ganZhi, "運", luckEventContext.value.natal),
         ],
       ]),
     ),
@@ -889,6 +891,7 @@ const annualEventsByYear = computed(
             ...topicEvents(annual.ganZhi, "歲", topicContext.value, luck),
             ...movingGodEvents(annual.ganZhi, "歲", luckEventContext.value.natal, luck),
             ...patternLuckEvents(annual.ganZhi, "歲", luckEventContext.value.natal, basicPattern.value),
+            ...specialPatternLuckEvents(annual.ganZhi, "歲", luckEventContext.value.natal),
           ],
         ];
       }),
@@ -950,7 +953,8 @@ const selectedAnnualItem = computed<InteractionPillarItem | null>(() => {
 const interactionColumns = computed<InteractionPillarItem[]>(() => [
   ...(selectedAnnualItem.value ? [selectedAnnualItem.value] : []),
   ...(selectedLuckItem.value ? [selectedLuckItem.value] : []),
-  ...natalItems.value,
+  // 原局由左到右排成 時、日、月、年，跟四柱與其他區塊對齊
+  ...natalItems.value.slice().reverse(),
 ]);
 
 const interactionColumnIndexMap = computed(
@@ -1457,7 +1461,8 @@ watch(expandMonthLane, (expanded) => {
 .lane-track {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 112px;
+  /* 欄寬跟著字級放大，字放大時格子也一起變寬，不會溢到隔壁格 */
+  grid-auto-columns: calc(112px * var(--app-font-scale));
   width: max-content;
   min-width: max-content;
 }
@@ -1491,7 +1496,10 @@ watch(expandMonthLane, (expanded) => {
   display: grid;
   grid-template-rows: minmax(20px, auto) minmax(72px, auto) minmax(72px, auto) minmax(18px, auto);
   gap: 10px;
-  height: 232px;
+  height: auto;
+  min-width: 0;
+  min-height: calc(232px * var(--app-font-scale));
+  align-content: start;
   padding: 10px 12px 12px;
   border: 0;
   border-right: 1px solid rgba(226, 232, 240, 0.95);
@@ -1503,12 +1511,12 @@ watch(expandMonthLane, (expanded) => {
 }
 
 .fate-cell-annual {
-  height: 240px;
+  min-height: calc(240px * var(--app-font-scale));
 }
 
 .fate-cell-month {
   grid-template-rows: minmax(30px, auto) minmax(20px, auto) minmax(72px, auto) minmax(72px, auto) minmax(18px, auto);
-  height: 284px;
+  min-height: calc(284px * var(--app-font-scale));
   gap: 6px;
 }
 
@@ -1531,12 +1539,14 @@ watch(expandMonthLane, (expanded) => {
 .fate-cell-major {
   grid-template-rows: auto minmax(72px, auto) minmax(72px, auto) auto;
   height: auto;
-  min-height: 248px;
+  min-height: calc(248px * var(--app-font-scale));
   padding-top: 18px;
   align-content: start;
 }
 
 .fate-relation-list {
+  min-width: 0;
+  max-width: 100%;
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
@@ -1551,7 +1561,15 @@ watch(expandMonthLane, (expanded) => {
   font-size: calc(11px * var(--app-font-scale));
   font-weight: 600;
   line-height: 1.55;
-  white-space: nowrap;
+}
+
+/* 標籤一律完整顯示：放不下就換行，單一標籤太長時在格內折行 */
+.fate-relation-tag,
+.fate-event-tag {
+  box-sizing: border-box;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .fate-relation-tag.is-combine {
@@ -1636,15 +1654,13 @@ watch(expandMonthLane, (expanded) => {
 
 .fate-hidden-list {
   display: grid;
+  align-content: start;
   gap: 4px;
-  min-height: 72px;
-  max-height: 72px;
-  overflow: hidden;
+  min-height: calc(72px * var(--app-font-scale));
 }
 
 .fate-hidden-list-month {
-  min-height: 72px;
-  max-height: 72px;
+  min-height: calc(72px * var(--app-font-scale));
   padding-top: 2px;
 }
 
@@ -1659,7 +1675,7 @@ watch(expandMonthLane, (expanded) => {
   display: flex;
   align-items: baseline;
   gap: 4px;
-  min-height: 32px;
+  min-height: calc(32px * var(--app-font-scale));
 }
 
 .fate-char-row .wuxing-char {
@@ -1674,6 +1690,7 @@ watch(expandMonthLane, (expanded) => {
 }
 
 .ten-god-text {
+  white-space: nowrap;
   color: #111827;
   font-size: calc(12px * var(--app-font-scale));
 }
@@ -1707,13 +1724,19 @@ watch(expandMonthLane, (expanded) => {
   margin-top: 3px;
 }
 
+/* 合沖刑害與其他標籤之間用淡淡的虛線隔開 */
+.fate-relation-list + .fate-event-list {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(150, 120, 90, 0.35);
+}
+
 .fate-event-tag {
   padding: 0 5px;
   border-radius: 6px;
   font-size: calc(11px * var(--app-font-scale));
   font-weight: 600;
   line-height: 1.6;
-  white-space: nowrap;
 }
 
 .fate-event-tag.is-warn {
@@ -1945,8 +1968,10 @@ watch(expandMonthLane, (expanded) => {
 }
 
 .luck-panel.is-compact .lane-track {
-  grid-auto-columns: minmax(88px, 88px);
+  /* 欄寬跟著字級放大，字放大時格子也一起變寬，不會溢到隔壁格 */
+  grid-auto-columns: calc(88px * var(--app-font-scale));
 }
+
 
 .luck-panel.is-compact .fate-cell,
 .luck-panel.is-compact .fate-relation-tag {
@@ -1956,24 +1981,27 @@ watch(expandMonthLane, (expanded) => {
 
 .luck-panel.is-compact .fate-cell-major,
 .luck-panel.is-compact .fate-cell-annual {
-  height: 286px;
+  height: auto;
+  min-height: calc(286px * var(--app-font-scale));
   padding: 7px 8px 9px;
   gap: 2px;
 }
 
 .luck-panel.is-compact .fate-cell-major {
   height: auto;
-  min-height: 286px;
+  min-height: calc(286px * var(--app-font-scale));
 }
 
 .luck-panel.is-compact .fate-cell-month {
-  height: 334px;
-  grid-template-rows: minmax(24px, auto) minmax(22px, auto) minmax(56px, auto) minmax(112px, auto) minmax(14px, auto);
+  height: auto;
+  min-height: calc(334px * var(--app-font-scale));
+  grid-template-rows: auto auto minmax(calc(56px * var(--app-font-scale)), auto) minmax(calc(112px * var(--app-font-scale)), auto) auto;
+  align-content: start;
 }
 
 .luck-panel.is-compact .fate-cell-year {
   font-size: calc(10px * var(--app-font-scale));
-  min-height: 28px;
+  min-height: calc(28px * var(--app-font-scale));
   line-height: 1.15;
   white-space: pre-line;
 }
@@ -1985,12 +2013,12 @@ watch(expandMonthLane, (expanded) => {
 }
 
 .luck-panel.is-compact .fate-cell-main {
-  min-height: 62px;
+  min-height: calc(62px * var(--app-font-scale));
   gap: 4px;
 }
 
 .luck-panel.is-compact .fate-char-row {
-  min-height: 24px;
+  min-height: calc(24px * var(--app-font-scale));
   gap: 4px;
   align-items: baseline;
 }
@@ -2016,13 +2044,14 @@ watch(expandMonthLane, (expanded) => {
 
 .luck-panel.is-compact .fate-hidden-list,
 .luck-panel.is-compact .fate-hidden-list-month {
-  min-height: 104px;
-  max-height: 104px;
+  min-height: calc(104px * var(--app-font-scale));
+  max-height: none;
+  overflow: visible;
   gap: 4px;
 }
 
 .luck-panel.is-compact .fate-hidden-item {
-  min-height: 18px;
+  min-height: calc(18px * var(--app-font-scale));
   gap: 4px;
   align-items: baseline;
 }
@@ -2082,17 +2111,17 @@ watch(expandMonthLane, (expanded) => {
   }
 
   .lane-track {
-    grid-auto-columns: minmax(92px, 92px);
+    grid-auto-columns: calc(100px * var(--app-font-scale));
   }
 
   .fate-cell,
   .fate-cell-major,
   .fate-cell-annual {
-    height: 248px;
+    min-height: calc(248px * var(--app-font-scale));
   }
 
   .fate-cell-month {
-    height: 292px;
+    min-height: calc(292px * var(--app-font-scale));
   }
 
   .interaction-summary-strip {
@@ -2116,18 +2145,20 @@ watch(expandMonthLane, (expanded) => {
   }
 
   .luck-panel.is-compact .lane-track {
-    grid-auto-columns: minmax(80px, 80px);
+    grid-auto-columns: calc(80px * var(--app-font-scale));
   }
 
   .luck-panel.is-compact .fate-cell,
   .luck-panel.is-compact .fate-cell-major,
-  .luck-panel.is-compact .fate-cell-annual {
-    height: 270px;
+  .luck-panel.is-compact .fate-cell.fate-cell-annual {
+    height: auto;
+    min-height: calc(270px * var(--app-font-scale));
     padding: 6px 7px 8px;
   }
 
   .luck-panel.is-compact .fate-cell-month {
-    height: 312px;
+    height: auto;
+    min-height: calc(312px * var(--app-font-scale));
   }
 
   .luck-panel.is-compact .fate-char-row .wuxing-char,
@@ -2222,6 +2253,7 @@ watch(expandMonthLane, (expanded) => {
   font-size: calc(11px * var(--app-font-scale));
   font-weight: 700;
   line-height: 1.6;
+  white-space: nowrap;
   pointer-events: none;
 }
 
@@ -2264,7 +2296,7 @@ watch(expandMonthLane, (expanded) => {
 /* 流年格子會多出事件提示，高度隨內容延伸（同一列的格子會一起拉齊）。 */
 .fate-cell.fate-cell-annual {
   height: auto;
-  min-height: 240px;
+  min-height: calc(240px * var(--app-font-scale));
   grid-template-rows: auto minmax(72px, auto) minmax(72px, auto);
   grid-auto-rows: auto;
   align-content: start;
@@ -2272,7 +2304,24 @@ watch(expandMonthLane, (expanded) => {
 
 .luck-panel.is-compact .fate-cell.fate-cell-annual {
   height: auto;
-  min-height: 286px;
+  min-height: calc(286px * var(--app-font-scale));
+}
+
+/* 精簡模式的 .fate-cell 共用標籤的 0 3px 內距，流月格要補回內距，節氣字才不會貼邊 */
+.luck-panel.is-compact .fate-cell.fate-cell-month {
+  padding: 7px 8px 9px;
+}
+
+/* 「今年」徽章貼在流年格右下角，當年標籤最多時也要留出位置 */
+.fate-cell.fate-cell-annual.is-current,
+.luck-panel.is-compact .fate-cell.fate-cell-annual.is-current {
+  padding-bottom: calc(30px * var(--app-font-scale));
+}
+
+/* 「目前」頁籤貼在大運格上緣，留出高度避免蓋住歲數 */
+.fate-cell.fate-cell-major,
+.luck-panel.is-compact .fate-cell.fate-cell-major {
+  padding-top: calc(18px * var(--app-font-scale));
 }
 
 .luck-panel.is-compact .fate-event-tag {

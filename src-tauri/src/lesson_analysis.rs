@@ -1,13 +1,22 @@
+mod branch_gatherings;
+mod branch_interactions;
 mod dto;
 mod facts;
+mod interaction_strength;
 mod pattern;
+mod pillar_relations;
 mod preferences;
+mod stem_interactions;
 mod strength;
 
 pub use dto::*;
+use branch_interactions::build_branch_interactions;
 use facts::build_facts;
+use interaction_strength::build_interaction_strength;
+use pillar_relations::build_pillar_relations;
 use pattern::build_pattern;
 use preferences::build_preferences;
+use stem_interactions::build_stem_interactions;
 use strength::build_strength;
 
 use crate::bazi::QuantModelInteraction;
@@ -32,6 +41,11 @@ pub(crate) fn analyze(
     let strength = build_strength(&facts, interactions);
     let pattern = build_pattern(&facts, &strength, reference);
     let preferences = build_preferences(&facts, &strength);
+    let stem_interactions = build_stem_interactions(natal_cycles, &preferences);
+    let branch_interactions = build_branch_interactions(natal_cycles, &preferences);
+    let pillar_relations = build_pillar_relations(natal_cycles, &preferences);
+    let interaction_strength =
+        build_interaction_strength(natal_cycles, &strength, &stem_interactions, &branch_interactions);
     let status = if strength.classification == "依據不足" {
         "insufficient"
     } else if strength.status == "conditional"
@@ -51,6 +65,10 @@ pub(crate) fn analyze(
         pattern,
         strength,
         preferences,
+        stem_interactions,
+        branch_interactions,
+        pillar_relations,
+        interaction_strength,
         comparison,
         sources: lesson_sources(),
         limitations: vec![
@@ -276,10 +294,35 @@ fn lesson_sources() -> Vec<LessonSource> {
             ],
         },
         LessonSource {
+            date: "2026-10-07".to_string(),
+            rule_ids: vec!["stem-generation-control-distance".to_string()],
+        },
+        LessonSource {
+            date: "2026-10-14".to_string(),
+            rule_ids: vec!["stem-five-combination-variants".to_string()],
+        },
+        LessonSource {
+            date: "2026-10-21".to_string(),
+            rule_ids: vec![
+                "branch-clash-variants".to_string(),
+                "branch-six-combination-variants".to_string(),
+                "year-month-stem-transform-needs-chen-hour".to_string(),
+            ],
+        },
+        LessonSource {
             date: "2026-09-02".to_string(),
             rule_ids: vec![
                 "specialized-use-version".to_string(),
                 "follow-child-peer-exception".to_string(),
+            ],
+        },
+        LessonSource {
+            date: "講義第24–26章".to_string(),
+            rule_ids: vec![
+                "branch-three-combination-meeting".to_string(),
+                "branch-punishment-harm-by-elements".to_string(),
+                "same-pillar-stem-branch".to_string(),
+                "interaction-strength-review".to_string(),
             ],
         },
     ]

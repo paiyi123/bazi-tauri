@@ -108,7 +108,32 @@ export function combinationElement(text: string): WuXing | undefined {
   return match ? elementFromName(match[1]) : undefined;
 }
 
-export type RelationSide = { char: string; element: WuXing };
+// seat：大運干的坐支（只在天干關係用），10/07 用來判斷大運天干五合化不化。
+export type RelationSide = { char: string; element: WuXing; seat?: string };
+
+const BRANCH_MAIN: Record<string, WuXing> = {
+  子: "water", 丑: "earth", 寅: "wood", 卯: "wood", 辰: "earth", 巳: "fire",
+  午: "fire", 未: "earth", 申: "metal", 酉: "metal", 戌: "earth", 亥: "water",
+};
+
+// 地支藏干的五行（本氣、中氣、餘氣）。
+const BRANCH_HIDDEN: Record<string, WuXing[]> = {
+  子: ["water"], 丑: ["earth", "water", "metal"], 寅: ["wood", "fire", "earth"], 卯: ["wood"],
+  辰: ["earth", "wood", "water"], 巳: ["fire", "metal", "earth"], 午: ["fire", "earth"],
+  未: ["earth", "fire", "wood"], 申: ["metal", "water", "earth"], 酉: ["metal"],
+  戌: ["earth", "metal", "fire"], 亥: ["water", "wood"],
+};
+
+/**
+ * 2026-10-07：大運天干與原局五合，化不化看大運所坐的地支（丁壬合、大運坐卯 → 化木）。
+ * 與原局年月合化同一條件（10/14「化神通根乘旺」）：坐支本氣是化神或生化神，且藏有化神。
+ */
+export function seatTransforms(seat: string, combined: WuXing): boolean {
+  const main = BRANCH_MAIN[seat];
+  if (!main) return false;
+  const generator = (Object.keys(GENERATES) as WuXing[]).find((element) => GENERATES[element] === combined);
+  return (main === combined || main === generator) && (BRANCH_HIDDEN[seat] ?? []).includes(combined);
+}
 
 const GENERATES: Record<WuXing, WuXing> = { wood: "fire", fire: "earth", earth: "metal", metal: "water", water: "wood" };
 const CONTROLS: Record<WuXing, WuXing> = { wood: "earth", earth: "water", water: "fire", fire: "metal", metal: "wood" };
@@ -157,8 +182,8 @@ function judgeBranchCombination(luck: RelationSide, natal: RelationSide, prefere
 /**
  * Judges one luck-cycle relation against the natal pillar it touches.
  * - 沖: clashing away a 忌 is 有利, clashing a 喜用 is 不利 (2026-09-02、09-23).
- * - 天干五合: binding a natal 喜用 is 不利, binding a 忌 is 有利; the combined element is
- *   conditional because 天干合 may or may not 化.
+ * - 天干五合: 化不化看大運坐支 (2026-10-07). 化 → judged by the combined element;
+ *   不化 → 合絆 (2026-10-14): binding a natal 喜用 is 減吉, binding a 忌 is 減凶.
  * - 地支六合、半合: 有合無化 (2026-09-09), judged as plain 生剋 between the two branches.
  * - 伏吟: the repeated element's role.
  * - 害 is 神煞 and not used in class (2026-09-23); 刑、破、暗合、暗會 get no verdict yet.
@@ -194,6 +219,20 @@ export function judgeLuckRelation(
     }
     const result = preferences.elements[combined];
     const transformed = strengthened(result.favor);
+    if (luck.seat) {
+      // 10/07：由大運坐支決定化或不化，不再兩可。
+      if (seatTransforms(luck.seat, combined)) {
+        return {
+          favor: transformed,
+          reason: `大運坐${luck.seat}，${text.replace(/合[木火土金水]$/, "")}合化為${result.name}（化不化看大運坐支），這步運以${result.name}論，${result.name}為${result.label}`,
+        };
+      }
+      const effect = natal.favor === "good" ? "減吉" : natal.favor === "bad" ? "減凶" : "";
+      return {
+        favor: bound,
+        reason: `${boundText}；大運坐${luck.seat}不是${result.name}的旺地，合而不化（剋合）${effect ? `，${effect}` : ""}`,
+      };
+    }
     const reason = `${boundText}；若合化為${result.name}，${result.name}為${result.label}`;
     if (bound === "neutral" || transformed === "neutral" || bound === transformed) {
       return { favor: bound !== "neutral" ? bound : transformed, reason };

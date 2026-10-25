@@ -15,6 +15,48 @@
     </div>
     <div v-if="hasConflict" class="conflict-note">三種看法不一致，請展開各自的依據比對差在哪裡。</div>
 
+    <template v-if="lesson?.checks?.length">
+      <div class="subsection-title">課堂三步法強弱分析</div>
+      <el-table :data="lesson.checks" size="small" border class="check-table">
+        <el-table-column label="項目" width="84">
+          <template #default="{ row }">
+            <div>{{ row.item }}</div>
+            <el-tag :type="row.hit ? 'success' : 'info'" effect="plain" size="small">{{ row.hit ? "✓ 有" : "✗ 無" }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="本命盤的情況與課堂定義" min-width="180">
+          <template #default="{ row }">
+            <div>{{ row.finding }}</div>
+            <div class="rule-text">課堂定義（{{ row.sourceDate }}）：{{ row.rule }}</div>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div class="party-list">
+        <div class="party-row">
+          <span class="party-label">同黨（印、比劫）{{ lesson.samePartyCount }} 個</span>
+          <el-tag v-for="item in lesson.samePartyCharacters" :key="item" type="success" effect="plain" size="small">{{ item }}</el-tag>
+        </div>
+        <div class="party-row">
+          <span class="party-label">異黨（食傷、財、官殺）{{ lesson.opposingPartyCount }} 個</span>
+          <el-tag v-for="item in lesson.opposingPartyCharacters" :key="item" type="danger" effect="plain" size="small">{{ item }}</el-tag>
+        </div>
+      </div>
+
+      <div class="conclusion">{{ lesson.verdictReason }}</div>
+      <el-collapse class="note-collapse">
+        <el-collapse-item title="課堂判定表與限制" name="lesson-notes">
+          <ul class="reason-list">
+            <li>三者兼備、不見剋洩耗 → 旺極（專旺格候選）；三者兼備、見剋洩耗 → 旺（2026-07-22、07-29）。</li>
+            <li>三者得其二 → 強（2026-07-22）；不得時但得勢得地 → 衰中轉強（2026-07-29）。</li>
+            <li>三者只得其一 → 弱；三者皆無且滿盤剋洩耗 → 衰極，可能入從格。</li>
+            <li>同黨異黨四比四時，看月令屬哪一黨：得令者為旺（2026-09-02、09-09）。</li>
+            <li v-for="item in lesson.limitations" :key="item">{{ item }}</li>
+          </ul>
+        </el-collapse-item>
+      </el-collapse>
+    </template>
+
     <template v-if="lu">
       <div class="subsection-title">陸致極強弱檢核</div>
       <el-table :data="lu.checks" size="small" border class="check-table">
@@ -100,7 +142,9 @@ const views = computed(() => {
       key: "lesson",
       source: "課堂三步法",
       value: lessonLabel,
-      sub: "得令、得勢、得地",
+      sub: lesson.value?.checks?.length
+        ? lesson.value.checks.map((check) => `${check.item.replace("（得時）", "")}${check.hit ? "✓" : "✗"}`).join(" ")
+        : "得令、得勢、得地",
       category: category(lessonLabel),
     },
     {
@@ -199,6 +243,31 @@ function formatPoints(value: number): string {
   display: grid;
   gap: 8px;
   margin-top: 12px;
+}
+
+.rule-text {
+  margin-top: 2px;
+  color: var(--bazi-text-muted);
+  font-size: calc(12px * var(--app-font-scale));
+}
+
+.party-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.party-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.party-label {
+  color: var(--bazi-text-muted);
+  font-size: calc(13px * var(--app-font-scale));
+  margin-right: 2px;
 }
 
 .conclusion {

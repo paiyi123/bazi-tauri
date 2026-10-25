@@ -694,7 +694,7 @@ body {
 @media (max-width: 768px) {
   .compact-layout.app-shell {
     padding:
-      calc(48px + env(safe-area-inset-top, 0px))
+      calc(12px + env(safe-area-inset-top, 0px))
       12px
       calc(18px + env(safe-area-inset-bottom, 0px));
   }
@@ -704,7 +704,7 @@ body {
     position: fixed;
     inset: 0 0 auto;
     z-index: var(--bazi-z-overlay);
-    height: calc(48px + env(safe-area-inset-top, 0px));
+    height: calc(12px + env(safe-area-inset-top, 0px));
     pointer-events: none;
     background: linear-gradient(180deg, rgba(255, 249, 239, 1), rgba(255, 249, 239, 0.94));
     backdrop-filter: blur(12px);
@@ -776,7 +776,7 @@ body {
 
   .compact-layout .mode-card {
     position: sticky;
-    top: calc(48px + env(safe-area-inset-top, 0px));
+    top: calc(12px + env(safe-area-inset-top, 0px));
     z-index: var(--bazi-z-sticky);
     background: rgba(255, 250, 243, 0.96);
     box-shadow: var(--bazi-shadow-sm);
@@ -881,7 +881,7 @@ body {
 @media (max-width: 560px) {
   .compact-layout.app-shell {
     padding:
-      calc(46px + env(safe-area-inset-top, 0px))
+      calc(10px + env(safe-area-inset-top, 0px))
       10px
       calc(16px + env(safe-area-inset-bottom, 0px));
   }
@@ -939,7 +939,7 @@ body {
 @media (max-width: 420px) {
   .compact-layout.app-shell {
     padding:
-      calc(44px + env(safe-area-inset-top, 0px))
+      calc(8px + env(safe-area-inset-top, 0px))
       8px
       calc(14px + env(safe-area-inset-bottom, 0px));
   }

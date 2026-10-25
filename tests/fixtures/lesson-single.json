@@ -552,6 +552,41 @@
     "momentumProxy": true,
     "rootCount": 4,
     "observationCount": 3,
+    "samePartyCharacters": [
+      "年干甲（比肩）",
+      "年支寅（比肩）",
+      "月干甲（比肩）",
+      "月支寅（比肩）",
+      "日干甲（日元）",
+      "日支寅（比肩）",
+      "時干甲（比肩）",
+      "時支寅（比肩）"
+    ],
+    "opposingPartyCharacters": [],
+    "checks": [
+      {
+        "item": "得令（得時）",
+        "hit": true,
+        "rule": "日干生在同五行當旺的月令：木寅卯、火巳午、土辰戌丑未、金申酉、水亥子。",
+        "finding": "日主甲屬木，生於寅月（本氣甲屬木），月令與日主同五行 → 得令。",
+        "sourceDate": "2026-07-22"
+      },
+      {
+        "item": "得勢",
+        "hit": true,
+        "rule": "八個字（四天干含日主、四地支取本氣）分同黨（印、比劫）與異黨（食傷、財、官殺），多者勝；四比四時看月令屬哪一黨（得令者為旺）。",
+        "finding": "同黨 8 個、異黨 0 個；同黨較多 → 得勢。",
+        "sourceDate": "2026-09-02"
+      },
+      {
+        "item": "得地",
+        "hit": true,
+        "rule": "地支藏干中有與日干同五行者即通根，不分陰陽；根以本氣最穩，其次長生，再次餘氣、墓庫。",
+        "finding": "年支寅藏甲（本氣根，比肩）、月支寅藏甲（本氣根，比肩）、日支寅藏甲（本氣根，比肩）、時支寅藏甲（本氣根，比肩） → 得地（共 4 處根）。",
+        "sourceDate": "2026-07-22"
+      }
+    ],
+    "verdictReason": "得令✓、得勢✓、得地✓；三者兼備，天干與地支本氣都不見剋洩耗 → 旺極，入專旺格候選（2026-07-22、07-29）。",
     "pressureFamiliesSurface": [],
     "pressureFamiliesHidden": [
       "食傷",
@@ -771,6 +806,140 @@
       "通關元素存在也不宣稱通關成功；病藥不覆寫上游強弱。"
     ]
   },
+  "stemInteractions": {
+    "title": "天干生剋合化",
+    "conclusion": "天干沒有五合；生剋 0 組（其中不論 0 組）。",
+    "status": "candidate",
+    "combinations": [],
+    "relations": [],
+    "limitations": [
+      "吉凶依課堂三步法的喜忌方案；多方案時，元素只有在沒有方案相反時才算喜或忌。",
+      "牽絆方向、虛浮與否用根氣粗估，不是老師的量化公式。",
+      "合化後的五行沒有回頭重算強弱；量化五行力分數不受影響。"
+    ],
+    "sources": [
+      "2026-10-07",
+      "2026-10-14"
+    ]
+  },
+  "branchInteractions": {
+    "title": "地支沖合會刑害",
+    "conclusion": "地支沒有沖、合、會、刑、害。",
+    "status": "candidate",
+    "clashes": [],
+    "combinations": [],
+    "gatherings": [],
+    "punishments": [],
+    "limitations": [
+      "勝負用「本氣同五行的地支數，得令再加一」粗估；天干透出、半合三合的助力沒有計入，與老師逐例的文字判斷可能不同。",
+      "敗方有兩處以上生扶（同柱天干或地支本氣）時判為各有損傷，這是依講義例七整理的工程門檻。",
+      "三合、三會、刑害（講義第三至五節）課堂還沒講，依講義整理：成局條件是依第 26 章例題歸納的推論；刑害只依本氣生剋論，不論刑害本身吉凶（老師：害屬神煞）。",
+      "沖合結果沒有回頭重算強弱與喜忌；量化五行力分數不受影響。"
+    ],
+    "sources": [
+      "2026-10-21",
+      "講義第24章"
+    ]
+  },
+  "pillarRelations": {
+    "title": "同柱干支",
+    "conclusion": "甲寅干支同類；甲寅干支同類；甲寅干支同類；甲寅干支同類。",
+    "relations": [
+      {
+        "id": "pillar-relation-1",
+        "pillar": "年柱",
+        "ganZhi": "甲寅",
+        "kind": "same",
+        "kindLabel": "干支同類",
+        "hiddenCombination": null,
+        "hiddenCombinationPure": false,
+        "stemFavor": "未列喜忌",
+        "verdict": "neutral",
+        "verdictLabel": "未列喜忌",
+        "reason": "甲寅：上下比助，木力加強（六十甲子中以干支同類之氣最專）。",
+        "notes": [
+          "四生之地藏干力量：本氣最大，其次長生，再次寄土；透出天干者最大（講義第 45 頁）。"
+        ],
+        "sourceDate": "講義第25章"
+      },
+      {
+        "id": "pillar-relation-2",
+        "pillar": "月柱",
+        "ganZhi": "甲寅",
+        "kind": "same",
+        "kindLabel": "干支同類",
+        "hiddenCombination": null,
+        "hiddenCombinationPure": false,
+        "stemFavor": "未列喜忌",
+        "verdict": "neutral",
+        "verdictLabel": "未列喜忌",
+        "reason": "甲寅：上下比助，木力加強（六十甲子中以干支同類之氣最專）。",
+        "notes": [
+          "四生之地藏干力量：本氣最大，其次長生，再次寄土；透出天干者最大（講義第 45 頁）。"
+        ],
+        "sourceDate": "講義第25章"
+      },
+      {
+        "id": "pillar-relation-3",
+        "pillar": "日柱",
+        "ganZhi": "甲寅",
+        "kind": "same",
+        "kindLabel": "干支同類",
+        "hiddenCombination": null,
+        "hiddenCombinationPure": false,
+        "stemFavor": "未列喜忌",
+        "verdict": "neutral",
+        "verdictLabel": "日主自坐得生扶",
+        "reason": "甲寅：上下比助，木力加強（六十甲子中以干支同類之氣最專）。",
+        "notes": [
+          "四生之地藏干力量：本氣最大，其次長生，再次寄土；透出天干者最大（講義第 45 頁）。"
+        ],
+        "sourceDate": "講義第25章"
+      },
+      {
+        "id": "pillar-relation-4",
+        "pillar": "時柱",
+        "ganZhi": "甲寅",
+        "kind": "same",
+        "kindLabel": "干支同類",
+        "hiddenCombination": null,
+        "hiddenCombinationPure": false,
+        "stemFavor": "未列喜忌",
+        "verdict": "neutral",
+        "verdictLabel": "未列喜忌",
+        "reason": "甲寅：上下比助，木力加強（六十甲子中以干支同類之氣最專）。",
+        "notes": [
+          "四生之地藏干力量：本氣最大，其次長生，再次寄土；透出天干者最大（講義第 45 頁）。"
+        ],
+        "sourceDate": "講義第25章"
+      }
+    ],
+    "limitations": [
+      "講義說同柱力量要配合時令、藏干與整體結構綜合論斷，沒有固定公式；這裡只標上下關係與喜忌方向，不改強弱與量化分數。",
+      "日柱的天干就是日主，不另判吉凶，只標自坐得生扶或坐剋。"
+    ],
+    "sources": [
+      "講義第25章"
+    ]
+  },
+  "interactionStrength": {
+    "title": "作用變化後強弱複核",
+    "conclusion": "原局沒有天干合化或地支成局，作用變化不改變得勢點數。",
+    "samePartyCount": 8,
+    "opposingPartyCount": 0,
+    "momentum": true,
+    "classification": "旺極候選",
+    "changed": false,
+    "changes": [],
+    "limitations": [
+      "只做提醒，不取代課堂三步法的判定，也不改量化分數。",
+      "天干合化改黨別是講義明說；地支成局「該黨加一」是為了反映「增其合力」的工程權重，講義沒有給數字。",
+      "講義說八字結構複雜多端、沒有固定公式；從格、專旺、調候（如火炎土燥、金寒水冷）不在這個複核裡。"
+    ],
+    "sources": [
+      "講義第26章"
+    ]
+  },
   "comparison": {
     "pattern": {
       "appValue": "直輸四柱分析",
@@ -830,10 +999,39 @@
       ]
     },
     {
+      "date": "2026-10-07",
+      "ruleIds": [
+        "stem-generation-control-distance"
+      ]
+    },
+    {
+      "date": "2026-10-14",
+      "ruleIds": [
+        "stem-five-combination-variants"
+      ]
+    },
+    {
+      "date": "2026-10-21",
+      "ruleIds": [
+        "branch-clash-variants",
+        "branch-six-combination-variants",
+        "year-month-stem-transform-needs-chen-hour"
+      ]
+    },
+    {
       "date": "2026-09-02",
       "ruleIds": [
         "specialized-use-version",
         "follow-child-peer-exception"
+      ]
+    },
+    {
+      "date": "講義第24–26章",
+      "ruleIds": [
+        "branch-three-combination-meeting",
+        "branch-punishment-harm-by-elements",
+        "same-pillar-stem-branch",
+        "interaction-strength-review"
       ]
     }
   ],

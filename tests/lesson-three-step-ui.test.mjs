@@ -174,3 +174,54 @@ test('keeps legacy course annotations reachable beside absent new analysis', asy
   assert.match(html, /課堂命例補充/);
   assert.match(html, /舊註解/);
 });
+
+test('strength comparison card spells out 得令、得勢、得地 for the classroom method', async () => {
+  const html = await render('/src/components/StrengthComparisonPanel.vue', {
+    result: { quantModel: { strengthLabel: '偏強', totalScore: 1, lessonContent: { threeStepAnalysis: sourceFixture } } },
+  });
+  for (const text of ['課堂三步法強弱分析', '得令✗ 得勢✓ 得地✗', '月支酉（正印）', '年干甲（食神）', '同黨（印、比劫）4 個', '得令者為旺', '強候選']) {
+    assert.ok(html.includes(text), `missing ${text}`);
+  }
+});
+
+test('2026-10-07／10-14：天干生剋合化一節列出五合變化與生剋', async () => {
+  const html = await render('/src/components/LessonThreeStepPanel.vue', { analysis: fixture });
+  assert.match(html, /天干生剋合化/);
+  assert.match(html, /戊癸合火：合而不合/);
+  assert.match(html, /中間隔著月干丙、日干庚/);
+  assert.match(html, /天干生剋（遠近、通關、先受剋）/);
+  // Older payloads without the section still render.
+  const { stemInteractions, ...legacy } = fixture;
+  assert.doesNotMatch(await render('/src/components/LessonThreeStepPanel.vue', { analysis: legacy }), /天干生剋合化/);
+});
+
+test('2026-10-21：地支沖合一節列出相沖勝負與六合生剋', async () => {
+  const html = await render('/src/components/LessonThreeStepPanel.vue', { analysis: sourceFixture });
+  assert.match(html, /地支沖合/);
+  assert.match(html, /酉卯沖：勝負分明/);
+  assert.match(html, /去喜存忌，凶/);
+  const { branchInteractions, ...legacy } = sourceFixture;
+  assert.doesNotMatch(await render('/src/components/LessonThreeStepPanel.vue', { analysis: legacy }), /地支沖合/);
+});
+
+test('講義第24–26章：三合三會、刑害、同柱干支與作用變化後強弱複核', async () => {
+  const html = await render('/src/components/LessonThreeStepPanel.vue', { analysis: insufficientFixture });
+  assert.match(html, /地支沖合會刑害/);
+  assert.match(html, /丑戌相刑（丑戌未三刑缺未）：同屬土，加強土力/);
+  assert.match(html, /丑午相害：火生土/);
+  assert.match(html, /同柱干支/);
+  assert.match(html, /日柱甲午：天干生地支(<!--\[-->)?・暗合/);
+  assert.doesNotMatch(html, /地支沒有沖、合、會、刑、害/);
+  assert.match(html, /作用變化後強弱複核/);
+  const general = await render('/src/components/LessonThreeStepPanel.vue', { analysis: fixture });
+  assert.match(general, /申辰缺中神/);
+  // A synthetic reversal (cloned data, not a Rust output) is highlighted.
+  const changed = structuredClone(fixture);
+  changed.interactionStrength.changed = true;
+  changed.interactionStrength.conclusion = '測試：可能由強轉弱';
+  assert.match(await render('/src/components/LessonThreeStepPanel.vue', { analysis: changed }), /review-changed/);
+  // Older payloads without the new sections still render.
+  const { pillarRelations, interactionStrength, ...legacy } = fixture;
+  const legacyHtml = await render('/src/components/LessonThreeStepPanel.vue', { analysis: { ...legacy, branchInteractions: { ...legacy.branchInteractions, gatherings: undefined, punishments: undefined } } });
+  assert.doesNotMatch(legacyHtml, /lesson-step pillar-relations|lesson-step interaction-strength|combo-list gathering-list/);
+});

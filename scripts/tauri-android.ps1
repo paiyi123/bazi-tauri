@@ -309,6 +309,77 @@ import android.webkit.*
   Set-Content -LiteralPath $ipcPath -Value $ipcContent -NoNewline
 }
 
+function Invoke-AndroidTextZoomFix {
+  param([string]$WorkspaceRoot)
+
+  # Android's system font size scales WebView text through textZoom while layout widths stay fixed,
+  # which squeezes the luck-cycle cells. Pin textZoom to 100 and let the in-app font slider control size.
+  $mainActivityPath = Join-Path $WorkspaceRoot "src-tauri\gen\android\app\src\main\java\com\bazi\desktop\MainActivity.kt"
+  if (!(Test-Path -LiteralPath $mainActivityPath)) {
+    return
+  }
+
+  $content = Get-Content -LiteralPath $mainActivityPath -Raw
+  if ($content.Contains("textZoom")) {
+    return
+  }
+
+  $content = $content.Replace("import android.os.Bundle", "import android.os.Bundle`nimport android.webkit.WebView")
+  $lastBrace = $content.LastIndexOf("}")
+  if ($lastBrace -lt 0) {
+    return
+  }
+
+  $override = @"
+
+  override fun onWebViewCreate(webView: WebView) {
+    webView.settings.textZoom = 100
+  }
+"@
+  $content = $content.Substring(0, $lastBrace).TrimEnd() + "`n" + $override + "}`n"
+  Set-Content -LiteralPath $mainActivityPath -Value $content -NoNewline
+}
+
+function Invoke-AndroidSystemBarInsetFix {
+  param([string]$WorkspaceRoot)
+
+  # enableEdgeToEdge() lets the WebView draw under the status bar, navigation bar and camera cutout,
+  # so real phones hide the header and the right edge in landscape. Pad the content view by those insets
+  # (plus the keyboard) so the page always stays inside the visible area.
+  $mainActivityPath = Join-Path $WorkspaceRoot "src-tauri\gen\android\app\src\main\java\com\bazi\desktop\MainActivity.kt"
+  if (!(Test-Path -LiteralPath $mainActivityPath)) {
+    return
+  }
+
+  # Read and write as UTF-8 explicitly: Windows PowerShell would otherwise mangle the Chinese comments.
+  $utf8 = New-Object System.Text.UTF8Encoding $false
+  $content = [System.IO.File]::ReadAllText($mainActivityPath, $utf8)
+  if ($content.Contains("WindowInsetsCompat")) {
+    return
+  }
+
+  $content = $content.Replace(
+    "import android.os.Bundle",
+    "import android.os.Bundle`nimport android.view.View`nimport androidx.core.view.ViewCompat`nimport androidx.core.view.WindowInsetsCompat"
+  )
+
+  $listener = @"
+super.onCreate(savedInstanceState)
+
+    val content = findViewById<View>(android.R.id.content)
+    ViewCompat.setOnApplyWindowInsetsListener(content) { view, insets ->
+      val bars = insets.getInsets(
+        WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+      )
+      val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+      view.setPadding(bars.left, bars.top, bars.right, maxOf(bars.bottom, ime.bottom))
+      WindowInsetsCompat.CONSUMED
+    }
+"@
+  $content = $content.Replace("super.onCreate(savedInstanceState)", $listener.TrimEnd())
+  [System.IO.File]::WriteAllText($mainActivityPath, $content, $utf8)
+}
+
 $workspaceRoot = Split-Path -Parent $PSScriptRoot
 $npmCommand = Resolve-FirstExistingPath @(
   $env:TAURI_NPM_COMMAND,
@@ -472,6 +543,8 @@ if ($Subcommand -eq "build") {
 
   Invoke-AndroidAssetGeneration -PythonCommand $pythonCommand -WorkspaceRoot $workspaceRoot
   Invoke-AndroidWebViewWorkaround -WorkspaceRoot $workspaceRoot
+  Invoke-AndroidTextZoomFix -WorkspaceRoot $workspaceRoot
+  Invoke-AndroidSystemBarInsetFix -WorkspaceRoot $workspaceRoot
 
   & $cargoCommand @cargoArgs
   if ($LASTEXITCODE -ne 0) {

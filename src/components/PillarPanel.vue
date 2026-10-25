@@ -121,7 +121,7 @@
           </span>
         </div>
       </div>
-      <div class="relation-map">
+      <div ref="relationMapRef" class="relation-map" :style="relationMapStyle">
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="relation-map-svg">
           <template v-for="link in relationLinks" :key="link.key">
             <path
@@ -250,7 +250,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { BaziResponse, LuckPreviewPillar, Pillar, QuantModelInteraction } from '../types/bazi'
 import { BRANCH_WUXING, STEM_WUXING, type WuXing } from '../constants/wuxing'
 
@@ -1137,68 +1137,193 @@ function clampLabelPosition(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
 
-function spreadRelationLabels(links: RelationLink[]) {
-  const topLinks = links
-    .filter((link) => link.labelY < 50)
-    .sort((a, b) => a.labelY - b.labelY || a.labelX - b.labelX)
-  const bottomLinks = links
-    .filter((link) => link.labelY >= 50)
-    .sort((a, b) => a.labelY - b.labelY || a.labelX - b.labelX)
+// The diagram is laid out in % of the map, but labels and node cards are sized in px and grow with the
+// font-size slider. These measurements let the map grow with its cards and let labels avoid each other by size.
+interface RelationMapMetrics {
+  width: number
+  height: number
+  fontScale: number
+  nodeTop: number
+  nodeBottom: number
+}
 
-  const adjustGroup = (group: RelationLink[], area: 'top' | 'bottom') => {
-    const placed: Array<{ labelX: number; labelY: number }> = []
-    // Keep labels inside the map by pushing them toward the center band.
-    const yDirection = area === 'top' ? 1 : -1
-    const yMin = area === 'top' ? 6 : 54
-    const yMax = area === 'top' ? 44 : 93
-    const xMin = 12
-    const xMax = 88
-    const xCollision = 12.8
-    const yCollision = 6.8
-    const collides = (x: number, y: number) =>
-      placed.some((item) => Math.abs(item.labelX - x) < xCollision && Math.abs(item.labelY - y) < yCollision)
+const relationMapRef = ref<HTMLElement | null>(null)
+const relationMapMetrics = ref<RelationMapMetrics | null>(null)
+const relationMapHeight = ref<number | null>(null)
 
+const relationMapStyle = computed(() =>
+  relationMapHeight.value ? { height: `${relationMapHeight.value}px` } : {}
+)
+
+function measureRelationMap() {
+  const map = relationMapRef.value
+  if (!map) {
+    return
+  }
+  const nodes = Array.from(map.querySelectorAll<HTMLElement>('.relation-node'))
+  const mapStyle = getComputedStyle(map)
+  const fontScale = parseFloat(mapStyle.getPropertyValue('--app-font-scale')) || 1
+  const mapMin = parseFloat(mapStyle.minHeight) || 0
+
+  let nodeHeight = 0
+  let nodeBase = 0
+  if (nodes.length) {
+    // Let the cards take their natural height first, then give every card the tallest one.
+    // The hidden-stem block also gets the tallest block's height, so 干支 sit on the same line in every card.
+    map.style.setProperty('--relation-node-fit', '0px')
+    map.style.setProperty('--relation-hidden-fit', '0px')
+    const hiddenBlocks = Array.from(map.querySelectorAll<HTMLElement>('.relation-node-hidden-stems'))
+    const hiddenHeight = Math.max(0, ...hiddenBlocks.map((block) => block.offsetHeight))
+    map.style.setProperty('--relation-hidden-fit', `${hiddenHeight}px`)
+    nodeHeight = Math.max(...nodes.map((node) => node.offsetHeight))
+    nodeBase = parseFloat(getComputedStyle(nodes[0]).getPropertyValue('--relation-node-base')) || nodeHeight
+    map.style.setProperty('--relation-node-fit', `${nodeHeight}px`)
+  }
+
+  // Keep the card-to-map height ratio of the design, so lines and labels (placed in %) stay in proportion.
+  const ratio = mapMin > 0 && nodeBase > 0 ? nodeBase / mapMin : 0.5
+  const height = Math.max(mapMin, Math.ceil(nodeHeight / ratio))
+  const width = map.clientWidth
+  const nodeTop = height > 0 ? 48 - (nodeHeight / height) * 50 : 24
+  const nodeBottom = height > 0 ? 48 + (nodeHeight / height) * 50 : 72
+
+  if (relationMapHeight.value !== height) {
+    relationMapHeight.value = height
+  }
+  const previous = relationMapMetrics.value
+  if (
+    !previous ||
+    previous.width !== width ||
+    previous.height !== height ||
+    previous.fontScale !== fontScale ||
+    Math.abs(previous.nodeTop - nodeTop) > 0.01 ||
+    Math.abs(previous.nodeBottom - nodeBottom) > 0.01
+  ) {
+    relationMapMetrics.value = { width, height, fontScale, nodeTop, nodeBottom }
+  }
+}
+
+let relationMapFrame = 0
+function scheduleRelationMapMeasure() {
+  if (relationMapFrame) {
+    return
+  }
+  relationMapFrame = requestAnimationFrame(() => {
+    relationMapFrame = 0
+    measureRelationMap()
+  })
+}
+
+let relationMapObserver: ResizeObserver | null = null
+let fontScaleObserver: MutationObserver | null = null
+
+function observeRelationMap() {
+  relationMapObserver?.disconnect()
+  const map = relationMapRef.value
+  if (!map || typeof ResizeObserver === 'undefined') {
+    return
+  }
+  relationMapObserver = new ResizeObserver(scheduleRelationMapMeasure)
+  relationMapObserver.observe(map)
+  map.querySelectorAll('.relation-node').forEach((node) => relationMapObserver?.observe(node))
+  scheduleRelationMapMeasure()
+}
+
+onMounted(() => {
+  observeRelationMap()
+  // The font slider changes --app-font-scale on an ancestor's inline style; card text size follows it.
+  if (typeof MutationObserver !== 'undefined') {
+    fontScaleObserver = new MutationObserver(scheduleRelationMapMeasure)
+    fontScaleObserver.observe(document.body, { attributes: true, attributeFilter: ['style'], subtree: true })
+  }
+})
+
+onBeforeUnmount(() => {
+  relationMapObserver?.disconnect()
+  fontScaleObserver?.disconnect()
+  if (relationMapFrame) {
+    cancelAnimationFrame(relationMapFrame)
+  }
+})
+
+function estimateLabelSize(link: RelationLink, fontScale: number) {
+  const fontPx = (link.type === '祿' ? 11 : 12) * fontScale
+  const ems = Array.from(link.label).reduce((sum, char) => sum + (/[\x00-\x7f]/.test(char) ? 0.55 : 1), 0)
+  // 0.04em letter spacing, 9px side padding, 1px border.
+  return { width: ems * fontPx * 1.04 + 20, height: fontPx * 1.5 + 2 }
+}
+
+function spreadRelationLabels(links: RelationLink[], metrics: RelationMapMetrics | null) {
+  const width = metrics?.width || 360
+  const height = metrics?.height || 360
+  const fontScale = metrics?.fontScale || 1
+  const nodeTop = metrics?.nodeTop ?? 24
+  const nodeBottom = metrics?.nodeBottom ?? 72
+  const gap = 3
+  const edge = 4
+
+  type Box = { x: number; y: number; w: number; h: number }
+  const placed: Box[] = []
+  const overlaps = (a: Box, b: Box) =>
+    Math.abs(a.x - b.x) < (a.w + b.w) / 2 + gap && Math.abs(a.y - b.y) < (a.h + b.h) / 2 + gap
+
+  const place = (group: RelationLink[], area: 'top' | 'bottom') => {
     for (const link of group) {
-      const baseX = link.labelX
-      const baseY = link.labelY
-      let nextX = baseX
-      let nextY = baseY
-      const yStep = link.kind === 'path' ? 1.05 : 1.45
-      const xStep = link.kind === 'path' ? 3.1 : 3.8
+      const size = estimateLabelSize(link, fontScale)
+      const w = size.width
+      const h = size.height
+      const xMin = Math.min(width / 2, w / 2 + edge)
+      const xMax = Math.max(width / 2, width - w / 2 - edge)
+      const yMin = h / 2 + edge
+      const yMax = height - h / 2 - edge
+      const clampX = (value: number) => clampLabelPosition(value, xMin, xMax)
+      const clampY = (value: number) => clampLabelPosition(value, yMin, yMax)
+      const baseX = clampX((link.labelX / 100) * width)
+      const baseY = clampY((link.labelY / 100) * height)
 
-      if (collides(nextX, nextY)) {
-        let found = false
+      // Candidate rows go from the label's own spot toward the cards; candidates on a card cost extra.
+      const direction = area === 'top' ? 1 : -1
+      const rowStep = h + gap
+      const xStep = Math.max(6, w / 4)
+      const cardTop = (nodeTop / 100) * height
+      const cardBottom = (nodeBottom / 100) * height
+      let best: Box | null = null
+      let bestCost = Infinity
 
-        for (let wave = 1; wave <= 8 && !found; wave += 1) {
-          const candidateY = clampLabelPosition(baseY + yDirection * wave * yStep, yMin, yMax)
-          const candidateXs = [
-            baseX,
-            baseX + xStep,
-            baseX - xStep,
-            baseX + wave * xStep,
-            baseX - wave * xStep
-          ]
-
-          for (const candidateX of candidateXs) {
-            const clampedX = clampLabelPosition(candidateX, xMin, xMax)
-            if (!collides(clampedX, candidateY)) {
-              nextX = clampedX
-              nextY = candidateY
-              found = true
-              break
+      // Top labels stay above the cards' middle line and bottom labels below it.
+      const middle = height * 0.48
+      for (let row = -6; row <= 12; row += 1) {
+        const y = clampY(baseY + direction * row * rowStep)
+        if (area === 'top' ? y > middle : y < middle) {
+          continue
+        }
+        const onCard = y + h / 2 > cardTop && y - h / 2 < cardBottom
+        for (let step = 0; step <= 16; step += 1) {
+          for (const sign of step === 0 ? [0] : [1, -1]) {
+            const x = clampX(baseX + sign * step * xStep)
+            const box = { x, y, w, h }
+            if (placed.some((item) => overlaps(item, box))) {
+              continue
+            }
+            const cost = Math.abs(x - baseX) + Math.abs(y - baseY) * 1.5 + (onCard ? 400 : 0)
+            if (cost < bestCost) {
+              bestCost = cost
+              best = box
             }
           }
         }
       }
 
-      link.labelX = clampLabelPosition(nextX, xMin, xMax)
-      link.labelY = clampLabelPosition(nextY, yMin, yMax)
-      placed.push({ labelX: link.labelX, labelY: link.labelY })
+      const chosen = best ?? { x: baseX, y: baseY, w, h }
+      placed.push(chosen)
+      link.labelX = (chosen.x / width) * 100
+      link.labelY = (chosen.y / height) * 100
     }
   }
 
-  adjustGroup(topLinks, 'top')
-  adjustGroup(bottomLinks, 'bottom')
+  const byPosition = (a: RelationLink, b: RelationLink) => a.labelX - b.labelX || a.labelY - b.labelY
+  place(links.filter((link) => link.labelY < 50).sort(byPosition), 'top')
+  place(links.filter((link) => link.labelY >= 50).sort(byPosition), 'bottom')
 
   return links
 }
@@ -1259,8 +1384,14 @@ const relationLinks = computed<RelationLink[]>(() => {
     return [{ ...base, ...multi }]
   })
 
-  return spreadRelationLabels(rawLinks)
+  return spreadRelationLabels(rawLinks, relationMapMetrics.value)
 })
+
+// New cards (a 大運/流年 preview added) need observing; their content can change the tallest card.
+watch(
+  () => [diagramNodes.value.map((node) => node.key).join(','), showRelationMap.value],
+  () => nextTick(observeRelationMap)
+)
 </script>
 
 <style scoped>
@@ -1414,7 +1545,9 @@ const relationLinks = computed<RelationLink[]>(() => {
   align-items: center;
   min-width: 112px;
   max-width: 148px;
-  height: 214px;
+  --relation-node-base: 214px;
+  /* Grows with the font-size slider; the script gives every card the tallest card's height. */
+  min-height: max(var(--relation-node-base), var(--relation-node-fit, 0px));
   padding: 8px 10px 12px;
   border-radius: 16px;
   border: 1px solid rgba(188, 195, 211, 0.7);
@@ -1491,8 +1624,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   flex-direction: column;
   justify-content: flex-start;
   gap: 6px;
-  min-height: 66px;
-  max-height: 66px;
+  min-height: max(66px, var(--relation-hidden-fit, 0px));
   overflow: hidden;
 }
 
@@ -1516,6 +1648,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 
 .relation-node-hidden-ten-god {
   display: inline-flex;
+  white-space: nowrap;
   align-items: center;
   justify-content: center;
   min-height: 18px;
@@ -1682,7 +1815,8 @@ const relationLinks = computed<RelationLink[]>(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 0 6px;
   margin-top: 2px;
   padding-top: 5px;
   border-top: 1px solid rgba(188, 195, 211, 0.35);
@@ -1692,6 +1826,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   color: var(--el-text-color-secondary);
   font-size: calc(9px * var(--app-font-scale));
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .compact-score-value {
@@ -1769,7 +1904,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 .pillar-panel-compact .relation-node {
   min-width: 84px;
   max-width: 108px;
-  height: 156px;
+  --relation-node-base: 156px;
   padding: 6px 6px 8px;
 }
 
@@ -1779,8 +1914,7 @@ const relationLinks = computed<RelationLink[]>(() => {
 }
 
 .pillar-panel-compact .relation-node-hidden-stems {
-  min-height: 52px;
-  max-height: 52px;
+  min-height: max(52px, var(--relation-hidden-fit, 0px));
   gap: 4px;
 }
 
@@ -1838,7 +1972,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   .relation-node {
     min-width: 92px;
     max-width: 116px;
-    height: 172px;
+    --relation-node-base: 172px;
     padding: 6px 6px 8px;
   }
 
@@ -1848,8 +1982,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   }
 
   .relation-node-hidden-stems {
-    min-height: 54px;
-    max-height: 54px;
+    min-height: max(54px, var(--relation-hidden-fit, 0px));
     gap: 4px;
   }
 
@@ -1885,7 +2018,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   .pillar-panel-compact .relation-node {
     min-width: 76px;
     max-width: 96px;
-    height: 142px;
+    --relation-node-base: 142px;
   }
 
   .pillar-panel-compact .relation-node-stem,
@@ -1902,7 +2035,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   .relation-node {
     min-width: 84px;
     max-width: 104px;
-    height: 156px;
+    --relation-node-base: 156px;
   }
 
   .relation-node-stem,
@@ -1974,7 +2107,7 @@ const relationLinks = computed<RelationLink[]>(() => {
   .pillar-panel-compact .relation-node {
     min-width: 70px;
     max-width: 88px;
-    height: 132px;
+    --relation-node-base: 132px;
   }
 
   .pillar-panel-compact .relation-node-stem,

@@ -494,6 +494,42 @@
     "momentumProxy": false,
     "rootCount": 0,
     "observationCount": 0,
+    "samePartyCharacters": [
+      "日干甲（日元）"
+    ],
+    "opposingPartyCharacters": [
+      "年干戊（偏財）",
+      "年支戌（偏財）",
+      "月干己（正財）",
+      "月支丑（正財）",
+      "日支午（傷官）",
+      "時干丁（傷官）",
+      "時支巳（食神）"
+    ],
+    "checks": [
+      {
+        "item": "得令（得時）",
+        "hit": false,
+        "rule": "日干生在同五行當旺的月令：木寅卯、火巳午、土辰戌丑未、金申酉、水亥子。",
+        "finding": "日主甲屬木，生於丑月（本氣己屬土，為正財）；木要生於寅卯月才算得令 → 失令。",
+        "sourceDate": "2026-07-22"
+      },
+      {
+        "item": "得勢",
+        "hit": false,
+        "rule": "八個字（四天干含日主、四地支取本氣）分同黨（印、比劫）與異黨（食傷、財、官殺），多者勝；四比四時看月令屬哪一黨（得令者為旺）。",
+        "finding": "同黨 1 個、異黨 7 個；異黨較多 → 失勢。",
+        "sourceDate": "2026-09-02"
+      },
+      {
+        "item": "得地",
+        "hit": false,
+        "rule": "地支藏干中有與日干同五行者即通根，不分陰陽；根以本氣最穩，其次長生，再次餘氣、墓庫。",
+        "finding": "四支藏干都沒有木（不分陰陽）→ 不得地。",
+        "sourceDate": "2026-07-22"
+      }
+    ],
+    "verdictReason": "得令✗、得勢✗、得地✗；三者皆無，但剋洩耗未全見 → 依據不足，需再看合沖會化後的五行變化（2026-07-29）。",
     "pressureFamiliesSurface": [
       "食傷",
       "財"
@@ -700,6 +736,245 @@
       "通關元素存在也不宣稱通關成功；病藥不覆寫上游強弱。"
     ]
   },
+  "stemInteractions": {
+    "title": "天干生剋合化",
+    "conclusion": "天干五合：己甲合而能化（從象（化氣））。生剋 4 組（其中不論 0 組）。",
+    "status": "candidate",
+    "combinations": [
+      {
+        "id": "stem-combination-2-3",
+        "stems": "己甲",
+        "positions": [
+          "月干己（正財）",
+          "日干甲（日元）"
+        ],
+        "element": "土",
+        "scope": "日干本身之合",
+        "kind": "transformed",
+        "kindLabel": "合而能化",
+        "direction": null,
+        "boundStems": [],
+        "verdict": "neutral",
+        "verdictLabel": "從象（化氣）",
+        "reason": "己甲合，其餘六字都是土或生土之神：日主不能論化，但必順土之氣勢，合成從象，以從格論喜忌（講義例六）。",
+        "notes": [
+          "老師說法：統稱化氣格也無不可，喜忌論法都一樣（喜化神與生化神）；這時普通格的扶抑喜忌要改看特殊格。"
+        ],
+        "needsConfirmation": false,
+        "sourceDate": "2026-10-14"
+      }
+    ],
+    "relations": [
+      {
+        "id": "stem-relation-3-1",
+        "from": "日干甲（日元）",
+        "to": "年干戊（偏財）",
+        "relation": "剋",
+        "distance": "隔一位",
+        "status": "weak",
+        "statusLabel": "剋力有限",
+        "reason": "日干甲坐下無根、根氣-0.0，年干戊結黨有根（根氣2.9），剋者反而無能為力（如土旺木折、木旺金缺）。",
+        "sourceDate": "2026-10-07"
+      },
+      {
+        "id": "stem-relation-3-4",
+        "from": "日干甲（日元）",
+        "to": "時干丁（傷官）",
+        "relation": "生",
+        "distance": "鄰近",
+        "status": "active",
+        "statusLabel": "論生",
+        "reason": "相鄰貼近，生力大，但坐下無根（坐剋虛浮），生力打折。",
+        "sourceDate": "2026-10-07"
+      },
+      {
+        "id": "stem-relation-4-1",
+        "from": "時干丁（傷官）",
+        "to": "年干戊（偏財）",
+        "relation": "生",
+        "distance": "遙隔",
+        "status": "active",
+        "statusLabel": "論生",
+        "reason": "遙隔，生力更小，坐旺通根生力足。",
+        "sourceDate": "2026-10-07"
+      },
+      {
+        "id": "stem-relation-4-2",
+        "from": "時干丁（傷官）",
+        "to": "月干己（正財）",
+        "relation": "生",
+        "distance": "隔一位",
+        "status": "active",
+        "statusLabel": "論生",
+        "reason": "隔一位，生力較小，坐旺通根生力足。",
+        "sourceDate": "2026-10-07"
+      }
+    ],
+    "limitations": [
+      "吉凶依課堂三步法的喜忌方案；多方案時，元素只有在沒有方案相反時才算喜或忌。",
+      "牽絆方向、虛浮與否用根氣粗估，不是老師的量化公式。",
+      "合化後的五行沒有回頭重算強弱；量化五行力分數不受影響。"
+    ],
+    "sources": [
+      "2026-10-07",
+      "2026-10-14"
+    ]
+  },
+  "branchInteractions": {
+    "title": "地支沖合會刑害",
+    "conclusion": "丑戌相刑（丑戌未三刑缺未）：同屬土，加強土力（依生剋論，未列喜忌）；丑午相害：火生土（依生剋論，未列喜忌）。",
+    "status": "candidate",
+    "clashes": [],
+    "combinations": [],
+    "gatherings": [],
+    "punishments": [
+      {
+        "id": "branch-punishment-丑戌未",
+        "kind": "punishment",
+        "kindLabel": "丑戌相刑（丑戌未三刑缺未）",
+        "branches": "丑戌",
+        "positions": [
+          "月支丑",
+          "年支戌"
+        ],
+        "relation": "同屬土，加強土力",
+        "verdict": "neutral",
+        "verdictLabel": "依生剋論，未列喜忌",
+        "reason": "以本氣生剋論：同屬土，加強土力；加強土（未列喜忌）。",
+        "notes": [
+          "講義第五節：刑害的傳統論法近乎神煞，不足憑；改以五行本氣藏氣論生剋制化，配合喜忌與十神類化。"
+        ],
+        "sourceDate": "講義第24章"
+      },
+      {
+        "id": "branch-harm-2-3",
+        "kind": "harm",
+        "kindLabel": "丑午相害",
+        "branches": "丑午",
+        "positions": [
+          "月支丑",
+          "日支午"
+        ],
+        "relation": "火生土",
+        "verdict": "neutral",
+        "verdictLabel": "依生剋論，未列喜忌",
+        "reason": "以本氣生剋論：火生土；加強土（未列喜忌）。",
+        "notes": [
+          "講義第五節：刑害的傳統論法近乎神煞，不足憑；改以五行本氣藏氣論生剋制化，配合喜忌與十神類化。"
+        ],
+        "sourceDate": "講義第24章"
+      }
+    ],
+    "limitations": [
+      "勝負用「本氣同五行的地支數，得令再加一」粗估；天干透出、半合三合的助力沒有計入，與老師逐例的文字判斷可能不同。",
+      "敗方有兩處以上生扶（同柱天干或地支本氣）時判為各有損傷，這是依講義例七整理的工程門檻。",
+      "三合、三會、刑害（講義第三至五節）課堂還沒講，依講義整理：成局條件是依第 26 章例題歸納的推論；刑害只依本氣生剋論，不論刑害本身吉凶（老師：害屬神煞）。",
+      "沖合結果沒有回頭重算強弱與喜忌；量化五行力分數不受影響。"
+    ],
+    "sources": [
+      "2026-10-21",
+      "講義第24章"
+    ]
+  },
+  "pillarRelations": {
+    "title": "同柱干支",
+    "conclusion": "戊戌干支同類；己丑干支同類；甲午天干生地支・暗合；丁巳干支同類。",
+    "relations": [
+      {
+        "id": "pillar-relation-1",
+        "pillar": "年柱",
+        "ganZhi": "戊戌",
+        "kind": "same",
+        "kindLabel": "干支同類",
+        "hiddenCombination": null,
+        "hiddenCombinationPure": false,
+        "stemFavor": "未列喜忌",
+        "verdict": "neutral",
+        "verdictLabel": "未列喜忌",
+        "reason": "戊戌：上下比助，土力加強（六十甲子中以干支同類之氣最專）。",
+        "notes": [
+          "四墓之地藏干力量：土星本氣最大，其次餘氣，再次庫神；透出天干者最大（講義第 45 頁）。"
+        ],
+        "sourceDate": "講義第25章"
+      },
+      {
+        "id": "pillar-relation-2",
+        "pillar": "月柱",
+        "ganZhi": "己丑",
+        "kind": "same",
+        "kindLabel": "干支同類",
+        "hiddenCombination": null,
+        "hiddenCombinationPure": false,
+        "stemFavor": "未列喜忌",
+        "verdict": "neutral",
+        "verdictLabel": "未列喜忌",
+        "reason": "己丑：上下比助，土力加強（六十甲子中以干支同類之氣最專）。",
+        "notes": [
+          "四墓之地藏干力量：土星本氣最大，其次餘氣，再次庫神；透出天干者最大（講義第 45 頁）。"
+        ],
+        "sourceDate": "講義第25章"
+      },
+      {
+        "id": "pillar-relation-3",
+        "pillar": "日柱",
+        "ganZhi": "甲午",
+        "kind": "stem_generates_branch",
+        "kindLabel": "天干生地支",
+        "hiddenCombination": "甲木合午中己土",
+        "hiddenCombinationPure": true,
+        "stemFavor": "未列喜忌",
+        "verdict": "neutral",
+        "verdictLabel": "日主坐下耗洩",
+        "reason": "甲午：木生火，火加強、木被洩減力。",
+        "notes": [
+          "日柱干支上下相合（甲木合午中己土）：不入外格時以生合、剋合論，依本氣屬生合（講義第 46 頁；生剋歸類為推論）。"
+        ],
+        "sourceDate": "講義第25章"
+      },
+      {
+        "id": "pillar-relation-4",
+        "pillar": "時柱",
+        "ganZhi": "丁巳",
+        "kind": "same",
+        "kindLabel": "干支同類",
+        "hiddenCombination": null,
+        "hiddenCombinationPure": false,
+        "stemFavor": "未列喜忌",
+        "verdict": "neutral",
+        "verdictLabel": "未列喜忌",
+        "reason": "丁巳：上下比助，火力加強（六十甲子中以干支同類之氣最專）。",
+        "notes": [
+          "四生之地藏干力量：本氣最大，其次長生，再次寄土；透出天干者最大（講義第 45 頁）。"
+        ],
+        "sourceDate": "講義第25章"
+      }
+    ],
+    "limitations": [
+      "講義說同柱力量要配合時令、藏干與整體結構綜合論斷，沒有固定公式；這裡只標上下關係與喜忌方向，不改強弱與量化分數。",
+      "日柱的天干就是日主，不另判吉凶，只標自坐得生扶或坐剋。"
+    ],
+    "sources": [
+      "講義第25章"
+    ]
+  },
+  "interactionStrength": {
+    "title": "作用變化後強弱複核",
+    "conclusion": "原局沒有天干合化或地支成局，作用變化不改變得勢點數。",
+    "samePartyCount": 1,
+    "opposingPartyCount": 7,
+    "momentum": false,
+    "classification": "依據不足",
+    "changed": false,
+    "changes": [],
+    "limitations": [
+      "只做提醒，不取代課堂三步法的判定，也不改量化分數。",
+      "天干合化改黨別是講義明說；地支成局「該黨加一」是為了反映「增其合力」的工程權重，講義沒有給數字。",
+      "講義說八字結構複雜多端、沒有固定公式；從格、專旺、調候（如火炎土燥、金寒水冷）不在這個複核裡。"
+    ],
+    "sources": [
+      "講義第26章"
+    ]
+  },
   "comparison": {
     "pattern": {
       "appValue": "直輸四柱分析",
@@ -759,10 +1034,39 @@
       ]
     },
     {
+      "date": "2026-10-07",
+      "ruleIds": [
+        "stem-generation-control-distance"
+      ]
+    },
+    {
+      "date": "2026-10-14",
+      "ruleIds": [
+        "stem-five-combination-variants"
+      ]
+    },
+    {
+      "date": "2026-10-21",
+      "ruleIds": [
+        "branch-clash-variants",
+        "branch-six-combination-variants",
+        "year-month-stem-transform-needs-chen-hour"
+      ]
+    },
+    {
       "date": "2026-09-02",
       "ruleIds": [
         "specialized-use-version",
         "follow-child-peer-exception"
+      ]
+    },
+    {
+      "date": "講義第24–26章",
+      "ruleIds": [
+        "branch-three-combination-meeting",
+        "branch-punishment-harm-by-elements",
+        "same-pillar-stem-branch",
+        "interaction-strength-review"
       ]
     }
   ],

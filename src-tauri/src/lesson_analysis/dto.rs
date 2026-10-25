@@ -18,6 +18,10 @@ pub struct LessonThreeStepAnalysis {
     pub pattern: LessonPatternAnalysis,
     pub strength: LessonStrengthAnalysis,
     pub preferences: LessonPreferenceAnalysis,
+    pub stem_interactions: LessonStemInteractionAnalysis,
+    pub branch_interactions: LessonBranchInteractionAnalysis,
+    pub pillar_relations: LessonPillarRelationAnalysis,
+    pub interaction_strength: LessonInteractionStrengthReview,
     pub comparison: LessonComparison,
     pub sources: Vec<LessonSource>,
     pub limitations: Vec<String>,
@@ -191,11 +195,26 @@ pub struct LessonStrengthAnalysis {
     pub momentum_proxy: bool,
     pub root_count: usize,
     pub observation_count: usize,
+    pub same_party_characters: Vec<String>,
+    pub opposing_party_characters: Vec<String>,
+    pub checks: Vec<LessonStrengthCheck>,
+    pub verdict_reason: String,
     pub pressure_families_surface: Vec<String>,
     pub pressure_families_hidden: Vec<String>,
     pub interactions: Vec<LessonInteractionEvidence>,
     pub evidence: Vec<LessonEvidence>,
     pub limitations: Vec<String>,
+}
+
+/// One of the classroom's three strength observations (得令／得勢／得地), spelled out for display.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LessonStrengthCheck {
+    pub item: String,
+    pub hit: bool,
+    pub rule: String,
+    pub finding: String,
+    pub source_date: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -302,4 +321,202 @@ pub struct LessonComparisonItem {
     pub lesson_value: String,
     pub agreement_status: String,
     pub note: String,
+}
+
+/// 天干生剋合化（2026-10-07、10-14）：五合的五種變化與天干生剋的遠近、通關。
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LessonStemInteractionAnalysis {
+    pub title: String,
+    pub conclusion: String,
+    pub status: String,
+    pub combinations: Vec<LessonStemCombination>,
+    pub relations: Vec<LessonStemRelation>,
+    pub limitations: Vec<String>,
+    pub sources: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LessonStemCombination {
+    pub id: String,
+    pub stems: String,
+    pub positions: Vec<String>,
+    pub element: String,
+    /// 日干本身之合／日干以外之合／隔位相合
+    pub scope: String,
+    /// blocked／bound／contested／transformed
+    pub kind: String,
+    /// 合而不合／合而不化／爭合妒合／合而能化
+    pub kind_label: String,
+    /// 合來／合去
+    pub direction: Option<String>,
+    pub bound_stems: Vec<String>,
+    /// good／bad／mixed／neutral
+    pub verdict: String,
+    pub verdict_label: String,
+    pub reason: String,
+    pub notes: Vec<String>,
+    pub needs_confirmation: bool,
+    pub source_date: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LessonStemRelation {
+    pub id: String,
+    pub from: String,
+    pub to: String,
+    /// 生／剋
+    pub relation: String,
+    /// 鄰近／隔一位／遙隔
+    pub distance: String,
+    /// active／weak／ignored
+    pub status: String,
+    pub status_label: String,
+    pub reason: String,
+    pub source_date: String,
+}
+
+/// 地支沖合（2026-10-21）：六沖的勝負與去喜去忌、六合的生合剋合與解沖。
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LessonBranchInteractionAnalysis {
+    pub title: String,
+    pub conclusion: String,
+    pub status: String,
+    pub clashes: Vec<LessonBranchClash>,
+    pub combinations: Vec<LessonBranchCombination>,
+    /// 三合、半合、三會、辰戌丑未全（講義第二十四章第三、四節）
+    pub gatherings: Vec<LessonBranchGathering>,
+    /// 三刑、自刑、六害，以本氣生剋論（講義第二十四章第五節）
+    pub punishments: Vec<LessonBranchPunishment>,
+    pub limitations: Vec<String>,
+    pub sources: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LessonBranchClash {
+    pub id: String,
+    pub branches: String,
+    pub positions: Vec<String>,
+    /// 貼近／隔一位／遙隔
+    pub distance: String,
+    pub force_label: String,
+    pub winner: Option<String>,
+    pub loser: Option<String>,
+    /// decisive／both_damaged／storage
+    pub outcome: String,
+    pub outcome_label: String,
+    /// good／bad／mixed／neutral
+    pub verdict: String,
+    pub verdict_label: String,
+    pub reason: String,
+    pub notes: Vec<String>,
+    pub source_date: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LessonBranchCombination {
+    pub id: String,
+    pub branches: String,
+    pub positions: Vec<String>,
+    /// generating（生合）／controlling（剋合）
+    pub kind: String,
+    pub kind_label: String,
+    pub adjacent: bool,
+    pub verdict: String,
+    pub verdict_label: String,
+    pub reason: String,
+    /// 與相沖並見時的作用（加重沖力、減低沖力）
+    pub clash_effect: Option<String>,
+    pub notes: Vec<String>,
+    pub source_date: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LessonBranchGathering {
+    pub id: String,
+    /// three_combination／three_meeting／half_combination／incomplete_half／earth_full
+    pub kind: String,
+    pub kind_label: String,
+    pub branches: String,
+    pub positions: Vec<String>,
+    /// 局的五行
+    pub element: String,
+    /// 是否成局（不成局時依常理論）
+    pub formed: bool,
+    pub force_label: String,
+    pub verdict: String,
+    pub verdict_label: String,
+    pub reason: String,
+    pub notes: Vec<String>,
+    pub source_date: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LessonBranchPunishment {
+    pub id: String,
+    /// punishment／self_punishment／harm
+    pub kind: String,
+    pub kind_label: String,
+    pub branches: String,
+    pub positions: Vec<String>,
+    /// 本氣生剋讀法，例如「木生火、火剋金」
+    pub relation: String,
+    pub verdict: String,
+    pub verdict_label: String,
+    pub reason: String,
+    pub notes: Vec<String>,
+    pub source_date: String,
+}
+
+/// 同柱干支生剋合（講義第二十五章）。
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LessonPillarRelationAnalysis {
+    pub title: String,
+    pub conclusion: String,
+    pub relations: Vec<LessonPillarRelation>,
+    pub limitations: Vec<String>,
+    pub sources: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LessonPillarRelation {
+    pub id: String,
+    pub pillar: String,
+    pub gan_zhi: String,
+    /// same／stem_generates_branch／branch_generates_stem／stem_controls_branch／branch_controls_stem
+    pub kind: String,
+    pub kind_label: String,
+    pub hidden_combination: Option<String>,
+    pub hidden_combination_pure: bool,
+    pub stem_favor: String,
+    pub verdict: String,
+    pub verdict_label: String,
+    pub reason: String,
+    pub notes: Vec<String>,
+    pub source_date: String,
+}
+
+/// 作用變化後強弱複核（講義第二十六章）：只做提醒，不改課堂判定。
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LessonInteractionStrengthReview {
+    pub title: String,
+    pub conclusion: String,
+    pub same_party_count: usize,
+    pub opposing_party_count: usize,
+    pub momentum: bool,
+    pub classification: String,
+    pub changed: bool,
+    pub changes: Vec<String>,
+    pub limitations: Vec<String>,
+    pub sources: Vec<String>,
 }

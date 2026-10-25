@@ -47,6 +47,74 @@
           <p>課程來源：{{ analysis.sources.map(source => `${source.date}（${source.ruleIds.join('、')}）`).join('；') }}</p>
         </details>
       </article>
+      <article v-if="analysis.stemInteractions" class="lesson-step stem-interactions">
+        <h4>{{ analysis.stemInteractions.title }} <small>（{{ analysis.stemInteractions.sources.join('、') }}）</small></h4><p>{{ analysis.stemInteractions.conclusion }}</p>
+        <ul v-if="analysis.stemInteractions.combinations.length" class="combo-list">
+          <li v-for="combo in analysis.stemInteractions.combinations" :key="combo.id">
+            <span class="verdict" :class="`verdict-${combo.verdict}`">{{ verdictMark(combo.verdict) }}</span>
+            <strong>{{ combo.stems }}合{{ combo.element }}：{{ combo.kindLabel }}<template v-if="combo.direction">・{{ combo.direction }}</template></strong>（{{ combo.scope }}；{{ combo.verdictLabel }}<template v-if="combo.needsConfirmation">；待確認</template>）
+            <div class="combo-reason">{{ combo.reason }}</div>
+            <ul v-if="combo.notes.length" class="combo-notes"><li v-for="note in combo.notes" :key="note">{{ note }}</li></ul>
+          </li>
+        </ul>
+        <p v-else>天干沒有五合。</p>
+        <details v-if="analysis.stemInteractions.relations.length"><summary>天干生剋（遠近、通關、先受剋）</summary>
+          <ul><li v-for="item in analysis.stemInteractions.relations" :key="item.id" :class="{ ignored: item.status === 'ignored' }">{{ item.from }}{{ item.relation }}{{ item.to }}（{{ item.distance }}，{{ item.statusLabel }}）：{{ item.reason }}</li></ul>
+          <ul v-if="analysis.stemInteractions.limitations.length" class="limitations"><li v-for="item in analysis.stemInteractions.limitations" :key="item">限制：{{ item }}</li></ul>
+        </details>
+      </article>
+      <article v-if="analysis.branchInteractions" class="lesson-step branch-interactions">
+        <h4>{{ analysis.branchInteractions.title }} <small>（{{ analysis.branchInteractions.sources.join('、') }}）</small></h4><p>{{ analysis.branchInteractions.conclusion }}</p>
+        <ul v-if="analysis.branchInteractions.clashes.length || analysis.branchInteractions.combinations.length" class="combo-list">
+          <li v-for="clash in analysis.branchInteractions.clashes" :key="clash.id">
+            <span class="verdict" :class="`verdict-${clash.verdict}`">{{ verdictMark(clash.verdict) }}</span>
+            <strong>{{ clash.branches }}沖：{{ clash.outcomeLabel }}</strong>（{{ clash.distance }}，{{ clash.forceLabel }}；{{ clash.verdictLabel }}）
+            <div class="combo-reason">{{ clash.positions.join('、') }}。{{ clash.reason }}</div>
+            <ul v-if="clash.notes.length" class="combo-notes"><li v-for="note in clash.notes" :key="note">{{ note }}</li></ul>
+          </li>
+          <li v-for="combo in analysis.branchInteractions.combinations" :key="combo.id">
+            <span class="verdict" :class="`verdict-${combo.verdict}`">{{ verdictMark(combo.verdict) }}</span>
+            <strong>{{ combo.branches }}六合：{{ combo.kindLabel }}</strong>（{{ combo.adjacent ? '相鄰' : '隔位' }}；{{ combo.verdictLabel }}）
+            <div class="combo-reason">{{ combo.positions.join('、') }}。{{ combo.reason }}</div>
+            <div v-if="combo.clashEffect" class="combo-reason">沖合並見：{{ combo.clashEffect }}</div>
+            <ul v-if="combo.notes.length" class="combo-notes"><li v-for="note in combo.notes" :key="note">{{ note }}</li></ul>
+          </li>
+        </ul>
+        <p v-else-if="!analysis.branchInteractions.gatherings?.length && !analysis.branchInteractions.punishments?.length">地支沒有沖、合、會、刑、害。</p>
+        <ul v-if="analysis.branchInteractions.gatherings?.length || analysis.branchInteractions.punishments?.length" class="combo-list gathering-list">
+          <li v-for="item in analysis.branchInteractions.gatherings || []" :key="item.id" :class="{ ignored: !item.formed && item.verdict === 'neutral' }">
+            <span class="verdict" :class="`verdict-${item.verdict}`">{{ verdictMark(item.verdict) }}</span>
+            <strong>{{ item.kindLabel }}</strong>（{{ item.forceLabel }}；{{ item.verdictLabel }}）
+            <div class="combo-reason">{{ item.positions.join('、') }}。{{ item.reason }}</div>
+            <ul v-if="item.notes.length" class="combo-notes"><li v-for="note in item.notes" :key="note">{{ note }}</li></ul>
+          </li>
+          <li v-for="item in analysis.branchInteractions.punishments || []" :key="item.id">
+            <span class="verdict" :class="`verdict-${item.verdict}`">{{ verdictMark(item.verdict) }}</span>
+            <strong>{{ item.kindLabel }}：{{ item.relation }}</strong>（{{ item.verdictLabel }}）
+            <div class="combo-reason">{{ item.positions.join('、') }}。{{ item.reason }}</div>
+            <ul v-if="item.notes.length" class="combo-notes"><li v-for="note in item.notes" :key="note">{{ note }}</li></ul>
+          </li>
+        </ul>
+        <ul v-if="analysis.branchInteractions.limitations.length" class="limitations"><li v-for="item in analysis.branchInteractions.limitations" :key="item">限制：{{ item }}</li></ul>
+      </article>
+      <article v-if="analysis.pillarRelations" class="lesson-step pillar-relations">
+        <h4>{{ analysis.pillarRelations.title }} <small>（{{ analysis.pillarRelations.sources.join('、') }}）</small></h4><p>{{ analysis.pillarRelations.conclusion }}</p>
+        <ul class="combo-list">
+          <li v-for="item in analysis.pillarRelations.relations" :key="item.id">
+            <span class="verdict" :class="`verdict-${item.verdict}`">{{ verdictMark(item.verdict) }}</span>
+            <strong>{{ item.pillar }}{{ item.ganZhi }}：{{ item.kindLabel }}<template v-if="item.hiddenCombination">・暗合</template></strong>（{{ item.verdictLabel }}）
+            <div class="combo-reason">{{ item.reason }}</div>
+            <ul v-if="item.notes.length" class="combo-notes"><li v-for="note in item.notes" :key="note">{{ note }}</li></ul>
+          </li>
+        </ul>
+        <ul v-if="analysis.pillarRelations.limitations.length" class="limitations"><li v-for="item in analysis.pillarRelations.limitations" :key="item">限制：{{ item }}</li></ul>
+      </article>
+      <article v-if="analysis.interactionStrength" class="lesson-step interaction-strength" :class="{ 'review-changed': analysis.interactionStrength.changed }">
+        <h4>{{ analysis.interactionStrength.title }} <small>（{{ analysis.interactionStrength.sources.join('、') }}）</small></h4>
+        <p>{{ analysis.interactionStrength.conclusion }}</p>
+        <ul v-if="analysis.interactionStrength.changes.length"><li v-for="item in analysis.interactionStrength.changes" :key="item">{{ item }}</li></ul>
+        <ul v-if="analysis.interactionStrength.limitations.length" class="limitations"><li v-for="item in analysis.interactionStrength.limitations" :key="item">限制：{{ item }}</li></ul>
+      </article>
       <details class="comparison"><summary>App 比較與整體限制</summary><p>格局：{{ analysis.comparison.pattern.appValue }}／{{ analysis.comparison.pattern.lessonValue }}（{{ statusLabel(analysis.comparison.pattern.agreementStatus) }}）— {{ analysis.comparison.pattern.note }}</p><p>強弱：{{ analysis.comparison.strength.appValue }}／{{ analysis.comparison.strength.lessonValue }}（{{ statusLabel(analysis.comparison.strength.agreementStatus) }}）— {{ analysis.comparison.strength.note }}</p><p>喜忌：{{ analysis.comparison.preferences.appValue }}／{{ analysis.comparison.preferences.lessonValue }}（{{ statusLabel(analysis.comparison.preferences.agreementStatus) }}）— {{ analysis.comparison.preferences.note }}</p><ul v-if="analysis.limitations.length" class="limitations"><li v-for="item in analysis.limitations" :key="item">限制：{{ item }}</li></ul></details>
     </template><p v-else class="empty-analysis">此結果尚無三步分析</p>
   </section>
@@ -91,6 +159,7 @@ const seasonLabels: Record<string, string> = {
 const statusLabel = (value: string) => statusLabels[value] || `未知狀態（${value || '未提供'}）`;
 const seasonLabel = (value: string) => seasonLabels[value] || `未知季節（${value || '未提供'}）`;
 const yesNo = (value: boolean) => value ? '是' : '否';
+const verdictMark = (value: string) => ({ good: '▲有利', bad: '▼不利', mixed: '◆依方案而定' } as Record<string, string>)[value] || '・不判吉凶';
 const directionGroups = (plan: LessonPreferencePlan) => [{ label: '取用方向', items: plan.useDirections }, { label: '喜神方向', items: plan.favorableDirections }, { label: '忌神方向', items: plan.unfavorableDirections }, { label: '有條件方向', items: plan.conditionalDirections }];
 </script>
 
@@ -101,6 +170,9 @@ h3, h4, h5 { margin: 0 0 8px; } p { margin: 6px 0; } ul { margin: 6px 0; padding
 .status-line, .notice { color: var(--el-text-color-secondary, #606266); } .fact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; }
 .plan-grid { display: grid; gap: 10px; } .plan-card { padding: 12px; border: 1px solid var(--el-border-color-lighter, #ebeef5); border-radius: 6px; background: var(--el-fill-color-lighter, #f5f7fa); } small { font-weight: normal; }
 details { margin-top: 10px; } summary { cursor: pointer; font-weight: 600; } .empty-analysis { margin: 0; padding: 16px; color: var(--el-text-color-secondary, #606266); }
+.combo-list { list-style: none; padding-left: 0; } .combo-list > li { padding: 8px 0; border-top: 1px dashed var(--el-border-color-lighter, #ebeef5); } .combo-list > li:first-child { border-top: none; } .combo-reason { margin-top: 2px; } .combo-notes { color: var(--el-text-color-secondary, #606266); font-size: 0.92em; }
+.verdict { display: inline-block; margin-right: 6px; font-size: 0.9em; font-weight: 600; } .verdict-good { color: var(--el-color-success, #2f9e44); } .verdict-bad { color: var(--el-color-danger, #d9480f); } .verdict-mixed, .verdict-neutral { color: var(--el-text-color-secondary, #606266); } li.ignored { color: var(--el-text-color-secondary, #909399); }
+.gathering-list { margin-top: 4px; border-top: 1px dashed var(--el-border-color-lighter, #ebeef5); } .interaction-strength.review-changed { border-color: var(--el-color-warning, #e6a23c); } .interaction-strength.review-changed > p { color: var(--el-color-warning-dark-2, #b88230); font-weight: 600; }
 @media (max-width: 720px) { .lesson-three-step { margin-top: 12px; } }
 </style>
 

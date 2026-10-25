@@ -85,3 +85,30 @@ test('opposite verdicts on one tag cancel out', () => {
     'neutral',
   );
 });
+
+test('2026-10-07：大運天干五合，化不化看大運坐支', async () => {
+  const { seatTransforms } = await server.ssrLoadModule('/src/utils/lessonPreference.ts');
+  // 68 年次男命（己未 壬申 甲戌 己巳）喜水木、忌火土金。
+  const elements = Object.fromEntries(
+    [['wood', '木', 'good'], ['water', '水', 'good'], ['fire', '火', 'bad'], ['earth', '土', 'bad'], ['metal', '金', 'bad']].map(
+      ([element, name, favor]) => [element, { element, name, favor, label: favor === 'good' ? '喜用' : '忌', notes: [] }],
+    ),
+  );
+  const prefs = { elements, planTitles: ['身弱財強：比劫分財'] };
+  // 丁卯運：丁壬合，大運坐卯 → 化木，喜 → 有利（老師：財運走上坡）。
+  const dingMao = judgeLuckRelation('丁壬合木', 'stem', { char: '丁', element: 'fire', seat: '卯' }, side('壬', 'water'), prefs);
+  assert.equal(dingMao.favor, 'good');
+  assert.match(dingMao.reason, /坐卯.*化為木/);
+  // 同樣丁壬合，大運坐未（不是木的旺地）→ 合而不化，合絆原局壬水（喜）→ 減吉。
+  const dingWei = judgeLuckRelation('丁壬合木', 'stem', { char: '丁', element: 'fire', seat: '未' }, side('壬', 'water'), prefs);
+  assert.equal(dingWei.favor, 'bad');
+  assert.match(dingWei.reason, /合而不化.*減吉/);
+  // 甲運坐丑：甲己合化土（10/07 例）；本盤土為忌 → 不利。
+  assert.equal(judgeLuckRelation('甲己合土', 'stem', { char: '甲', element: 'wood', seat: '丑' }, side('己', 'earth'), prefs).favor, 'bad');
+
+  assert.equal(seatTransforms('卯', 'wood'), true);
+  assert.equal(seatTransforms('丑', 'earth'), true);
+  assert.equal(seatTransforms('申', 'water'), true); // 申金生水且藏壬
+  assert.equal(seatTransforms('酉', 'water'), false); // 酉不藏水
+  assert.equal(seatTransforms('亥', 'fire'), false);
+});

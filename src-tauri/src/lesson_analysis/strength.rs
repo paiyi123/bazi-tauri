@@ -76,6 +76,24 @@ pub(super) fn build_strength(
         _ => "依據不足",
     }
     .to_string();
+    let checks = strength_checks(
+        facts,
+        StrengthCheckInputs {
+            same_season_element,
+            seal_in_season,
+            same_party_count,
+            opposing_party_count,
+            month_command_same_party,
+            momentum_proxy,
+        },
+    );
+    let (same_party_characters, opposing_party_characters) = party_characters(facts, &is_same_party);
+    let verdict_reason = verdict_reason(
+        &checks,
+        &classification,
+        &pressure_families_surface,
+        tie_won_by_month,
+    );
     let mut ordered_interactions = interactions.iter().collect::<Vec<_>>();
     ordered_interactions.sort_by(|left, right| {
         left.scope
@@ -207,10 +225,206 @@ pub(super) fn build_strength(
         momentum_proxy,
         root_count: facts.roots.len(),
         observation_count,
+        same_party_characters,
+        opposing_party_characters,
+        checks,
+        verdict_reason,
         pressure_families_surface,
         pressure_families_hidden,
         interactions: interaction_rows,
         evidence,
         limitations,
     }
+}
+
+struct StrengthCheckInputs {
+    same_season_element: bool,
+    seal_in_season: bool,
+    same_party_count: usize,
+    opposing_party_count: usize,
+    month_command_same_party: bool,
+    momentum_proxy: bool,
+}
+
+/// Months in which each element is 當旺 (2026-07-22 得時 definition).
+fn season_branches(element: &str) -> &'static str {
+    match element {
+        "木" => "寅卯",
+        "火" => "巳午",
+        "土" => "辰戌丑未",
+        "金" => "申酉",
+        _ => "亥子",
+    }
+}
+
+/// Each of the eight characters labelled by position and ten god (branches by 本氣), split into
+/// 同黨 and 異黨 for the 得勢 count.
+fn party_characters(
+    facts: &LessonFacts,
+    is_same_party: &dyn Fn(&str) -> bool,
+) -> (Vec<String>, Vec<String>) {
+    let mut same = Vec::new();
+    let mut opposing = Vec::new();
+    for (index, pillar) in facts.pillars.iter().enumerate() {
+        let branch_ten_god = pillar
+            .hidden_stems
+            .first()
+            .map(|hidden| hidden.ten_god.as_str())
+            .unwrap_or("");
+        for (element, label) in [
+            (
+                pillar.stem_element.as_str(),
+                format!("{}{}（{}）", STEM_LOCATION_LABELS[index], pillar.stem, pillar.stem_ten_god),
+            ),
+            (
+                pillar.branch_main_element.as_str(),
+                format!("{}{}（{}）", BRANCH_LOCATION_LABELS[index], pillar.branch, branch_ten_god),
+            ),
+        ] {
+            if is_same_party(element) {
+                same.push(label);
+            } else {
+                opposing.push(label);
+            }
+        }
+    }
+    (same, opposing)
+}
+
+fn strength_checks(facts: &LessonFacts, inputs: StrengthCheckInputs) -> Vec<LessonStrengthCheck> {
+    let day = &facts.day_master;
+    let month = &facts.month_command;
+    let season_finding = if inputs.same_season_element {
+        format!(
+            "日主{}屬{}，生於{}月（本氣{}屬{}），月令與日主同五行 → 得令。",
+            day.stem, day.element, month.branch, month.main_stem, month.element
+        )
+    } else if inputs.seal_in_season {
+        format!(
+            "日主{}屬{}，生於{}月（本氣{}屬{}，為{}）；{}要生於{}月才算得令 → 失令。月令是印（同黨），能生身，但不算得令。",
+            day.stem,
+            day.element,
+            month.branch,
+            month.main_stem,
+            month.element,
+            month.ten_god,
+            day.element,
+            season_branches(&day.element)
+        )
+    } else {
+        format!(
+            "日主{}屬{}，生於{}月（本氣{}屬{}，為{}）；{}要生於{}月才算得令 → 失令。",
+            day.stem,
+            day.element,
+            month.branch,
+            month.main_stem,
+            month.element,
+            month.ten_god,
+            day.element,
+            season_branches(&day.element)
+        )
+    };
+    let party_finding = {
+        let comparison = if inputs.same_party_count == inputs.opposing_party_count {
+            format!(
+                "兩黨相同，依「得令者為旺」看月令：月令{}屬{}",
+                month.branch,
+                if inputs.month_command_same_party { "同黨" } else { "異黨" }
+            )
+        } else if inputs.same_party_count > inputs.opposing_party_count {
+            "同黨較多".to_string()
+        } else {
+            "異黨較多".to_string()
+        };
+        format!(
+            "同黨 {} 個、異黨 {} 個；{} → {}。",
+            inputs.same_party_count,
+            inputs.opposing_party_count,
+            comparison,
+            if inputs.momentum_proxy { "得勢" } else { "失勢" }
+        )
+    };
+    let root_finding = if facts.roots.is_empty() {
+        format!("四支藏干都沒有{}（不分陰陽）→ 不得地。", day.element)
+    } else {
+        format!(
+            "{} → 得地（共 {} 處根）。",
+            facts
+                .roots
+                .iter()
+                .map(|root| format!(
+                    "{}{}藏{}（{}根，{}）",
+                    root.pillar, root.branch, root.hidden_stem, root.hidden_stem_layer, root.ten_god
+                ))
+                .collect::<Vec<_>>()
+                .join("、"),
+            facts.roots.len()
+        )
+    };
+    vec![
+        LessonStrengthCheck {
+            item: "得令（得時）".to_string(),
+            hit: inputs.same_season_element,
+            rule: "日干生在同五行當旺的月令：木寅卯、火巳午、土辰戌丑未、金申酉、水亥子。".to_string(),
+            finding: season_finding,
+            source_date: "2026-07-22".to_string(),
+        },
+        LessonStrengthCheck {
+            item: "得勢".to_string(),
+            hit: inputs.momentum_proxy,
+            rule: "八個字（四天干含日主、四地支取本氣）分同黨（印、比劫）與異黨（食傷、財、官殺），多者勝；四比四時看月令屬哪一黨（得令者為旺）。".to_string(),
+            finding: party_finding,
+            source_date: "2026-09-02".to_string(),
+        },
+        LessonStrengthCheck {
+            item: "得地".to_string(),
+            hit: !facts.roots.is_empty(),
+            rule: "地支藏干中有與日干同五行者即通根，不分陰陽；根以本氣最穩，其次長生，再次餘氣、墓庫。".to_string(),
+            finding: root_finding,
+            source_date: "2026-07-22".to_string(),
+        },
+    ]
+}
+
+fn verdict_reason(
+    checks: &[LessonStrengthCheck],
+    classification: &str,
+    pressure_families_surface: &[String],
+    tie_won_by_month: bool,
+) -> String {
+    let hits = checks
+        .iter()
+        .filter(|check| check.hit)
+        .map(|check| check.item.trim_end_matches("（得時）"))
+        .collect::<Vec<_>>();
+    let marks = checks
+        .iter()
+        .map(|check| {
+            format!(
+                "{}{}",
+                check.item.trim_end_matches("（得時）"),
+                if check.hit { "✓" } else { "✗" }
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("、");
+    let rule = match classification {
+        "旺極候選" => "三者兼備，天干與地支本氣都不見剋洩耗 → 旺極，入專旺格候選（2026-07-22、07-29）".to_string(),
+        "旺候選" => format!(
+            "三者兼備，但見{} → 旺，仍屬普通格局（2026-07-29）",
+            pressure_families_surface.join("、")
+        ),
+        "強候選" if tie_won_by_month && hits.len() == 1 => {
+            "三者只得其一，但同黨異黨四比四、月令屬同黨，依「得令者為旺」判強（2026-09-02 課堂命例）".to_string()
+        }
+        "強候選" if hits.contains(&"得令") => format!(
+            "三者得其二（{}）→ 強（2026-07-22）。註：2026-07-29 把「得時＋得勢」「得時＋得地」也歸為旺，兩說都屬身強一方",
+            hits.join("＋")
+        ),
+        "強候選" => format!("三者得其二（{}）→ 強；不得時但得勢得地，衰中轉強（2026-07-22、07-29）", hits.join("＋")),
+        "弱候選" => format!("三者只得其一（{}）→ 弱（2026-07-29）", hits.join("")),
+        "衰極候選" => "三者皆無，表層剋洩耗俱全 → 衰極，可能入從格（2026-07-22）".to_string(),
+        _ => "三者皆無，但剋洩耗未全見 → 依據不足，需再看合沖會化後的五行變化（2026-07-29）".to_string(),
+    };
+    format!("{marks}；{rule}。")
 }

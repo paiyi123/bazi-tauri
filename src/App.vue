@@ -21,7 +21,7 @@
             <el-slider
               v-model="fontScale"
               :min="86"
-              :max="118"
+              :max="200"
               :step="2"
               :show-tooltip="false"
               class="font-size-slider"
@@ -62,6 +62,7 @@
           <BasicStructurePanel :result="result" />
           <LifeTopicsPanel :result="result" />
           <TenGodComboPanel :result="result" />
+          <SpecialPatternPanel :result="result" />
           <FiveElementStrengthPanel :result="result" />
           <CourseContentPanel :result="result" />
           <QuantFivePhasePanel :result="result" :compact="false" @preview-change="handlePreviewChange" />
@@ -108,6 +109,7 @@
                 <BasicStructurePanel :result="result" />
                 <LifeTopicsPanel :result="result" />
                 <TenGodComboPanel :result="result" />
+                <SpecialPatternPanel :result="result" />
                 <FiveElementStrengthPanel :result="result" />
                 <CourseContentPanel :result="result" />
                 <TenGodPanel :result="result" />
@@ -165,6 +167,7 @@ import StrengthComparisonPanel from "./components/StrengthComparisonPanel.vue";
 import BasicStructurePanel from "./components/BasicStructurePanel.vue";
 import LifeTopicsPanel from "./components/LifeTopicsPanel.vue";
 import TenGodComboPanel from "./components/TenGodComboPanel.vue";
+import SpecialPatternPanel from "./components/SpecialPatternPanel.vue";
 import LuckCyclePanel from "./components/LuckCyclePanel.vue";
 import PillarPanel from "./components/PillarPanel.vue";
 import PillarInputForm from "./components/PillarInputForm.vue";
@@ -235,7 +238,7 @@ function loadFontScale() {
   if (!Number.isFinite(raw)) {
     return 100;
   }
-  return Math.min(118, Math.max(86, Math.round(raw / 2) * 2));
+  return Math.min(200, Math.max(86, Math.round(raw / 2) * 2));
 }
 
 function syncCompactLayout() {
