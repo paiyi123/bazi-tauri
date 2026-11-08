@@ -2,7 +2,7 @@
   <el-card shadow="hover">
     <template #header>
       <div class="section-header">
-        <h2>用神分析</h2>
+        <h2>用神分析（量化五行力）</h2>
       </div>
     </template>
 

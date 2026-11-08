@@ -57,16 +57,7 @@
           <SummaryPanel :result="result" :compact="false" />
           <PillarPanel :result="result" :preview-pillars="focusedLuckPillars" :compact="false" />
           <FiveElementFlowPanel :result="result" :compact="false" />
-          <LuckCyclePanel :result="result" :compact="false" @preview-change="handlePreviewChange" />
-          <StrengthComparisonPanel :result="result" />
-          <BasicStructurePanel :result="result" />
-          <LifeTopicsPanel :result="result" />
-          <TenGodComboPanel :result="result" />
-          <SpecialPatternPanel :result="result" />
-          <FiveElementStrengthPanel :result="result" />
-          <CourseContentPanel :result="result" />
-          <QuantFivePhasePanel :result="result" :compact="false" @preview-change="handlePreviewChange" />
-          <TenGodPanel :result="result" />
+          <AnalysisTopics :result="result" :compact="false" @preview-change="handlePreviewChange" />
         </div>
 
         <div v-else-if="result" class="compact-result-shell">
@@ -75,20 +66,24 @@
               <SummaryPanel :result="result" :compact="true" />
             </el-tab-pane>
             <el-tab-pane label="四柱" name="pillars" lazy>
-              <PillarPanel
-                v-if="activeCompactTab === 'pillars'"
-                key="compact-pillars-panel"
-                :result="result"
-                :preview-pillars="focusedLuckPillars"
-                :compact="true"
-                :show-pillars="true"
-                :show-relation-map="false"
-                :show-interaction-section="false"
-              />
+              <div v-if="activeCompactTab === 'pillars'" class="compact-section-stack">
+                <PillarPanel
+                  key="compact-pillars-panel"
+                  :result="result"
+                  :preview-pillars="focusedLuckPillars"
+                  :compact="true"
+                  :show-pillars="true"
+                  :show-relation-map="false"
+                  :show-interaction-section="false"
+                />
+                <PillarSummaryPanel :result="result" />
+              </div>
             </el-tab-pane>
             <el-tab-pane label="運勢" name="luck" lazy>
               <div v-if="activeCompactTab === 'luck'" class="compact-section-stack">
                 <LuckCyclePanel :result="result" :compact="true" @preview-change="handlePreviewChange" />
+                <FourBookTopicsPanel :result="result" :only="['luck']" title="大運流年要訣（四本書）" />
+                <FourBooksPanel :result="result" :only="['limit']" title="限運：每柱管哪段年齡（四本書）" />
                 <PillarPanel
                   key="compact-luck-relations-panel"
                   :result="result"
@@ -104,16 +99,13 @@
               <FiveElementFlowPanel v-if="activeCompactTab === 'flow'" :result="result" :compact="true" />
             </el-tab-pane>
             <el-tab-pane label="分析" name="analysis" lazy>
-              <div class="compact-section-stack">
-                <StrengthComparisonPanel :result="result" />
-                <BasicStructurePanel :result="result" />
-                <LifeTopicsPanel :result="result" />
-                <TenGodComboPanel :result="result" />
-                <SpecialPatternPanel :result="result" />
-                <FiveElementStrengthPanel :result="result" />
-                <CourseContentPanel :result="result" />
-                <TenGodPanel :result="result" />
-              </div>
+              <AnalysisTopics
+                v-if="activeCompactTab === 'analysis'"
+                :result="result"
+                :compact="true"
+                :exclude="['luck']"
+                @preview-change="handlePreviewChange"
+              />
             </el-tab-pane>
             <el-tab-pane label="量化" name="quant" lazy>
               <QuantFivePhasePanel :result="result" :compact="true" @preview-change="handlePreviewChange" />
@@ -159,21 +151,17 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import AnalysisTopics from "./components/AnalysisTopics.vue";
 import FiveElementFlowPanel from "./components/FiveElementFlowPanel.vue";
 import BirthForm from "./components/BirthForm.vue";
-import CourseContentPanel from "./components/CourseContentPanel.vue";
-import FiveElementStrengthPanel from "./components/FiveElementStrengthPanel.vue";
-import StrengthComparisonPanel from "./components/StrengthComparisonPanel.vue";
-import BasicStructurePanel from "./components/BasicStructurePanel.vue";
-import LifeTopicsPanel from "./components/LifeTopicsPanel.vue";
-import TenGodComboPanel from "./components/TenGodComboPanel.vue";
-import SpecialPatternPanel from "./components/SpecialPatternPanel.vue";
+import FourBooksPanel from "./components/FourBooksPanel.vue";
+import FourBookTopicsPanel from "./components/FourBookTopicsPanel.vue";
 import LuckCyclePanel from "./components/LuckCyclePanel.vue";
 import PillarPanel from "./components/PillarPanel.vue";
+import PillarSummaryPanel from "./components/PillarSummaryPanel.vue";
 import PillarInputForm from "./components/PillarInputForm.vue";
 import QuantFivePhasePanel from "./components/QuantFivePhasePanel.vue";
 import SummaryPanel from "./components/SummaryPanel.vue";
-import TenGodPanel from "./components/TenGodPanel.vue";
 import { analyzePillars, calculateBazi, renderPrintHtml } from "./services/bazi";
 import type {
   BaziRequest,

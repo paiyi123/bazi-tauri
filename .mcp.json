@@ -1,0 +1,1 @@
+{ "mcpServers": { "bazi": { "command": "node", "args": ["tools/bazi-report/mcp.mjs"] } } }

@@ -1,6 +1,7 @@
 <template>
   <section class="lesson-three-step" aria-label="三步本命分析">
     <template v-if="analysis">
+      <template v-if="part !== 'interactions'">
       <header class="lesson-summary">
         <h3>三步本命分析</h3>
         <p class="status-line">整體狀態：{{ statusLabel(analysis.status) }}</p>
@@ -47,6 +48,8 @@
           <p>課程來源：{{ analysis.sources.map(source => `${source.date}（${source.ruleIds.join('、')}）`).join('；') }}</p>
         </details>
       </article>
+      </template>
+      <template v-if="part !== 'core'">
       <article v-if="analysis.stemInteractions" class="lesson-step stem-interactions">
         <h4>{{ analysis.stemInteractions.title }} <small>（{{ analysis.stemInteractions.sources.join('、') }}）</small></h4><p>{{ analysis.stemInteractions.conclusion }}</p>
         <ul v-if="analysis.stemInteractions.combinations.length" class="combo-list">
@@ -115,14 +118,17 @@
         <ul v-if="analysis.interactionStrength.changes.length"><li v-for="item in analysis.interactionStrength.changes" :key="item">{{ item }}</li></ul>
         <ul v-if="analysis.interactionStrength.limitations.length" class="limitations"><li v-for="item in analysis.interactionStrength.limitations" :key="item">限制：{{ item }}</li></ul>
       </article>
+      </template>
+      <template v-if="part !== 'interactions'">
       <details class="comparison"><summary>App 比較與整體限制</summary><p>格局：{{ analysis.comparison.pattern.appValue }}／{{ analysis.comparison.pattern.lessonValue }}（{{ statusLabel(analysis.comparison.pattern.agreementStatus) }}）— {{ analysis.comparison.pattern.note }}</p><p>強弱：{{ analysis.comparison.strength.appValue }}／{{ analysis.comparison.strength.lessonValue }}（{{ statusLabel(analysis.comparison.strength.agreementStatus) }}）— {{ analysis.comparison.strength.note }}</p><p>喜忌：{{ analysis.comparison.preferences.appValue }}／{{ analysis.comparison.preferences.lessonValue }}（{{ statusLabel(analysis.comparison.preferences.agreementStatus) }}）— {{ analysis.comparison.preferences.note }}</p><ul v-if="analysis.limitations.length" class="limitations"><li v-for="item in analysis.limitations" :key="item">限制：{{ item }}</li></ul></details>
+      </template>
     </template><p v-else class="empty-analysis">此結果尚無三步分析</p>
   </section>
 </template>
 
 <script setup lang="ts">
 import type { LessonPreferencePlan, LessonThreeStepAnalysis } from '../types/bazi';
-defineProps<{ analysis?: LessonThreeStepAnalysis | null }>();
+defineProps<{ analysis?: LessonThreeStepAnalysis | null; part?: 'core' | 'interactions' }>();
 
 const statusLabels: Record<string, string> = {
   candidate: '候選',

@@ -2,7 +2,7 @@
   <el-card shadow="hover">
     <template #header>
       <div class="section-header">
-        <h2>結構分析圖解</h2>
+        <h2>結構分析圖解（陸致極）</h2>
       </div>
     </template>
     <p class="intro">

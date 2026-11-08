@@ -310,6 +310,9 @@ import { spouseStorageYears, topicEvents, type TopicContext } from "../utils/lif
 import { movingGodEvents } from "../utils/tenGodCombos";
 import { basicStructure, patternLuckEvents } from "../utils/basicStructure";
 import { specialPatternLuckEvents } from "../utils/specialPatterns";
+import { fourBookLuckEvents, type Element as BookElement } from "../utils/fourBooks";
+import { fourBookTopicEvents } from "../utils/fourBookTopics";
+import { yongShenGuide } from "../utils/yongShen";
 
 const TOPIC_MARK: Record<string, string> = { marriage: "婚", wealth: "財", health: "健", move: "動" };
 
@@ -844,6 +847,28 @@ const spouseStorageByYear = computed(() =>
   ),
 );
 
+// 四本書（妙算、心訣、子平正源）的運歲提示；喜忌沿用課堂三步法。
+const BOOK_ELEMENT_KEY: Record<BookElement, "wood" | "fire" | "earth" | "metal" | "water"> = {
+  木: "wood", 火: "fire", 土: "earth", 金: "metal", 水: "water",
+};
+const fourBookOptions = computed(() => {
+  const prefs = lessonFavor.value;
+  return {
+    natal: luckEventContext.value.natal,
+    favorOf: prefs ? (element: BookElement) => prefs.elements[BOOK_ELEMENT_KEY[element]].favor : undefined,
+  };
+});
+const fourBookTopicOptions = computed(() => ({
+  ...fourBookOptions.value,
+  gender: (props.result.gender === "FEMALE" ? "FEMALE" : "MALE") as "MALE" | "FEMALE",
+  useElements: (yongShenGuide(props.result.quantModel?.lessonContent?.threeStepAnalysis)?.useElements ?? []) as BookElement[],
+}));
+// 前一步大運（依年份先後），用來看轉角運。
+const previousLuckOf = computed(() => {
+  const ordered = [...(props.result.daYun ?? [])].filter((item) => item.ganZhi).sort((a, b) => (a.startYear ?? 0) - (b.startYear ?? 0));
+  return new Map(ordered.map((item, index) => [item.index, index > 0 ? ordered[index - 1].ganZhi : undefined]));
+});
+
 const luckEventsByRow = computed(
   () =>
     new Map(
@@ -855,6 +880,8 @@ const luckEventsByRow = computed(
           ...movingGodEvents(row.ganZhi, "運", luckEventContext.value.natal),
           ...patternLuckEvents(row.ganZhi, "運", luckEventContext.value.natal, basicPattern.value),
           ...specialPatternLuckEvents(row.ganZhi, "運", luckEventContext.value.natal),
+          ...fourBookLuckEvents(row.ganZhi, "運", fourBookOptions.value),
+          ...fourBookTopicEvents(row.ganZhi, "運", { ...fourBookTopicOptions.value, previousLuck: previousLuckOf.value.get(row.index) }),
         ],
       ]),
     ),
@@ -892,6 +919,8 @@ const annualEventsByYear = computed(
             ...movingGodEvents(annual.ganZhi, "歲", luckEventContext.value.natal, luck),
             ...patternLuckEvents(annual.ganZhi, "歲", luckEventContext.value.natal, basicPattern.value),
             ...specialPatternLuckEvents(annual.ganZhi, "歲", luckEventContext.value.natal),
+            ...fourBookLuckEvents(annual.ganZhi, "歲", { ...fourBookOptions.value, luck }),
+            ...fourBookTopicEvents(annual.ganZhi, "歲", { ...fourBookTopicOptions.value, luck }),
           ],
         ];
       }),

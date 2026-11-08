@@ -24,3 +24,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tyme4rs = "1.4.2"
 chrono = "0.4"
+qrcode = { version = "0.14", default-features = false, features = ["svg"] }
+
+[target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
+tauri-plugin-barcode-scanner = "~2.4.4"

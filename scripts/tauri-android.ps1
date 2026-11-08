@@ -546,6 +546,10 @@ if ($Subcommand -eq "build") {
   Invoke-AndroidTextZoomFix -WorkspaceRoot $workspaceRoot
   Invoke-AndroidSystemBarInsetFix -WorkspaceRoot $workspaceRoot
 
+  # tauri-build only regenerates tauri.settings.gradle / tauri.build.gradle.kts (the Android plugin
+  # module list) when this is set. The Tauri CLI sets it; we call cargo directly, so set it here.
+  $env:TAURI_ANDROID_PROJECT_PATH = $androidProject
+
   & $cargoCommand @cargoArgs
   if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE

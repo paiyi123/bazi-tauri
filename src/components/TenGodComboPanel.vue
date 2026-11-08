@@ -2,7 +2,7 @@
   <el-card shadow="hover">
     <template #header>
       <div class="section-header">
-        <h2>十神組合</h2>
+        <h2>十神組合（十神洩天機）</h2>
       </div>
     </template>
     <p class="intro">

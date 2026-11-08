@@ -10,6 +10,7 @@
     </template>
 
     <el-descriptions :column="descriptionColumns" border :size="compact ? 'small' : 'default'">
+      <el-descriptions-item label="性別">{{ genderLabel }}</el-descriptions-item>
       <el-descriptions-item label="輸入曆別">{{ result.inputCalendarType }}</el-descriptions-item>
       <el-descriptions-item label="輸入日期">{{ result.inputDateTime }}</el-descriptions-item>
       <el-descriptions-item label="公曆">{{ result.solarDateTime }}</el-descriptions-item>
@@ -70,6 +71,9 @@ const props = defineProps<{
 }>();
 
 const luckStart = computed(() => props.result.luckStart);
+const genderLabel = computed(() =>
+  props.result.gender === "FEMALE" ? "女（坤造）" : props.result.gender === "MALE" ? "男（乾造）" : "未提供",
+);
 const descriptionColumns = computed(() => (props.compact ? 1 : 2));
 const fullSpan = computed(() => (props.compact ? 1 : 2));
 const specialPatternSummary = computed(() => {

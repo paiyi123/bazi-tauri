@@ -2,11 +2,14 @@
   <el-card shadow="hover">
     <template #header>
       <div class="section-header">
-        <h2>上課內容</h2>
+        <h2>{{ heading }}</h2>
       </div>
     </template>
 
-    <template v-if="lessonContent">
+    <template v-if="lessonContent && part">
+      <LessonThreeStepPanel :analysis="lessonContent.threeStepAnalysis" :part="part" />
+    </template>
+    <template v-else-if="lessonContent">
       <el-alert type="info" :closable="false" show-icon :title="lessonContent.status" />
       <el-descriptions :column="1" border class="course-content-box">
         <el-descriptions-item label="課程流程">
@@ -19,7 +22,7 @@
         </el-descriptions-item>
       </el-descriptions>
 
-      <LessonThreeStepPanel :analysis="lessonContent.threeStepAnalysis" />
+      <LessonThreeStepPanel v-if="!referenceOnly" :analysis="lessonContent.threeStepAnalysis" />
 
       <details v-if="visibleInferences.length" class="legacy-inference-details">
         <summary>課堂命例補充</summary>
@@ -93,7 +96,18 @@ import LessonThreeStepPanel from "./LessonThreeStepPanel.vue";
 
 const props = defineProps<{
   result: BaziResponse;
+  /** core：格局、強弱、喜忌；interactions：干支作用；reference：只顯示課程流程與命例補充；不給＝全部。 */
+  section?: "core" | "interactions" | "reference";
 }>();
+
+const part = computed(() => (props.section === "core" || props.section === "interactions" ? props.section : undefined));
+const referenceOnly = computed(() => props.section === "reference");
+const HEADINGS: Record<string, string> = {
+  core: "課堂三步法：格局・強弱・喜忌",
+  interactions: "課堂：干支作用與強弱複核",
+  reference: "上課內容：課程流程與命例補充",
+};
+const heading = computed(() => HEADINGS[props.section ?? ""] ?? "上課內容");
 
 const lessonContent = computed(() => props.result.quantModel?.lessonContent);
 const visibleInferences = computed(

@@ -14,20 +14,25 @@
       <el-row :gutter="12">
         <el-col :span="24">
           <el-form-item label="已儲存人物" :class="{ 'compact-form-item': compact }">
-            <el-select
-              v-model="selectedRecordId"
-              clearable
-              class="full-width"
-              placeholder="選擇已存資料"
-              @change="applySelectedRecord"
-            >
-              <el-option
-                v-for="record in savedRecords"
-                :key="record.id"
-                :label="`${record.name}（${record.yearEra === 'ROC' ? '民國' : '西元'}${record.year}/${record.month}/${record.day}）`"
-                :value="record.id"
-              />
-            </el-select>
+            <div class="record-picker-row">
+              <el-select
+                v-model="selectedRecordId"
+                clearable
+                class="record-picker"
+                placeholder="選擇已存資料"
+                @change="applySelectedRecord"
+              >
+                <el-option
+                  v-for="record in savedRecords"
+                  :key="record.id"
+                  :label="`${record.name}（${record.yearEra === 'ROC' ? '民國' : '西元'}${record.year}/${record.month}/${record.day}）`"
+                  :value="record.id"
+                />
+              </el-select>
+              <el-button :size="formSize" type="primary" :loading="loading" class="record-picker-submit" @click="onSubmit">
+                開始排盤
+              </el-button>
+            </div>
             <div class="storage-label">儲存位置：本機 `localStorage`</div>
           </el-form-item>
         </el-col>
@@ -48,8 +53,98 @@
               刪除所選
             </el-button>
             <el-button :size="formSize" plain @click="onClearLocalRecords">清除全部</el-button>
+            <el-button :size="formSize" type="primary" plain :disabled="!savedRecords.length" @click="onOpenShare">
+              分享 QR
+            </el-button>
+            <el-button :size="formSize" type="primary" plain @click="onOpenImport">匯入命例</el-button>
           </el-space>
         </el-col>
+
+        <el-dialog
+          v-model="shareDialogVisible"
+          title="分享命例"
+          width="min(460px, 94vw)"
+          append-to-body
+          class="record-share-dialog"
+        >
+          <template v-if="shareStep === 'select'">
+            <div class="share-select-toolbar">
+              <span>已選 {{ shareSelectedIds.length }} / {{ savedRecords.length }} 筆</span>
+              <el-space>
+                <el-button size="small" link type="primary" @click="shareSelectedIds = savedRecords.map((item) => item.id)">全選</el-button>
+                <el-button size="small" link @click="shareSelectedIds = []">清除</el-button>
+              </el-space>
+            </div>
+            <el-input v-model="shareFilter" size="small" clearable placeholder="搜尋姓名" class="share-filter" />
+            <el-checkbox-group v-model="shareSelectedIds" class="share-record-list">
+              <el-checkbox v-for="record in filteredShareRecords" :key="record.id" :value="record.id" class="share-record-item">
+                {{ recordLabel(record) }}
+              </el-checkbox>
+            </el-checkbox-group>
+            <p class="share-hint">
+              一張 QR Code 最多放 {{ QR_MAX_RECORDS }} 筆，選比較多時會分成好幾張，逐張掃描即可。
+            </p>
+          </template>
+
+          <template v-else>
+            <p class="share-name">
+              第 {{ sharePage + 1 }} / {{ shareChunks.length }} 張（{{ currentShareChunk?.records.length ?? 0 }} 筆）
+            </p>
+            <div v-if="shareQrSvg" class="share-qr" v-html="shareQrSvg"></div>
+            <el-alert v-else-if="shareError" :title="shareError" type="warning" show-icon :closable="false" />
+            <p class="share-names">{{ currentShareChunk?.records.map((item) => item.name).join("、") }}</p>
+            <div v-if="shareChunks.length > 1" class="share-pager">
+              <el-button size="small" :disabled="sharePage === 0" @click="showSharePage(sharePage - 1)">上一張</el-button>
+              <el-button size="small" :disabled="sharePage >= shareChunks.length - 1" @click="showSharePage(sharePage + 1)">
+                下一張
+              </el-button>
+            </div>
+            <p class="share-hint">在另一台裝置按「匯入命例」→「掃描 QR Code」，或複製分享碼貼過去。</p>
+            <el-input :model-value="currentShareChunk?.code ?? ''" type="textarea" :rows="3" readonly />
+          </template>
+
+          <template #footer>
+            <template v-if="shareStep === 'select'">
+              <el-button @click="shareDialogVisible = false">取消</el-button>
+              <el-button type="primary" :disabled="!shareSelectedIds.length" @click="onGenerateShare">
+                產生 QR Code（{{ shareSelectedIds.length }} 筆{{ sharePreviewCount > 1 ? `，共 ${sharePreviewCount} 張` : "" }}）
+              </el-button>
+            </template>
+            <template v-else>
+              <el-button @click="shareStep = 'select'">重新選擇</el-button>
+              <el-button @click="onCopyShareCode(false)">複製這張</el-button>
+              <el-button v-if="shareChunks.length > 1" @click="onCopyShareCode(true)">複製全部</el-button>
+              <el-button type="primary" @click="shareDialogVisible = false">完成</el-button>
+            </template>
+          </template>
+        </el-dialog>
+
+        <el-dialog
+          v-model="importDialogVisible"
+          title="匯入命例"
+          width="min(420px, 92vw)"
+          append-to-body
+          class="record-share-dialog"
+        >
+          <el-button v-if="scanAvailable" type="primary" class="full-width scan-button" :loading="scanning" @click="onScanImport">
+            掃描 QR Code
+          </el-button>
+          <p class="share-hint">{{ scanAvailable ? "或貼上" : "貼上" }}另一台裝置的命例分享碼（BAZI1: 開頭）：</p>
+          <el-input v-model="importCode" type="textarea" :rows="3" placeholder='BAZI1:["王小明","F","S","A",1970,11,6,5,0,0,"卯時 05:00",""]' />
+          <el-alert v-if="importError" :title="importError" type="error" show-icon :closable="false" class="import-error" />
+          <template #footer>
+            <el-button @click="importDialogVisible = false">取消</el-button>
+            <el-button type="primary" :disabled="!importCode.trim()" @click="onImportCode">匯入</el-button>
+          </template>
+        </el-dialog>
+
+        <Teleport to="body">
+          <div v-if="cameraOpen" class="qr-scan-overlay">
+            <p class="qr-scan-tip">將 QR Code 對準框內</p>
+            <div class="qr-scan-frame" />
+            <button type="button" class="qr-scan-cancel" @click="onCancelScan">取消掃描</button>
+          </div>
+        </Teleport>
 
         <el-col :span="12">
           <el-form-item label="曆別">
@@ -261,6 +356,8 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { getLunarMonthDetail, getLunarYearOptions } from "../services/bazi";
+import { canScanRecordQr, cancelRecordQrScan, getRecordShareQrSvg, scanRecordQr } from "../services/recordShare";
+import { QR_MAX_RECORDS, chunkRecordsForShare, decodeRecordsShare, importSharedRecords } from "../utils/recordShare";
 import type {
   BaziRequest,
   BirthRecordResponse,
@@ -541,6 +638,132 @@ function onClearLocalRecords() {
   saveMessage.value = "已清除本機生日組";
 }
 
+const shareDialogVisible = ref(false);
+const shareStep = ref<"select" | "qr">("select");
+const shareSelectedIds = ref<number[]>([]);
+const shareFilter = ref("");
+const shareChunks = ref<ReturnType<typeof chunkRecordsForShare>>([]);
+const sharePage = ref(0);
+const shareQrSvg = ref("");
+const shareError = ref("");
+const importDialogVisible = ref(false);
+const importCode = ref("");
+const importError = ref("");
+const scanning = ref(false);
+const cameraOpen = ref(false);
+const scanAvailable = canScanRecordQr();
+
+const filteredShareRecords = computed(() => {
+  const keyword = shareFilter.value.trim();
+  return keyword ? savedRecords.value.filter((item) => item.name.includes(keyword)) : savedRecords.value;
+});
+const shareSelectedRecords = computed(() =>
+  savedRecords.value.filter((item) => shareSelectedIds.value.includes(item.id)),
+);
+const sharePreviewCount = computed(() => chunkRecordsForShare(shareSelectedRecords.value).length);
+const currentShareChunk = computed(() => shareChunks.value[sharePage.value]);
+
+function recordLabel(record: BirthRecordResponse) {
+  return `${record.name}（${record.yearEra === "ROC" ? "民國" : "西元"}${record.year}/${record.month}/${record.day}）`;
+}
+
+function onOpenShare() {
+  shareStep.value = "select";
+  shareFilter.value = "";
+  shareSelectedIds.value = selectedRecordId.value ? [selectedRecordId.value] : [];
+  shareDialogVisible.value = true;
+}
+
+async function showSharePage(page: number) {
+  sharePage.value = page;
+  shareQrSvg.value = "";
+  shareError.value = "";
+  const chunk = shareChunks.value[page];
+  if (!chunk) return;
+  try {
+    const svg = await getRecordShareQrSvg(chunk.code);
+    if (sharePage.value === page) shareQrSvg.value = svg;
+  } catch (errorValue) {
+    shareError.value = errorValue instanceof Error ? errorValue.message : String(errorValue);
+  }
+}
+
+async function onGenerateShare() {
+  shareChunks.value = chunkRecordsForShare(shareSelectedRecords.value);
+  shareStep.value = "qr";
+  await showSharePage(0);
+}
+
+async function onCopyShareCode(all: boolean) {
+  const text = all ? shareChunks.value.map((chunk) => chunk.code).join("\n") : currentShareChunk.value?.code ?? "";
+  try {
+    await navigator.clipboard.writeText(text);
+    saveMessage.value = all ? `已複製全部 ${shareChunks.value.length} 張的分享碼` : "已複製分享碼";
+  } catch {
+    saveMessage.value = "無法自動複製，請長按分享碼手動複製";
+  }
+}
+
+function onOpenImport() {
+  importCode.value = "";
+  importError.value = "";
+  importDialogVisible.value = true;
+}
+
+function importFromCode(text: string) {
+  importError.value = "";
+  try {
+    const incoming = decodeRecordsShare(text);
+    const result = importSharedRecords(savedRecords.value, incoming);
+    if (result.added.length) {
+      savedRecords.value = result.records;
+      persistSavedRecords();
+    }
+    const first = result.added[0] ?? result.duplicates[0];
+    if (first) {
+      selectedRecordId.value = first.id;
+      applyRecord(first);
+    }
+    auxiliaryError.value = "";
+    if (incoming.length === 1) {
+      saveMessage.value = result.added.length ? `已匯入：${recordLabel(first)}` : `已經有這筆命例：${recordLabel(first)}`;
+    } else {
+      saveMessage.value = `已匯入 ${result.added.length} 筆${result.duplicates.length ? `，${result.duplicates.length} 筆原本就有` : ""}`;
+    }
+    importDialogVisible.value = false;
+  } catch (errorValue) {
+    importError.value = errorValue instanceof Error ? errorValue.message : String(errorValue);
+  }
+}
+
+function onImportCode() {
+  importFromCode(importCode.value);
+}
+
+async function onScanImport() {
+  importError.value = "";
+  scanning.value = true;
+  try {
+    const content = await scanRecordQr({
+      onCameraOpen: () => {
+        cameraOpen.value = true;
+      },
+    });
+    importCode.value = content;
+    importFromCode(content);
+  } catch (errorValue) {
+    const message = errorValue instanceof Error ? errorValue.message : String(errorValue);
+    importError.value = /cancel/i.test(message) ? "" : `掃描失敗：${message}`;
+  } finally {
+    cameraOpen.value = false;
+    scanning.value = false;
+  }
+}
+
+function onCancelScan() {
+  void cancelRecordQrScan();
+}
+
 async function refreshLunarMonthOptions() {
   if (form.calendarType !== "LUNAR") {
     lunarMonthOptions.value = [];
@@ -689,6 +912,101 @@ function onSubmit() {
   width: 100%;
 }
 
+.record-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.record-picker {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.record-picker-submit {
+  flex: none;
+  min-width: 140px;
+}
+
+@media (max-width: 768px) {
+  .record-picker-submit {
+    min-width: 0;
+  }
+}
+
+.share-name {
+  margin: 0 0 8px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.share-select-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.share-filter {
+  margin-bottom: 8px;
+}
+
+.share-record-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 45vh;
+  overflow-y: auto;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+
+.share-record-item {
+  margin-right: 0;
+  height: auto;
+  min-height: 30px;
+}
+
+.share-names {
+  margin: 0 0 8px;
+  text-align: center;
+  font-size: calc(13px * var(--app-font-scale));
+}
+
+.share-pager {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.share-qr {
+  display: flex;
+  justify-content: center;
+  margin: 0 auto 8px;
+  width: min(320px, 80vw);
+}
+
+.share-qr :deep(svg) {
+  width: 100%;
+  height: auto;
+}
+
+.share-hint {
+  margin: 8px 0;
+  font-size: calc(13px * var(--app-font-scale));
+  color: var(--el-text-color-secondary);
+}
+
+.scan-button {
+  margin-bottom: 4px;
+}
+
+.import-error {
+  margin-top: 8px;
+}
+
 .storage-label {
   margin-top: 8px;
   font-size: calc(12px * var(--app-font-scale));
@@ -794,5 +1112,57 @@ function onSubmit() {
 
 .save-button-group :deep(.el-button) {
   min-height: 38px;
+}
+</style>
+
+<style>
+/* 掃描 QR Code 時：網頁全透明，只露出掃描遮罩，相機畫面在網頁後面。 */
+html.qr-scanning,
+html.qr-scanning body {
+  background: transparent !important;
+}
+
+html.qr-scanning body > *:not(.qr-scan-overlay) {
+  visibility: hidden !important;
+}
+
+.qr-scan-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 24px;
+}
+
+.qr-scan-tip {
+  margin: 0;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 16px;
+}
+
+.qr-scan-frame {
+  width: min(70vw, 280px);
+  aspect-ratio: 1;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.35);
+}
+
+.qr-scan-cancel {
+  min-width: 180px;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 999px;
+  background: #fff;
+  color: #7a2e14;
+  font-size: 17px;
+  font-weight: 600;
 }
 </style>

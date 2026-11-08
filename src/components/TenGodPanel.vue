@@ -2,7 +2,7 @@
   <el-card shadow="hover">
     <template #header>
       <div class="section-header">
-        <h2>合沖刑破分析</h2>
+        <h2>合沖刑破（量化模型）</h2>
       </div>
     </template>
 

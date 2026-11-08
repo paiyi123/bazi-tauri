@@ -15,7 +15,10 @@
     "tauri:android:dev": "powershell -ExecutionPolicy Bypass -File .\\scripts\\tauri-android.ps1 dev",
     "tauri:android:build": "powershell -ExecutionPolicy Bypass -File .\\scripts\\tauri-android.ps1 build",
     "tauri:android:apk": "powershell -ExecutionPolicy Bypass -File .\\scripts\\tauri-android.ps1 build --apk",
-    "tauri:android:aab": "powershell -ExecutionPolicy Bypass -File .\\scripts\\tauri-android.ps1 build --aab"
+    "tauri:android:aab": "powershell -ExecutionPolicy Bypass -File .\\scripts\\tauri-android.ps1 build --aab",
+    "report": "node tools/bazi-report/report.mjs",
+    "notes": "node tools/bazi-report/notes.mjs",
+    "mcp": "node tools/bazi-report/mcp.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",

@@ -2,10 +2,13 @@
   <el-card shadow="hover">
     <template #header>
       <div class="section-header">
-        <h2>婚姻・財運・健康</h2>
+        <h2>{{ title ?? "婚姻・財運・健康" }}</h2>
       </div>
     </template>
-    <p class="intro">
+    <p v-if="only" class="intro">
+      依陸致極《八字命理學進階教程》第六、七、十一、十三章；喜忌用陸致極的強弱。只是書中的觀察方法，不是定論。
+    </p>
+    <p v-else class="intro">
       依陸致極《八字命理學進階教程》第六、七、十一、十三章的判讀要點整理。大運流年格子上的
       <span class="dot is-marriage">婚</span><span class="dot is-wealth">財</span><span class="dot is-health">健</span>
       標籤是對應的應期提示。這些只是書中的觀察方法，不是定論。
@@ -34,6 +37,9 @@ import { lifeTopicSections } from "../utils/lifeTopics";
 
 const props = defineProps<{
   result: BaziResponse;
+  /** 只顯示某幾個主題（marriage、wealth、health）。 */
+  only?: string[];
+  title?: string;
 }>();
 
 const opened = ref(["marriage", "wealth", "health"]);
@@ -45,7 +51,7 @@ const sections = computed(() =>
     ),
     gender: props.result.gender,
     strength: props.result.quantModel?.luStrength?.category,
-  }),
+  }).filter((section) => !props.only || props.only.includes(section.key)),
 );
 </script>
 

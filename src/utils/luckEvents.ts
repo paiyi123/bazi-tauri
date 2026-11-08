@@ -209,7 +209,9 @@ function groupEvents(natalBranches: string[], incoming: string[], whoName: strin
           kind: `three-clash-${many}${one}`,
           label: "三沖一",
           level: "warn",
-          detail: `${whoName}使地支出現三個${many}沖一個${one}。身弱而根藏於被沖之支時，三沖一可以拔根（進階 p289）。`,
+          detail: `${whoName}使地支出現三個${many}沖一個${one}。身弱而根藏於被沖之支時，三沖一可以拔根（進階 p289）。${
+            pair === "辰戌" ? "辰戌是「天羅地網」，八字心訣第 63 訣說三辰沖一戌、三戌沖一辰最易犯官非牢獄（黃興丙辰年）。" : ""
+          }`,
         });
       }
     }
@@ -221,7 +223,7 @@ function groupEvents(natalBranches: string[], incoming: string[], whoName: strin
       kind: "four-clash",
       label: "四沖",
       level: "warn",
-      detail: `${whoName}使寅申巳亥四字俱全，彼此互沖。張大千癸亥年寅巳申三刑加寅申巳亥四沖而逝（基礎 p261–262）。`,
+      detail: `${whoName}使寅申巳亥四字俱全，彼此互沖。張大千癸亥年寅巳申三刑加寅申巳亥四沖而逝（基礎 p261–262）。八字心訣第 64 訣稱四驛馬齊全，事業官祿受阻、因「瞋」遭殃。`,
     });
   }
   for (const group of THREE_PUNISHMENTS) {
