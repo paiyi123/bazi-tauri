@@ -11,8 +11,8 @@
 
     <el-descriptions :column="descriptionColumns" border :size="compact ? 'small' : 'default'">
       <el-descriptions-item label="性別">{{ genderLabel }}</el-descriptions-item>
-      <el-descriptions-item label="輸入曆別">{{ result.inputCalendarType }}</el-descriptions-item>
-      <el-descriptions-item label="輸入日期">{{ result.inputDateTime }}</el-descriptions-item>
+      <el-descriptions-item v-if="isResearch" label="輸入曆別">{{ result.inputCalendarType }}</el-descriptions-item>
+      <el-descriptions-item v-if="isResearch" label="輸入日期">{{ result.inputDateTime }}</el-descriptions-item>
       <el-descriptions-item label="公曆">{{ result.solarDateTime }}</el-descriptions-item>
       <el-descriptions-item label="農曆">{{ result.lunarDateTime }}</el-descriptions-item>
       <el-descriptions-item label="八字">
@@ -26,21 +26,22 @@
         </span>
       </el-descriptions-item>
       <el-descriptions-item label="日主">{{ result.dayMaster }}</el-descriptions-item>
-      <el-descriptions-item label="格局">{{ result.geJu }}</el-descriptions-item>
-      <el-descriptions-item label="特殊格局">{{ specialPatternSummary }}</el-descriptions-item>
-      <el-descriptions-item v-if="specialPatternBasis" label="特殊格局取格" :span="fullSpan">
+      <el-descriptions-item v-if="lessonPattern" label="格局">{{ lessonPattern }}</el-descriptions-item>
+      <el-descriptions-item v-if="isResearch || !lessonPattern" :label="lessonPattern ? '格局（量化模型）' : '格局'">{{ result.geJu }}</el-descriptions-item>
+      <el-descriptions-item v-if="isResearch" label="特殊格局">{{ specialPatternSummary }}</el-descriptions-item>
+      <el-descriptions-item v-if="isResearch && specialPatternBasis" label="特殊格局取格" :span="fullSpan">
         {{ specialPatternBasis }}
       </el-descriptions-item>
-      <el-descriptions-item label="格局依據">{{ result.geJuBasis }}</el-descriptions-item>
-      <el-descriptions-item label="胎元">{{ result.taiYuan }}</el-descriptions-item>
-      <el-descriptions-item label="命宮">{{ result.mingGong }}</el-descriptions-item>
-      <el-descriptions-item label="身宮">{{ result.shenGong }}</el-descriptions-item>
+      <el-descriptions-item v-if="isResearch" label="格局依據">{{ result.geJuBasis }}</el-descriptions-item>
+      <el-descriptions-item v-if="isResearch" label="胎元">{{ result.taiYuan }}</el-descriptions-item>
+      <el-descriptions-item v-if="isResearch" label="命宮">{{ result.mingGong }}</el-descriptions-item>
+      <el-descriptions-item v-if="isResearch" label="身宮">{{ result.shenGong }}</el-descriptions-item>
       <el-descriptions-item v-if="directPillarYearSummary" label="可能西元年" :span="fullSpan">
         <span class="shen-sha-text">{{ directPillarYearSummary }}</span>
       </el-descriptions-item>
       <template v-if="hasExactLuckTiming">
-        <el-descriptions-item label="起運日期">{{ luckStart?.startSolar }}</el-descriptions-item>
-        <el-descriptions-item label="起運偏移" :span="fullSpan">
+        <el-descriptions-item v-if="isResearch" label="起運日期">{{ luckStart?.startSolar }}</el-descriptions-item>
+        <el-descriptions-item v-if="isResearch" label="起運偏移" :span="fullSpan">
           {{ luckStart?.startYear }}年 {{ luckStart?.startMonth }}月 {{ luckStart?.startDay }}日 {{ luckStart?.startHour }}時
         </el-descriptions-item>
         <el-descriptions-item label="上大運" :span="fullSpan">
@@ -53,7 +54,7 @@
       <el-descriptions-item v-if="luckTransitionSummary" label="交脫大運" :span="fullSpan">
         {{ luckTransitionSummary }}
       </el-descriptions-item>
-      <el-descriptions-item v-if="luckStart?.transitionSummaryExperimental" label="交脫大運（研究值）" :span="fullSpan">
+      <el-descriptions-item v-if="isResearch && luckStart?.transitionSummaryExperimental" label="交脫大運（研究值）" :span="fullSpan">
         {{ luckStart.transitionSummaryExperimental }}
       </el-descriptions-item>
     </el-descriptions>
@@ -64,12 +65,16 @@
 import { computed } from "vue";
 import type { BaziResponse } from "../types/bazi";
 import { BRANCH_WUXING, STEM_WUXING } from "../constants/wuxing";
+import { useViewMode } from "../composables/useViewMode";
 
 const props = defineProps<{
   result: BaziResponse;
   compact?: boolean;
 }>();
 
+const { isResearch } = useViewMode();
+// 新手模式的「格局」用課堂取格（看月令十神）；量化模型的格局名稱只在研究模式另列。
+const lessonPattern = computed(() => props.result.quantModel?.lessonContent?.threeStepAnalysis?.pattern?.ordinaryResult ?? "");
 const luckStart = computed(() => props.result.luckStart);
 const genderLabel = computed(() =>
   props.result.gender === "FEMALE" ? "女（坤造）" : props.result.gender === "MALE" ? "男（乾造）" : "未提供",

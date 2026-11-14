@@ -10,6 +10,21 @@
       </div>
     </template>
 
+    <div class="event-filter-bar" role="group" aria-label="標籤篩選">
+      <span class="event-filter-label">標籤</span>
+      <button
+        v-for="option in EVENT_FILTERS"
+        :key="option.value"
+        type="button"
+        :class="['event-filter-chip', { 'is-active': eventFilter === option.value }]"
+        :title="option.title"
+        @click="eventFilter = option.value"
+      >
+        {{ option.label }}
+      </button>
+      <span class="event-filter-legend">橙＝各書認為較嚴重，灰＝提示；標籤只表示「這段時間有事情動」，好壞看 ▲有利 ▼不利。</span>
+    </div>
+
     <div class="compact-lane-toggle-bar">
       <button
         type="button"
@@ -85,12 +100,15 @@
               </div>
               <div v-if="luckEventsByRow.get(row.index)?.length" class="fate-event-list">
                 <span
-                  v-for="event in luckEventsByRow.get(row.index)"
+                  v-for="event in shownEvents(luckEventsByRow.get(row.index))"
                   :key="`luck-event-${row.index}-${event.kind}`"
                   :class="['fate-event-tag', `is-${event.level}`, event.topic && `is-topic-${event.topic}`]"
                   :title="event.detail"
                 >
                   <b v-if="event.topic" class="topic-mark">{{ TOPIC_MARK[event.topic] }}</b>{{ event.label }}
+                </span>
+                <span v-if="hiddenEventCount(luckEventsByRow.get(row.index))" class="fate-event-more" title="點這一格，下方會列出全部標籤">
+                  +{{ hiddenEventCount(luckEventsByRow.get(row.index)) }}
                 </span>
               </div>
             </button>
@@ -147,12 +165,15 @@
               </div>
               <div v-if="annualEventsByYear.get(annual.year)?.length" class="fate-event-list">
                 <span
-                  v-for="event in annualEventsByYear.get(annual.year)"
+                  v-for="event in shownEvents(annualEventsByYear.get(annual.year))"
                   :key="`annual-event-${annual.year}-${event.kind}`"
                   :class="['fate-event-tag', `is-${event.level}`, event.topic && `is-topic-${event.topic}`]"
                   :title="event.detail"
                 >
                   <b v-if="event.topic" class="topic-mark">{{ TOPIC_MARK[event.topic] }}</b>{{ event.label }}
+                </span>
+                <span v-if="hiddenEventCount(annualEventsByYear.get(annual.year))" class="fate-event-more" title="點這一格，下方會列出全部標籤">
+                  +{{ hiddenEventCount(annualEventsByYear.get(annual.year)) }}
                 </span>
               </div>
               <div class="fate-cell-meta">{{ annual.age }}歲</div>
@@ -302,10 +323,12 @@ import {
   combineJudgements,
   judgeLuckRelation,
   lessonPreferences,
+  type RelationContext,
   type RelationJudgement,
   type RelationSide,
 } from "../utils/lessonPreference";
 import { annualEvents, majorLuckEvents, type LuckEvent, type LuckEventContext } from "../utils/luckEvents";
+import { useViewMode } from "../composables/useViewMode";
 import { spouseStorageYears, topicEvents, type TopicContext } from "../utils/lifeTopics";
 import { movingGodEvents } from "../utils/tenGodCombos";
 import { basicStructure, patternLuckEvents } from "../utils/basicStructure";
@@ -313,6 +336,7 @@ import { specialPatternLuckEvents } from "../utils/specialPatterns";
 import { fourBookLuckEvents, type Element as BookElement } from "../utils/fourBooks";
 import { fourBookTopicEvents } from "../utils/fourBookTopics";
 import { yongShenGuide } from "../utils/yongShen";
+import { useLuckSelection } from "../composables/useLuckSelection";
 
 const TOPIC_MARK: Record<string, string> = { marriage: "婚", wealth: "財", health: "健", move: "動" };
 
@@ -353,9 +377,13 @@ type InteractionSummary = {
 };
 
 const currentYear = new Date().getFullYear();
-const selectedLuckIndex = ref<number | null>(null);
-const selectedAnnualYear = ref<number | null>(null);
-const selectedMonthIndex = ref<number | null>(null);
+// 選擇和四柱下方的大運列共用（useLuckSelection），兩邊同步。
+const {
+  luckIndex: selectedLuckIndex,
+  annualYear: selectedAnnualYear,
+  monthIndex: selectedMonthIndex,
+  ensureFor: ensureLuckSelection,
+} = useLuckSelection();
 const expandAnnualLane = ref(!props.compact);
 const expandMonthLane = ref(!props.compact);
 
@@ -736,6 +764,14 @@ const favorLineTitle = computed(() => {
   ].join("\n");
 });
 
+// 原局八個字的五行（地支取本氣）。
+const natalElements = computed(
+  () =>
+    new Set(
+      natalItems.value.flatMap((item) => [STEM_WUXING[item.stem], BRANCH_WUXING[item.branch]]).filter(Boolean),
+    ),
+);
+
 // Each 大運 against the four natal pillars, same rules as the 「大運 × 原局」 strip.
 const luckNatalRelations = computed(
   () =>
@@ -750,9 +786,9 @@ const luckNatalRelations = computed(
           branchTenGods: row.branchTenGods,
         };
         // Keep which characters each tag touches, so it can be judged against 喜忌.
-        type Touch = { scope: "stem" | "branch"; luck: RelationSide; natal: RelationSide };
+        type Touch = { scope: "stem" | "branch"; luck: RelationSide; natal: RelationSide; context: RelationContext };
         const touched = new Map<string, Touch[]>();
-        const collect = (text: string, scope: Touch["scope"], luckChar: string, natalChar: string) => {
+        const collect = (text: string, scope: Touch["scope"], luckChar: string, natalChar: string, natalKey: string) => {
           const table = scope === "stem" ? STEM_WUXING : BRANCH_WUXING;
           const list = touched.get(text) ?? [];
           const luckElement = table[luckChar];
@@ -762,13 +798,18 @@ const luckNatalRelations = computed(
               scope,
               luck: { char: luckChar, element: luckElement, ...(scope === "stem" ? { seat: item.branch } : {}) },
               natal: { char: natalChar, element: natalElement },
+              // 11/04：沖月令而原局沒有大運這個五行時，沖不一定勝。
+              context:
+                scope === "branch"
+                  ? { natalIsMonthBranch: natalKey === "month", natalHasLuckElement: natalElements.value.has(luckElement) }
+                  : {},
             });
           }
           touched.set(text, list);
         };
         natalItems.value.forEach((natal) => {
-          summarizeStemInteractions(item, natal).forEach((text) => collect(text, "stem", item.stem, natal.stem));
-          summarizeBranchInteractions(item, natal).forEach((text) => collect(text, "branch", item.branch, natal.branch));
+          summarizeStemInteractions(item, natal).forEach((text) => collect(text, "stem", item.stem, natal.stem, natal.key));
+          summarizeBranchInteractions(item, natal).forEach((text) => collect(text, "branch", item.branch, natal.branch, natal.key));
         });
         const preferences = lessonFavor.value;
         return [
@@ -780,7 +821,7 @@ const luckNatalRelations = computed(
               preferences && touches.length
                 ? combineJudgements(
                     touches.map((touch) =>
-                      judgeLuckRelation(text, touch.scope, touch.luck, touch.natal, preferences),
+                      judgeLuckRelation(text, touch.scope, touch.luck, touch.natal, preferences, touch.context),
                     ),
                   )
                 : undefined,
@@ -868,6 +909,41 @@ const previousLuckOf = computed(() => {
   const ordered = [...(props.result.daYun ?? [])].filter((item) => item.ganZhi).sort((a, b) => (a.startYear ?? 0) - (b.startYear ?? 0));
   return new Map(ordered.map((item, index) => [item.index, index > 0 ? ordered[index - 1].ganZhi : undefined]));
 });
+
+// 標籤篩選：新手預設只看「重點」（較嚴重的優先，每格最多 2 個），研究模式預設看全部。
+type EventFilter = "key" | "all" | "marriage" | "wealth" | "health" | "move";
+const EVENT_FILTERS: { value: EventFilter; label: string; title: string }[] = [
+  { value: "key", label: "重點", title: "每格最多 2 個，較嚴重的優先" },
+  { value: "all", label: "全部", title: "各書所有運歲標籤" },
+  { value: "marriage", label: "婚", title: "只看婚姻相關" },
+  { value: "wealth", label: "財", title: "只看財運相關" },
+  { value: "health", label: "健", title: "只看健康相關" },
+  { value: "move", label: "動", title: "只看十神動神（七殺、傷官、偏財、比劫被引動）" },
+];
+const KEY_EVENT_LIMIT = 2;
+const { isResearch } = useViewMode();
+const eventFilter = ref<EventFilter>(isResearch.value ? "all" : "key");
+watch(isResearch, (research) => {
+  eventFilter.value = research ? "all" : "key";
+});
+
+function filteredEvents(list: LuckEvent[] | undefined): LuckEvent[] {
+  const events = list ?? [];
+  if (eventFilter.value === "all") return events;
+  if (eventFilter.value === "key") {
+    return [...events].sort((a, b) => (a.level === b.level ? 0 : a.level === "warn" ? -1 : 1));
+  }
+  return events.filter((event) => event.topic === eventFilter.value);
+}
+
+function shownEvents(list: LuckEvent[] | undefined): LuckEvent[] {
+  const events = filteredEvents(list);
+  return eventFilter.value === "key" ? events.slice(0, KEY_EVENT_LIMIT) : events;
+}
+
+function hiddenEventCount(list: LuckEvent[] | undefined): number {
+  return eventFilter.value === "key" ? Math.max(0, (list?.length ?? 0) - KEY_EVENT_LIMIT) : 0;
+}
 
 const luckEventsByRow = computed(
   () =>
@@ -1362,7 +1438,10 @@ function selectMonthRow(row: LiuYue) {
 watch(
   rows,
   () => {
-    initializeSelection();
+    // 換了命盤才重設；只是面板重新出現（例如手機切換分頁）就保留原本的選擇。
+    if (ensureLuckSelection(props.result)) {
+      initializeSelection();
+    }
   },
   { immediate: true },
 );
@@ -1744,6 +1823,51 @@ watch(expandMonthLane, (expanded) => {
   padding-top: 4px;
   color: #475569;
   font-size: calc(13px * var(--app-font-scale));
+}
+
+.event-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.event-filter-label {
+  color: var(--bazi-text-muted);
+  font-weight: 700;
+  font-size: calc(13px * var(--app-font-scale));
+}
+
+.event-filter-chip {
+  padding: 2px 12px;
+  border: 1px solid rgba(115, 95, 76, 0.35);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bazi-text);
+  font-size: calc(13px * var(--app-font-scale));
+  cursor: pointer;
+}
+
+.event-filter-chip.is-active {
+  border-color: #b45309;
+  background: rgba(180, 83, 9, 0.12);
+  color: #92400e;
+  font-weight: 600;
+}
+
+.event-filter-legend {
+  flex-basis: 100%;
+  color: var(--bazi-text-muted);
+  font-size: calc(12px * var(--app-font-scale));
+  line-height: 1.5;
+}
+
+.fate-event-more {
+  align-self: center;
+  color: var(--bazi-text-muted);
+  font-size: calc(11px * var(--app-font-scale));
+  font-weight: 600;
 }
 
 .fate-event-list {

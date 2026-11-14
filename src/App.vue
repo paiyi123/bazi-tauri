@@ -1,120 +1,148 @@
 <template>
-  <div class="app-shell" :class="{ 'compact-layout': isCompactLayout }" :style="appFontStyle">
-    <header class="app-header">
-      <div>
-        <p class="eyebrow">Tauri + tyme4rs</p>
-        <h1>八字排盤</h1>
-        <p class="subtitle">
-          參考 `bazi-sources` 的核心流程改寫為本機應用，現在同時可往 Windows 與 Android 版本延伸，並保留大運、流年、流月展示。
-        </p>
+  <div class="app-shell" :class="{ 'compact-layout': isCompactLayout, 'has-bottom-tabs': isCompactLayout && !!result }" :style="appFontStyle">
+    <header class="app-toolbar">
+      <h1>八字排盤</h1>
+      <div class="toolbar-actions">
+        <el-segmented v-model="viewMode" :options="viewModeOptions" size="small" class="view-mode-switch" />
+        <el-popover v-if="!isCompactLayout" trigger="click" placement="bottom-end" :width="300">
+          <template #reference>
+            <el-button size="small">設定</el-button>
+          </template>
+          <div class="settings-body">
+            <div class="font-size-control">
+              <span class="font-size-label">字級</span>
+              <el-slider v-model="fontScale" :min="86" :max="200" :step="2" :show-tooltip="false" class="font-size-slider" />
+              <span class="font-size-value">{{ fontScale }}%</span>
+            </div>
+            <p class="settings-note">新手模式：只看課堂三步法的主答案與重點。研究模式：多顯示量化計分、各書原始卡片、胎元命宮、神煞與分數。</p>
+          </div>
+        </el-popover>
+        <el-button v-if="result && !isCompactLayout" size="small" type="primary" plain @click="handleOpenPrintPreview">列印</el-button>
       </div>
     </header>
 
-    <main class="page-grid">
+    <main class="page-grid" :class="{ 'is-two-column': useSideColumn }">
       <section class="left-column">
-        <el-card shadow="never" class="mode-card" @click="showInputPanel = true">
-          <el-segmented v-model="inputMode" :options="modeOptions" block />
-        </el-card>
-        <el-card shadow="never" class="font-size-card">
-          <div class="font-size-control">
-            <span class="font-size-label">字級</span>
-            <el-slider
-              v-model="fontScale"
-              :min="86"
-              :max="200"
-              :step="2"
-              :show-tooltip="false"
-              class="font-size-slider"
-            />
-            <span class="font-size-value">{{ fontScale }}%</span>
+        <div v-if="result && !showInputPanel" class="input-summary">
+          <span>{{ result.solarDateTime }}<span class="input-summary-sep">·</span>{{ genderText }}</span>
+          <el-button link type="primary" @click="showInputPanel = true">修改／新排盤</el-button>
+        </div>
+        <div v-if="useSideColumn && result" class="side-sticky">
+          <ConclusionCard :result="result" />
+          <TopicSideNav />
+        </div>
+        <template v-if="!result || showInputPanel">
+          <div v-if="result" class="input-summary">
+            <span>修改出生資料，或排一張新的命盤</span>
+            <el-button link type="primary" @click="showInputPanel = false">收起</el-button>
           </div>
-        </el-card>
-        <BirthForm
-          v-if="showInputPanel && inputMode === 'birth'"
-          :compact="isCompactLayout"
-          :loading="loading"
-          :error="error"
-          :prefill-draft="prefillBirthDraft"
-          @print-context="handlePrintContext"
-          @submit="handleSubmit"
-        />
-        <PillarInputForm
-          v-else-if="showInputPanel"
-          :compact="isCompactLayout"
-          :loading="loading"
-          :error="error"
-          @print-context="handlePrintContext"
-          @submit="handleSubmitPillars"
-          @apply-birth-draft="handleApplyBirthDraft"
-        />
+          <el-card shadow="never" class="mode-card">
+            <el-segmented v-model="inputMode" :options="modeOptions" block />
+          </el-card>
+          <BirthForm
+            v-if="inputMode === 'birth'"
+            :compact="isCompactLayout"
+            :loading="loading"
+            :error="error"
+            :prefill-draft="prefillBirthDraft"
+            @print-context="handlePrintContext"
+            @submit="handleSubmit"
+          />
+          <PillarInputForm
+            v-else
+            :compact="isCompactLayout"
+            :loading="loading"
+            :error="error"
+            @print-context="handlePrintContext"
+            @submit="handleSubmitPillars"
+            @apply-birth-draft="handleApplyBirthDraft"
+          />
+        </template>
       </section>
 
       <section class="right-column">
-        <div v-if="result" class="result-toolbar">
-          <el-button type="primary" plain @click="handleOpenPrintPreview">列印命盤</el-button>
-        </div>
         <div v-if="result && !isCompactLayout" class="result-stack">
-          <SummaryPanel :result="result" :compact="false" />
-          <PillarPanel :result="result" :preview-pillars="focusedLuckPillars" :compact="false" />
-          <FiveElementFlowPanel :result="result" :compact="false" />
-          <AnalysisTopics :result="result" :compact="false" @preview-change="handlePreviewChange" />
+          <ConclusionCard v-if="!useSideColumn" :result="result" />
+          <PillarPanel :result="result" :preview-pillars="focusedLuckPillars" :compact="false" :show-relation-map="false" :show-interaction-section="isResearch" @preview-change="handlePreviewChange" />
+          <SourceFold :open="isResearch" label="命盤摘要・五行流通圖" hint="農曆、起運時間、八個字之間的生剋流通">
+            <SummaryPanel :result="result" :compact="false" />
+            <FiveElementFlowPanel :result="result" :compact="false" />
+          </SourceFold>
+          <AnalysisTopics :result="result" :compact="false" :side-nav="useSideColumn" @preview-change="handlePreviewChange" />
         </div>
 
         <div v-else-if="result" class="compact-result-shell">
-          <el-tabs v-model="activeCompactTab" class="compact-result-tabs">
-            <el-tab-pane label="摘要" name="summary">
+          <MiniChartBar v-if="activeCompactTab !== 'chart'" :result="result" class="mini-chart-sticky" />
+          <div v-if="activeCompactTab === 'chart'" class="compact-section-stack">
+            <ConclusionCard :result="result" compact />
+            <PillarPanel
+              key="compact-pillars-panel"
+              :result="result"
+              @preview-change="handlePreviewChange"
+              :preview-pillars="focusedLuckPillars"
+              :compact="true"
+              :show-pillars="true"
+              :show-relation-map="false"
+              :show-interaction-section="false"
+            />
+            <PillarSummaryPanel :result="result" hide-conclusions />
+            <SourceFold :open="isResearch" label="命盤摘要・五行流通圖" hint="農曆、起運時間、生剋流通">
+              <FiveElementFlowPanel :result="result" :compact="true" />
               <SummaryPanel :result="result" :compact="true" />
-            </el-tab-pane>
-            <el-tab-pane label="四柱" name="pillars" lazy>
-              <div v-if="activeCompactTab === 'pillars'" class="compact-section-stack">
-                <PillarPanel
-                  key="compact-pillars-panel"
-                  :result="result"
-                  :preview-pillars="focusedLuckPillars"
-                  :compact="true"
-                  :show-pillars="true"
-                  :show-relation-map="false"
-                  :show-interaction-section="false"
-                />
-                <PillarSummaryPanel :result="result" />
+            </SourceFold>
+          </div>
+          <div v-else-if="activeCompactTab === 'analysis'" class="compact-section-stack">
+            <AnalysisTopics
+              :result="result"
+              :compact="true"
+              :exclude="['luck']"
+              @preview-change="handlePreviewChange"
+              @goto-outside="selectCompactTab('luck')"
+            />
+          </div>
+          <div v-else-if="activeCompactTab === 'luck'" class="compact-section-stack">
+            <LuckCyclePanel :result="result" :compact="true" @preview-change="handlePreviewChange" />
+            <FourBookTopicsPanel :result="result" :only="['luck']" title="大運流年要訣（四本書）" />
+            <FourBooksPanel v-if="isResearch" :result="result" :only="['limit']" title="限運：每柱管哪段年齡（四本書）" />
+            <PillarPanel
+              key="compact-luck-relations-panel"
+              :result="result"
+              :preview-pillars="focusedLuckPillars"
+              :compact="true"
+              :show-pillars="false"
+              :show-relation-map="true"
+              :show-interaction-section="true"
+            />
+          </div>
+          <div v-else class="compact-section-stack">
+            <el-card shadow="never" class="more-card">
+              <template #header>
+                <div class="section-header"><h2>設定</h2></div>
+              </template>
+              <div class="more-row">
+                <span class="more-label">顯示模式</span>
+                <el-segmented v-model="viewMode" :options="viewModeOptions" />
               </div>
-            </el-tab-pane>
-            <el-tab-pane label="運勢" name="luck" lazy>
-              <div v-if="activeCompactTab === 'luck'" class="compact-section-stack">
-                <LuckCyclePanel :result="result" :compact="true" @preview-change="handlePreviewChange" />
-                <FourBookTopicsPanel :result="result" :only="['luck']" title="大運流年要訣（四本書）" />
-                <FourBooksPanel :result="result" :only="['limit']" title="限運：每柱管哪段年齡（四本書）" />
-                <PillarPanel
-                  key="compact-luck-relations-panel"
-                  :result="result"
-                  :preview-pillars="focusedLuckPillars"
-                  :compact="true"
-                  :show-pillars="false"
-                  :show-relation-map="true"
-                  :show-interaction-section="true"
-                />
+              <p class="settings-note">新手模式：只看課堂三步法的主答案與重點。研究模式：多顯示量化計分、各書原始卡片、胎元命宮、神煞與分數。</p>
+              <div class="font-size-control">
+                <span class="font-size-label">字級</span>
+                <el-slider v-model="fontScale" :min="86" :max="200" :step="2" :show-tooltip="false" class="font-size-slider" />
+                <span class="font-size-value">{{ fontScale }}%</span>
               </div>
-            </el-tab-pane>
-            <el-tab-pane label="流通" name="flow" lazy>
-              <FiveElementFlowPanel v-if="activeCompactTab === 'flow'" :result="result" :compact="true" />
-            </el-tab-pane>
-            <el-tab-pane label="分析" name="analysis" lazy>
-              <AnalysisTopics
-                v-if="activeCompactTab === 'analysis'"
-                :result="result"
-                :compact="true"
-                :exclude="['luck']"
-                @preview-change="handlePreviewChange"
-              />
-            </el-tab-pane>
-            <el-tab-pane label="量化" name="quant" lazy>
-              <QuantFivePhasePanel :result="result" :compact="true" @preview-change="handlePreviewChange" />
-            </el-tab-pane>
-          </el-tabs>
+              <div class="more-actions">
+                <el-button @click="openInputPanel">修改／新排盤</el-button>
+                <el-button type="primary" plain @click="handleOpenPrintPreview">列印命盤</el-button>
+              </div>
+            </el-card>
+            <QuantFivePhasePanel v-if="isResearch" :result="result" :compact="true" @preview-change="handlePreviewChange" />
+            <el-card v-else shadow="never" class="more-card">
+              <p class="settings-note">量化五行力的計分表是研究資料，切到「研究」模式就會出現在這裡。</p>
+            </el-card>
+          </div>
         </div>
 
         <el-card v-else shadow="hover" class="empty-card">
-          <el-empty description="左側輸入出生資料後，系統會以本機 Rust 引擎計算四柱、大運與起運資訊。">
+          <el-empty description="輸入出生資料後，系統會以本機 Rust 引擎計算四柱、大運與起運資訊。">
             <template #image>
               <div class="empty-mark">命</div>
             </template>
@@ -122,6 +150,20 @@
         </el-card>
       </section>
     </main>
+
+    <nav v-if="result && isCompactLayout" class="bottom-tabs" aria-label="結果分頁">
+      <button
+        v-for="tab in compactTabs"
+        :key="tab.name"
+        type="button"
+        class="bottom-tab"
+        :class="{ active: activeCompactTab === tab.name }"
+        @click="selectCompactTab(tab.name)"
+      >
+        <span class="bottom-tab-icon">{{ tab.icon }}</span>
+        <span>{{ tab.label }}</span>
+      </button>
+    </nav>
 
     <el-dialog
       v-model="showPrintPreview"
@@ -154,6 +196,9 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import AnalysisTopics from "./components/AnalysisTopics.vue";
 import FiveElementFlowPanel from "./components/FiveElementFlowPanel.vue";
 import BirthForm from "./components/BirthForm.vue";
+import ConclusionCard from "./components/ConclusionCard.vue";
+import MiniChartBar from "./components/MiniChartBar.vue";
+import { useViewMode, type ViewMode } from "./composables/useViewMode";
 import FourBooksPanel from "./components/FourBooksPanel.vue";
 import FourBookTopicsPanel from "./components/FourBookTopicsPanel.vue";
 import LuckCyclePanel from "./components/LuckCyclePanel.vue";
@@ -162,6 +207,8 @@ import PillarSummaryPanel from "./components/PillarSummaryPanel.vue";
 import PillarInputForm from "./components/PillarInputForm.vue";
 import QuantFivePhasePanel from "./components/QuantFivePhasePanel.vue";
 import SummaryPanel from "./components/SummaryPanel.vue";
+import SourceFold from "./components/SourceFold.vue";
+import TopicSideNav from "./components/TopicSideNav.vue";
 import { analyzePillars, calculateBazi, renderPrintHtml } from "./services/bazi";
 import type {
   BaziRequest,
@@ -180,7 +227,24 @@ const isCompactLayout = ref(false);
 const showInputPanel = ref(true);
 const FONT_SCALE_STORAGE_KEY = "bazi:font-scale:v1";
 const fontScale = ref(loadFontScale());
-const activeCompactTab = ref<"summary" | "pillars" | "luck" | "flow" | "quant" | "analysis">("summary");
+type CompactTab = "chart" | "analysis" | "luck" | "more";
+const activeCompactTab = ref<CompactTab>("chart");
+const compactTabs: { name: CompactTab; label: string; icon: string }[] = [
+  { name: "chart", label: "命盤", icon: "命" },
+  { name: "analysis", label: "解盤", icon: "解" },
+  { name: "luck", label: "運勢", icon: "運" },
+  { name: "more", label: "更多", icon: "⋯" },
+];
+const { mode: viewMode, isResearch } = useViewMode();
+// 電腦版排盤後：左欄固定結論卡，右欄放命盤與分析；打開輸入表單時回到單欄。
+const useSideColumn = computed(() => !!result.value && !isCompactLayout.value && !showInputPanel.value);
+const viewModeOptions: { label: string; value: ViewMode }[] = [
+  { label: "新手", value: "beginner" },
+  { label: "研究", value: "research" },
+];
+const genderText = computed(() =>
+  result.value?.gender === "FEMALE" ? "女" : result.value?.gender === "MALE" ? "男" : "性別未填",
+);
 const prefillBirthDraft = ref<BaziRequest | null>(null);
 const printContext = ref<PrintContext | null>(null);
 const showPrintPreview = ref(false);
@@ -209,7 +273,7 @@ watch(fontScale, (value) => {
 
 watch(result, () => {
   focusedLuckPillars.value = [];
-  activeCompactTab.value = "summary";
+  activeCompactTab.value = "chart";
 });
 
 let compactMediaQuery: MediaQueryList | null = null;
@@ -222,8 +286,10 @@ function loadFontScale() {
   if (typeof window === "undefined") {
     return 100;
   }
-  const raw = Number(window.localStorage.getItem(FONT_SCALE_STORAGE_KEY));
-  if (!Number.isFinite(raw)) {
+  const stored = window.localStorage.getItem(FONT_SCALE_STORAGE_KEY);
+  const raw = Number(stored);
+  // 沒存過時 Number(null) 會是 0，被夾成最小的 86%；改成預設 100%。
+  if (stored === null || !Number.isFinite(raw) || raw <= 0) {
     return 100;
   }
   return Math.min(200, Math.max(86, Math.round(raw / 2) * 2));
@@ -269,6 +335,16 @@ onBeforeUnmount(() => {
     mediaQuery.removeListener?.(handleCompactLayoutChange);
   }
 });
+
+function selectCompactTab(name: CompactTab) {
+  activeCompactTab.value = name;
+  window.scrollTo({ top: 0 });
+}
+
+function openInputPanel() {
+  showInputPanel.value = true;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
 function handlePreviewChange(pillars: LuckPreviewPillar[] | null) {
   focusedLuckPillars.value = pillars ?? [];

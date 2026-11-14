@@ -2,12 +2,12 @@
   <el-card shadow="hover" class="pillar-summary">
     <template #header>
       <div class="section-header">
-        <h2>作用變化與強弱喜忌</h2>
+        <h2>{{ hideConclusions ? "干支作用變化" : "作用變化與強弱喜忌" }}</h2>
       </div>
     </template>
 
     <template v-if="summary">
-      <dl class="conclusions">
+      <dl v-if="!hideConclusions" class="conclusions">
         <div class="row">
           <dt>日主</dt>
           <dd>
@@ -92,7 +92,8 @@ import type { BaziResponse } from "../types/bazi";
 import { pillarSummary } from "../utils/pillarSummary";
 import type { Favor } from "../utils/lessonPreference";
 
-const props = defineProps<{ result: BaziResponse }>();
+// hideConclusions：上方已有「本命結論」卡時，不再重複列強弱、用神、喜忌。
+const props = defineProps<{ result: BaziResponse; hideConclusions?: boolean }>();
 
 const summary = computed(() => pillarSummary(props.result.quantModel?.lessonContent?.threeStepAnalysis));
 

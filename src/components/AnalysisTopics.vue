@@ -1,7 +1,7 @@
 <template>
   <div class="analysis-topics" :class="{ compact }">
     <!-- 桌面版：所有分區由上到下排，頂端一列可跳到各區。手機版：用選單一次看一區。 -->
-    <nav class="topic-nav" :class="{ sticky: !compact }" aria-label="分析分區">
+    <nav class="topic-nav" :class="{ sticky: !compact, 'has-side-nav': sideNav }" aria-label="分析分區">
       <button
         v-for="topic in visibleTopics"
         :key="topic.key"
@@ -21,44 +21,68 @@
           <p>{{ topic.desc }}</p>
         </header>
         <div class="topic-body">
-          <template v-if="topic.key === 'strength'">
+          <ul v-if="leadsOf(topic.key).length" class="topic-lead">
+            <li v-for="(line, idx) in leadsOf(topic.key)" :key="idx" :class="`tone-${line.tone}`"><GlossaryText :text="line.text" /></li>
+          </ul>
+          <template v-if="topic.key === 'steps'">
+            <ReadingSteps :result="result" @goto="goto" />
+          </template>
+          <template v-else-if="topic.key === 'learn'">
+            <LearnPanel :result="result" />
+          </template>
+          <template v-else-if="topic.key === 'strength'">
+            <DisagreementList :result="result" />
             <StrengthComparisonPanel :result="result" />
-            <CourseContentPanel :result="result" section="core" />
-            <YongShenPanel :result="result" />
-            <FourBooksPanel :result="result" :only="['clarity', 'quality', 'climate', 'flow']" title="清濁・用神品質・調候（四本書）" />
-            <FiveElementStrengthPanel :result="result" />
+            <YongShenPanel v-if="hasLesson" :result="result" />
+            <SourceFold :open="isResearch" label="詳細推論與各書細節" :hint="isResearch ? '課堂三步法完整推論、四本書清濁調候、量化用神' : '課堂三步法完整推論、四本書清濁調候'">
+              <CourseContentPanel v-if="hasLesson" :result="result" section="core" />
+              <FourBooksPanel :result="result" :only="['clarity', 'quality', 'climate', 'flow']" title="清濁・用神品質・調候（四本書）" />
+              <FiveElementStrengthPanel v-if="isResearch" :result="result" />
+            </SourceFold>
           </template>
           <template v-else-if="topic.key === 'pattern'">
-            <BasicStructurePanel :result="result" />
-            <SpecialPatternPanel :result="result" />
             <TenGodComboPanel :result="result" />
+            <SourceFold :open="isResearch" label="各書細節" :hint="isResearch ? '蘇民峰特別格局、陸致極結構圖' : '蘇民峰特別格局'">
+              <SpecialPatternPanel :result="result" />
+              <BasicStructurePanel v-if="isResearch" :result="result" />
+            </SourceFold>
           </template>
           <template v-else-if="topic.key === 'interaction'">
-            <CourseContentPanel :result="result" section="interactions" />
-            <TenGodPanel :result="result" />
-            <FourBooksPanel :result="result" :only="['combine']" title="五合的三種化法（四本書）" />
+            <CourseContentPanel v-if="hasLesson" :result="result" section="interactions" />
+            <SourceFold v-if="isResearch" open label="各書細節" hint="量化模型合沖、四本書五合化法">
+              <TenGodPanel :result="result" />
+              <FourBooksPanel :result="result" :only="['combine']" title="五合的三種化法（四本書）" />
+            </SourceFold>
           </template>
           <template v-else-if="topic.key === 'luck'">
             <LuckCyclePanel :result="result" :compact="compact" @preview-change="emit('preview-change', $event)" />
-            <FourBookTopicsPanel :result="result" :only="['luck']" title="大運流年要訣（四本書）" />
-            <FourBooksPanel :result="result" :only="['limit']" title="限運：每柱管哪段年齡（四本書）" />
+            <SourceFold :open="isResearch" label="各書細節" :hint="isResearch ? '大運流年要訣、限運' : '大運流年要訣（四本書）'">
+              <FourBookTopicsPanel :result="result" :only="['luck']" title="大運流年要訣（四本書）" />
+              <FourBooksPanel v-if="isResearch" :result="result" :only="['limit']" title="限運：每柱管哪段年齡（四本書）" />
+            </SourceFold>
           </template>
           <template v-else-if="topic.key === 'family'">
-            <FourBookTopicsPanel :result="result" :only="['relatives', 'family', 'marriage']" title="六親・婚姻（四本書）" />
-            <LifeTopicsPanel :result="result" :only="['marriage']" title="婚姻（陸致極）" />
-            <FourBooksPanel :result="result" :only="['rotation', 'love']" title="轉盤看親人・戀愛方式（四本書）" />
+            <SourceFold :open="isResearch" label="各書細節" :hint="isResearch ? '四本書六親婚姻、陸致極婚姻、轉盤' : '四本書六親婚姻、陸致極婚姻'">
+              <FourBookTopicsPanel :result="result" :only="['relatives', 'family', 'marriage']" title="六親・婚姻（四本書）" />
+              <LifeTopicsPanel :result="result" :only="['marriage']" title="婚姻（陸致極）" />
+              <FourBooksPanel v-if="isResearch" :result="result" :only="['rotation', 'love']" title="轉盤看親人・戀愛方式（四本書）" />
+            </SourceFold>
           </template>
           <template v-else-if="topic.key === 'health'">
-            <LifeTopicsPanel :result="result" :only="['health']" title="健康（陸致極）" />
-            <FourBookTopicsPanel :result="result" :only="['health']" title="健康（四本書）" />
+            <SourceFold :open="isResearch" label="各書細節" hint="陸致極健康、四本書健康">
+              <LifeTopicsPanel :result="result" :only="['health']" title="健康（陸致極）" />
+              <FourBookTopicsPanel :result="result" :only="['health']" title="健康（四本書）" />
+            </SourceFold>
           </template>
           <template v-else-if="topic.key === 'career'">
-            <FourBookTopicsPanel :result="result" :only="['career', 'wealth', 'study']" title="事業・財富・學業（四本書）" />
-            <LifeTopicsPanel :result="result" :only="['wealth']" title="財運（陸致極）" />
+            <SourceFold :open="isResearch" label="各書細節" hint="四本書事業財富學業、陸致極財運">
+              <FourBookTopicsPanel :result="result" :only="['career', 'wealth', 'study']" title="事業・財富・學業（四本書）" />
+              <LifeTopicsPanel :result="result" :only="['wealth']" title="財運（陸致極）" />
+            </SourceFold>
           </template>
           <template v-else-if="topic.key === 'reference'">
             <QuantFivePhasePanel v-if="!compact" :result="result" :compact="false" @preview-change="emit('preview-change', $event)" />
-            <CourseContentPanel :result="result" section="reference" />
+            <CourseContentPanel v-if="hasLessonContent" :result="result" section="reference" />
           </template>
         </div>
       </section>
@@ -69,6 +93,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import type { BaziResponse, LuckPreviewPillar } from "../types/bazi";
+import { useViewMode } from "../composables/useViewMode";
 import BasicStructurePanel from "./BasicStructurePanel.vue";
 import CourseContentPanel from "./CourseContentPanel.vue";
 import FiveElementStrengthPanel from "./FiveElementStrengthPanel.vue";
@@ -82,36 +107,58 @@ import StrengthComparisonPanel from "./StrengthComparisonPanel.vue";
 import TenGodComboPanel from "./TenGodComboPanel.vue";
 import TenGodPanel from "./TenGodPanel.vue";
 import YongShenPanel from "./YongShenPanel.vue";
+import SourceFold from "./SourceFold.vue";
+import GlossaryText from "./GlossaryText.vue";
+import ReadingSteps from "./ReadingSteps.vue";
+import LearnPanel from "./LearnPanel.vue";
+import DisagreementList from "./DisagreementList.vue";
+import { topicLeads, type LeadLine } from "../utils/topicLeads";
+import { visibleTopicList, type TopicKey } from "../constants/analysisTopics";
 
-type TopicKey = "strength" | "pattern" | "interaction" | "luck" | "family" | "health" | "career" | "reference";
 
 const props = defineProps<{
   result: BaziResponse;
   compact: boolean;
   /** 手機版的大運已經在「運勢」分頁，這裡可以排除。 */
   exclude?: TopicKey[];
+  /** 電腦版寬螢幕時左欄已有目錄，這一列就不用再顯示。 */
+  sideNav?: boolean;
 }>();
 
 const emit = defineEmits<{
   "preview-change": [pillars: LuckPreviewPillar[] | null];
+  /** 要看的分區不在這裡（例如手機版大運在「運勢」分頁）。 */
+  "goto-outside": [topic: string];
 }>();
 
-const TOPICS: { key: TopicKey; short: string; title: string; desc: string }[] = [
-  { key: "luck", short: "大運流年", title: "大運流年", desc: "大運、流年、流月與各書的運歲標籤；看一年的步驟、限運年齡。" },
-  { key: "strength", short: "強弱用神", title: "強弱・用神・喜忌", desc: "日主強弱、用神喜神忌神、清濁與調候。其他各區說的「喜／忌」都以課堂三步法為準。" },
-  { key: "pattern", short: "格局", title: "格局・十神組合", desc: "結構與格局成敗、特別格局、十神組合。" },
-  { key: "interaction", short: "合沖刑害", title: "干支作用（合沖刑害）", desc: "天干五合、地支沖合刑害、同柱干支，以及作用之後的強弱複核。" },
-  { key: "family", short: "六親婚姻", title: "六親・婚姻", desc: "父母、兄弟、配偶、子女的星與宮，擇偶、婚期、轉盤看親人。" },
-  { key: "health", short: "健康", title: "健康", desc: "五行太過不及、相剋的病症、需要留意的身體部位。" },
-  { key: "career", short: "事業財富", title: "事業・財富・學業", desc: "適合的行業、財的多寡與來源、讀書與考運。" },
-  { key: "reference", short: "量化・上課", title: "量化計分與上課參考", desc: "量化五行力的計分明細、課程流程與課堂命例比對。" },
-];
-
-const visibleTopics = computed(() => TOPICS.filter((topic) => !props.exclude?.includes(topic.key)));
+const { isResearch } = useViewMode();
+// 沒有課堂資料時，課堂卡片只會顯示「尚無分析」，不如不顯示。
+const hasLessonContent = computed(() => !!props.result.quantModel?.lessonContent);
+const hasLesson = computed(() => !!props.result.quantModel?.lessonContent?.threeStepAnalysis);
+// 新手模式不顯示「量化計分與上課參考」分區，那些是研究用的原始資料。
+const visibleTopics = computed(() => visibleTopicList(isResearch.value, props.exclude));
 const current = ref<TopicKey>(visibleTopics.value[0]?.key ?? "strength");
-const shownTopics = computed(() =>
-  props.compact ? visibleTopics.value.filter((topic) => topic.key === current.value) : visibleTopics.value,
-);
+const shownTopics = computed(() => {
+  if (!props.compact) return visibleTopics.value;
+  const chosen = visibleTopics.value.find((topic) => topic.key === current.value) ?? visibleTopics.value[0];
+  return chosen ? [chosen] : [];
+});
+
+// 每個主題最上面的一句白話重點（大運、量化分區沒有）。
+const leads = computed(() => {
+  const map = new Map<TopicKey, LeadLine[]>();
+  for (const key of ["strength", "pattern", "interaction", "family", "health", "career"] as const) {
+    map.set(key, topicLeads(props.result, key));
+  }
+  return map;
+});
+const leadsOf = (key: TopicKey) => leads.value.get(key) ?? [];
+
+function goto(topic: string) {
+  const target = visibleTopics.value.find((item) => item.key === topic);
+  if (target) choose(target.key);
+  else emit("goto-outside", topic);
+}
 
 function choose(key: TopicKey) {
   if (props.compact) {
@@ -123,6 +170,11 @@ function choose(key: TopicKey) {
 </script>
 
 <style scoped>
+@media (min-width: 1100px) {
+  .topic-nav.has-side-nav {
+    display: none;
+  }
+}
 .analysis-topics {
   display: grid;
   gap: 18px;
@@ -199,6 +251,28 @@ function choose(key: TopicKey) {
   font-size: calc(13px * var(--app-font-scale));
   line-height: 1.5;
 }
+
+.topic-lead {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--bazi-surface-strong);
+  box-shadow: 0 1px 4px rgba(45, 33, 24, 0.08);
+  list-style: none;
+  font-size: calc(15px * var(--app-font-scale));
+  line-height: 1.65;
+}
+
+.topic-lead li {
+  padding-left: 12px;
+  border-left: 4px solid var(--bazi-border-strong);
+}
+
+.topic-lead .tone-good { border-left-color: #2f9e44; }
+.topic-lead .tone-bad { border-left-color: var(--bazi-danger); }
+.topic-lead .tone-mixed { border-left-color: var(--bazi-gold); }
 
 .topic-body {
   display: grid;

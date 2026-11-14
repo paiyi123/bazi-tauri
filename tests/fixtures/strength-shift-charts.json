@@ -1,0 +1,4124 @@
+{
+ "t3": {
+  "label": "講義第26章天干例三 丁亥 壬子 戊辰 丙辰",
+  "analysis": {
+   "version": "classroom-2026-10-v2",
+   "status": "conditional",
+   "facts": {
+    "title": "排盤事實",
+    "conclusion": "日主戊屬土，月令子本氣癸屬水；根氣與透干均保留原柱位及藏干層位。",
+    "pillars": [
+     {
+      "pillar": "年柱",
+      "ganZhi": "丁亥",
+      "stem": "丁",
+      "stemElement": "火",
+      "stemTenGod": "正印",
+      "branch": "亥",
+      "branchMainElement": "水",
+      "hiddenStems": [
+       {
+        "stem": "壬",
+        "element": "水",
+        "tenGod": "偏財",
+        "layer": "本氣"
+       },
+       {
+        "stem": "甲",
+        "element": "木",
+        "tenGod": "七殺",
+        "layer": "中氣"
+       }
+      ]
+     },
+     {
+      "pillar": "月柱",
+      "ganZhi": "壬子",
+      "stem": "壬",
+      "stemElement": "水",
+      "stemTenGod": "偏財",
+      "branch": "子",
+      "branchMainElement": "水",
+      "hiddenStems": [
+       {
+        "stem": "癸",
+        "element": "水",
+        "tenGod": "正財",
+        "layer": "本氣"
+       }
+      ]
+     },
+     {
+      "pillar": "日柱",
+      "ganZhi": "戊辰",
+      "stem": "戊",
+      "stemElement": "土",
+      "stemTenGod": "日元",
+      "branch": "辰",
+      "branchMainElement": "土",
+      "hiddenStems": [
+       {
+        "stem": "戊",
+        "element": "土",
+        "tenGod": "比肩",
+        "layer": "本氣"
+       },
+       {
+        "stem": "乙",
+        "element": "木",
+        "tenGod": "正官",
+        "layer": "中氣"
+       },
+       {
+        "stem": "癸",
+        "element": "水",
+        "tenGod": "正財",
+        "layer": "餘氣"
+       }
+      ]
+     },
+     {
+      "pillar": "時柱",
+      "ganZhi": "丙辰",
+      "stem": "丙",
+      "stemElement": "火",
+      "stemTenGod": "偏印",
+      "branch": "辰",
+      "branchMainElement": "土",
+      "hiddenStems": [
+       {
+        "stem": "戊",
+        "element": "土",
+        "tenGod": "比肩",
+        "layer": "本氣"
+       },
+       {
+        "stem": "乙",
+        "element": "木",
+        "tenGod": "正官",
+        "layer": "中氣"
+       },
+       {
+        "stem": "癸",
+        "element": "水",
+        "tenGod": "正財",
+        "layer": "餘氣"
+       }
+      ]
+     }
+    ],
+    "dayMaster": {
+     "stem": "戊",
+     "element": "土"
+    },
+    "monthCommand": {
+     "branch": "子",
+     "mainStem": "癸",
+     "element": "水",
+     "tenGod": "正財"
+    },
+    "transparencies": [
+     {
+      "hiddenStem": "癸",
+      "hiddenStemLayer": "本氣",
+      "tenGod": "正財",
+      "visibleLocations": [],
+      "evidenceId": "fact-transparency-1"
+     }
+    ],
+    "roots": [
+     {
+      "pillar": "日支",
+      "branch": "辰",
+      "hiddenStem": "戊",
+      "hiddenStemLayer": "本氣",
+      "element": "土",
+      "tenGod": "比肩",
+      "rootKind": "same_stem",
+      "evidenceId": "fact-hidden-3-1"
+     },
+     {
+      "pillar": "時支",
+      "branch": "辰",
+      "hiddenStem": "戊",
+      "hiddenStemLayer": "本氣",
+      "element": "土",
+      "tenGod": "比肩",
+      "rootKind": "same_stem",
+      "evidenceId": "fact-hidden-4-1"
+     }
+    ],
+    "tenGodDistribution": [
+     {
+      "family": "印",
+      "element": "火",
+      "surfaceLocations": [
+       "年干丁",
+       "時干丙"
+      ],
+      "hiddenLocations": [],
+      "surfaceEvidenceIds": [
+       "fact-stem-1",
+       "fact-stem-4"
+      ],
+      "hiddenEvidenceIds": []
+     },
+     {
+      "family": "比劫",
+      "element": "土",
+      "surfaceLocations": [
+       "日支辰本氣戊",
+       "時支辰本氣戊"
+      ],
+      "hiddenLocations": [
+       "日支辰本氣戊",
+       "時支辰本氣戊"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-hidden-3-1",
+       "fact-hidden-4-1"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-3-1",
+       "fact-hidden-4-1"
+      ]
+     },
+     {
+      "family": "食傷",
+      "element": "金",
+      "surfaceLocations": [],
+      "hiddenLocations": [],
+      "surfaceEvidenceIds": [],
+      "hiddenEvidenceIds": []
+     },
+     {
+      "family": "財",
+      "element": "水",
+      "surfaceLocations": [
+       "年支亥本氣壬",
+       "月干壬",
+       "月支子本氣癸"
+      ],
+      "hiddenLocations": [
+       "年支亥本氣壬",
+       "月支子本氣癸",
+       "日支辰餘氣癸",
+       "時支辰餘氣癸"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-hidden-1-1",
+       "fact-stem-2",
+       "fact-hidden-2-1"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-1-1",
+       "fact-hidden-2-1",
+       "fact-hidden-3-3",
+       "fact-hidden-4-3"
+      ]
+     },
+     {
+      "family": "官殺",
+      "element": "木",
+      "surfaceLocations": [],
+      "hiddenLocations": [
+       "年支亥中氣甲",
+       "日支辰中氣乙",
+       "時支辰中氣乙"
+      ],
+      "surfaceEvidenceIds": [],
+      "hiddenEvidenceIds": [
+       "fact-hidden-1-2",
+       "fact-hidden-3-2",
+       "fact-hidden-4-2"
+      ]
+     }
+    ],
+    "evidence": [
+     {
+      "id": "fact-hidden-1-1",
+      "kind": "chart_fact",
+      "pillar": "年支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "年支亥藏壬（本氣、水）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-1-2",
+      "kind": "chart_fact",
+      "pillar": "年支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "年支亥藏甲（中氣、木）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-1",
+      "kind": "chart_fact",
+      "pillar": "年干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "年干為丁，五行火，相對日主為正印。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-2-1",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "月支子藏癸（本氣、水）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-2",
+      "kind": "chart_fact",
+      "pillar": "月干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "月干為壬，五行水，相對日主為偏財。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-3-1",
+      "kind": "chart_fact",
+      "pillar": "日支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "日支辰藏戊（本氣、土）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-3-2",
+      "kind": "chart_fact",
+      "pillar": "日支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "日支辰藏乙（中氣、木）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-3-3",
+      "kind": "chart_fact",
+      "pillar": "日支",
+      "hiddenStemLayer": "餘氣",
+      "interactionId": null,
+      "description": "日支辰藏癸（餘氣、水）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-3",
+      "kind": "chart_fact",
+      "pillar": "日干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "日干為戊，五行土，相對日主為日元。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-4-1",
+      "kind": "chart_fact",
+      "pillar": "時支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "時支辰藏戊（本氣、土）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-4-2",
+      "kind": "chart_fact",
+      "pillar": "時支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "時支辰藏乙（中氣、木）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-4-3",
+      "kind": "chart_fact",
+      "pillar": "時支",
+      "hiddenStemLayer": "餘氣",
+      "interactionId": null,
+      "description": "時支辰藏癸（餘氣、水）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-4",
+      "kind": "chart_fact",
+      "pillar": "時干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "時干為丙，五行火，相對日主為偏印。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-transparency-1",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "月令藏干癸未在年、月、時干透出。",
+      "sourceDate": null
+     }
+    ],
+    "limitations": [
+     "藏干事實不因合沖而刪除；互動後是否仍有效另在強弱步驟標為待定。"
+    ]
+   },
+   "strength": {
+    "title": "第二步：日主強弱",
+    "conclusion": "三項觀察命中 2 項；表層剋洩耗家族為財，初判強候選。",
+    "status": "conditional",
+    "classification": "強候選",
+    "sameSeasonElement": false,
+    "sealInSeason": false,
+    "supportStemCount": 2,
+    "supportBranchCount": 2,
+    "samePartyCount": 5,
+    "opposingPartyCount": 3,
+    "monthCommandSameParty": false,
+    "momentumProxy": true,
+    "rootCount": 2,
+    "observationCount": 2,
+    "samePartyCharacters": [
+     "年干丁（正印）",
+     "日干戊（日元）",
+     "日支辰（比肩）",
+     "時干丙（偏印）",
+     "時支辰（比肩）"
+    ],
+    "opposingPartyCharacters": [
+     "年支亥（偏財）",
+     "月干壬（偏財）",
+     "月支子（正財）"
+    ],
+    "checks": [
+     {
+      "item": "得令（得時）",
+      "hit": false,
+      "rule": "日干生在同五行當旺的月令：木寅卯、火巳午、土辰戌丑未、金申酉、水亥子。",
+      "finding": "日主戊屬土，生於子月（本氣癸屬水，為正財）；土要生於辰戌丑未月才算得令 → 失令。",
+      "sourceDate": "2026-07-22"
+     },
+     {
+      "item": "得勢",
+      "hit": true,
+      "rule": "八個字（四天干含日主、四地支取本氣）分同黨（印、比劫）與異黨（食傷、財、官殺），多者勝；四比四時看月令屬哪一黨（得令者為旺）。",
+      "finding": "同黨 5 個、異黨 3 個；同黨較多 → 得勢。",
+      "sourceDate": "2026-09-02"
+     },
+     {
+      "item": "得地",
+      "hit": true,
+      "rule": "地支藏干中有與日干同五行者即通根，不分陰陽；根以本氣最穩，其次長生，再次餘氣、墓庫。",
+      "finding": "日支辰藏戊（本氣根，比肩）、時支辰藏戊（本氣根，比肩） → 得地（共 2 處根）。",
+      "sourceDate": "2026-07-22"
+     }
+    ],
+    "verdictReason": "得令✗、得勢✓、得地✓；三者得其二（得勢＋得地）→ 強；不得時但得勢得地，衰中轉強（2026-07-22、07-29）。",
+    "pressureFamiliesSurface": [
+     "財"
+    ],
+    "pressureFamiliesHidden": [
+     "財",
+     "官殺"
+    ],
+    "interactions": [
+     {
+      "id": "interaction-1-刑",
+      "scope": "地支",
+      "interactionType": "刑",
+      "target": "辰辰",
+      "outcome": "-",
+      "pillars": "日柱(辰)、時柱(辰)",
+      "detail": "自刑",
+      "assessment": "conditional_not_rescored"
+     },
+     {
+      "id": "interaction-2-半合化",
+      "scope": "地支",
+      "interactionType": "半合化",
+      "target": "辰子",
+      "outcome": "化水",
+      "pillars": "日柱(辰)、月柱(子)",
+      "detail": "量化模型裁決為地支半合化水",
+      "assessment": "conditional_not_rescored"
+     },
+     {
+      "id": "interaction-3-半合化",
+      "scope": "地支",
+      "interactionType": "半合化",
+      "target": "辰子",
+      "outcome": "化水",
+      "pillars": "時柱(辰)、月柱(子)",
+      "detail": "量化模型裁決為地支半合化水",
+      "assessment": "conditional_not_rescored"
+     },
+     {
+      "id": "interaction-4-合",
+      "scope": "天干",
+      "interactionType": "合",
+      "target": "丁壬",
+      "outcome": "木而不化",
+      "pillars": "年柱(丁)、月柱(壬)",
+      "detail": "量化模型裁決為天干丁壬合木（工程近似：合而不化）",
+      "assessment": "conditional_not_rescored"
+     }
+    ],
+    "evidence": [
+     {
+      "id": "strength-same-season",
+      "kind": "lesson_rule",
+      "pillar": "月支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "同氣得時=false；印當令=false，兩者分開記錄。",
+      "sourceDate": "2026-07-22"
+     },
+     {
+      "id": "strength-party-count",
+      "kind": "lesson_rule",
+      "pillar": null,
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "得勢：八字中同黨（印、比劫）5 個、異黨（食傷、財、官殺）3 個（天干與地支本氣，含日主）；同黨較多，得勢=true。",
+      "sourceDate": "2026-09-02"
+     },
+     {
+      "id": "strength-roots",
+      "kind": "chart_fact",
+      "pillar": null,
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "同五行藏干根共 2 處，保留全部層位。",
+      "sourceDate": null
+     },
+     {
+      "id": "strength-interaction-1-刑",
+      "kind": "chart_fact",
+      "pillar": "日柱(辰)、時柱(辰)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-1-刑",
+      "description": "地支刑（辰辰，-）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     },
+     {
+      "id": "strength-interaction-2-半合化",
+      "kind": "chart_fact",
+      "pillar": "日柱(辰)、月柱(子)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-2-半合化",
+      "description": "地支半合化（辰子，化水）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     },
+     {
+      "id": "strength-interaction-3-半合化",
+      "kind": "chart_fact",
+      "pillar": "時柱(辰)、月柱(子)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-3-半合化",
+      "description": "地支半合化（辰子，化水）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     },
+     {
+      "id": "strength-interaction-4-合",
+      "kind": "chart_fact",
+      "pillar": "年柱(丁)、月柱(壬)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-4-合",
+      "description": "天干合（丁壬，木而不化）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     }
+    ],
+    "limitations": [
+     "得勢只數八字的五行黨別（地支取本氣），不計干支力量大小與合沖後的變化。",
+     "表層剋洩耗與藏干出現分欄；不以藏干反向力量冒稱表層壓力。",
+     "互動後有效力量未定；保留初判並標 conditional。"
+    ]
+   },
+   "stemInteractions": {
+    "title": "天干生剋合化",
+    "conclusion": "天干五合：丁壬合而能化（未列喜忌）。生剋 4 組（其中不論 1 組）。",
+    "status": "conditional",
+    "combinations": [
+     {
+      "id": "stem-combination-1-2",
+      "stems": "丁壬",
+      "positions": [
+       "年干丁（正印）",
+       "月干壬（偏財）"
+      ],
+      "element": "木",
+      "scope": "日干以外之合",
+      "kind": "transformed",
+      "kindLabel": "合而能化",
+      "direction": null,
+      "boundStems": [],
+      "verdict": "neutral",
+      "verdictLabel": "未列喜忌",
+      "reason": "年月丁壬合，生在辰時，所坐亥子為化神通根乘旺 → 年干丁化為木、月干壬化為木；兩干都以木論，木為未列喜忌。",
+      "notes": [
+       "10/21 老師：日干以外之合化不化，第一看是否生在辰時（引至歸時見辰而化），第二看所坐地支化神通根乘旺。",
+       "合化後的五行沒有回頭重算強弱與喜忌方案。"
+      ],
+      "needsConfirmation": false,
+      "sourceDate": "2026-10-14"
+     }
+    ],
+    "relations": [
+     {
+      "id": "stem-relation-1-3",
+      "from": "年干丁（正印）",
+      "to": "日干戊（日元）",
+      "relation": "生",
+      "distance": "隔一位",
+      "status": "active",
+      "statusLabel": "論生",
+      "reason": "隔一位，生力較小，但坐下無根（坐剋虛浮），生力打折。",
+      "sourceDate": "2026-10-07"
+     },
+     {
+      "id": "stem-relation-2-4",
+      "from": "月干壬（偏財）",
+      "to": "時干丙（偏印）",
+      "relation": "剋",
+      "distance": "隔一位",
+      "status": "ignored",
+      "statusLabel": "不論剋",
+      "reason": "先受剋者無力剋人：月干壬先受日干戊剋，不論月干壬剋時干丙。",
+      "sourceDate": "2026-10-07"
+     },
+     {
+      "id": "stem-relation-3-2",
+      "from": "日干戊（日元）",
+      "to": "月干壬（偏財）",
+      "relation": "剋",
+      "distance": "鄰近",
+      "status": "active",
+      "statusLabel": "論剋",
+      "reason": "相鄰貼近，剋力較大。",
+      "sourceDate": "2026-10-07"
+     },
+     {
+      "id": "stem-relation-4-3",
+      "from": "時干丙（偏印）",
+      "to": "日干戊（日元）",
+      "relation": "生",
+      "distance": "鄰近",
+      "status": "active",
+      "statusLabel": "論生",
+      "reason": "相鄰貼近，生力大，但坐下無根（坐剋虛浮），生力打折。",
+      "sourceDate": "2026-10-07"
+     }
+    ],
+    "limitations": [
+     "吉凶依課堂三步法的喜忌方案；多方案時，元素只有在沒有方案相反時才算喜或忌。",
+     "牽絆方向、虛浮與否用根氣粗估，不是老師的量化公式。",
+     "合化後的五行沒有回頭重算強弱；量化五行力分數不受影響。"
+    ],
+    "sources": [
+     "2026-10-07",
+     "2026-10-14"
+    ]
+   },
+   "branchInteractions": {
+    "title": "地支沖合會刑害",
+    "conclusion": "子辰半合水局（半合成水為喜，論吉）；辰辰自刑：同屬土，加強土力（依生剋論，對日主不利）。",
+    "status": "conditional",
+    "clashes": [],
+    "combinations": [],
+    "gatherings": [
+     {
+      "id": "branch-gathering-half-2-3",
+      "kind": "half_combination",
+      "kindLabel": "子辰半合水局",
+      "branches": "子辰",
+      "positions": [
+       "月支子",
+       "日支辰"
+      ],
+      "element": "水",
+      "formed": true,
+      "forceLabel": "合力最大（合神居月令、月干透出）",
+      "verdict": "good",
+      "verdictLabel": "半合成水為喜，論吉",
+      "reason": "子辰半合水局，水之力增強（水為喜用）。",
+      "notes": [
+       "辰（土）的氣被水局牽引：生水者洩、被水剋者減，但辰仍保留本氣（半合不論化）。"
+      ],
+      "sourceDate": "講義第24章"
+     }
+    ],
+    "punishments": [
+     {
+      "id": "branch-self-punishment-辰",
+      "kind": "self_punishment",
+      "kindLabel": "辰辰自刑",
+      "branches": "辰辰",
+      "positions": [
+       "日支辰",
+       "時支辰"
+      ],
+      "relation": "同屬土，加強土力",
+      "verdict": "bad",
+      "verdictLabel": "依生剋論，對日主不利",
+      "reason": "以本氣生剋論：同屬土，加強土力；加強土（忌）。",
+      "notes": [
+       "講義第五節：刑害的傳統論法近乎神煞，不足憑；改以五行本氣藏氣論生剋制化，配合喜忌與十神類化。"
+      ],
+      "sourceDate": "講義第24章"
+     }
+    ],
+    "limitations": [
+     "勝負用「本氣同五行的地支數，得令再加一」粗估；天干透出、半合三合的助力沒有計入，與老師逐例的文字判斷可能不同。",
+     "敗方有兩處以上生扶（同柱天干或地支本氣）時判為各有損傷，這是依講義例七整理的工程門檻。",
+     "三合、三會、刑害（講義第三至五節）課堂還沒講，依講義整理：成局條件是依第 26 章例題歸納的推論；刑害只依本氣生剋論，不論刑害本身吉凶（老師：害屬神煞）。",
+     "沖合結果沒有回頭重算強弱與喜忌；量化五行力分數不受影響。"
+    ],
+    "sources": [
+     "2026-10-21",
+     "講義第24章"
+    ]
+   },
+   "pillarRelations": {
+    "title": "同柱干支",
+    "conclusion": "丁亥地支剋天干・暗合；壬子干支同類；戊辰干支同類・暗合；丙辰天干生地支。",
+    "relations": [
+     {
+      "id": "pillar-relation-1",
+      "pillar": "年柱",
+      "ganZhi": "丁亥",
+      "kind": "branch_controls_stem",
+      "kindLabel": "地支剋天干",
+      "hiddenCombination": "丁火合亥中壬水",
+      "hiddenCombinationPure": true,
+      "stemFavor": "忌",
+      "verdict": "mixed",
+      "verdictLabel": "暗合互絆，喜忌皆有",
+      "reason": "丁亥：水剋火，火坐剋（截腳）減弱，水也因剋而損力。",
+      "notes": [
+       "干支暗合：丁火合亥中壬水，屬六組較純粹者，影響絕對；天干與支中藏干互相合絆，喜則有合壞之虞，忌則減其作用（講義第 46 頁）。",
+       "四生之地藏干力量：本氣最大，其次長生，再次寄土；透出天干者最大（講義第 45 頁）。"
+      ],
+      "sourceDate": "講義第25章"
+     },
+     {
+      "id": "pillar-relation-2",
+      "pillar": "月柱",
+      "ganZhi": "壬子",
+      "kind": "same",
+      "kindLabel": "干支同類",
+      "hiddenCombination": null,
+      "hiddenCombinationPure": false,
+      "stemFavor": "喜用",
+      "verdict": "good",
+      "verdictLabel": "喜神通根乘旺",
+      "reason": "壬子：上下比助，水力加強（六十甲子中以干支同類之氣最專）。",
+      "notes": [],
+      "sourceDate": "講義第25章"
+     },
+     {
+      "id": "pillar-relation-3",
+      "pillar": "日柱",
+      "ganZhi": "戊辰",
+      "kind": "same",
+      "kindLabel": "干支同類",
+      "hiddenCombination": "戊土合辰中癸水",
+      "hiddenCombinationPure": false,
+      "stemFavor": "忌",
+      "verdict": "neutral",
+      "verdictLabel": "日主自坐得生扶",
+      "reason": "戊辰：上下比助，土力加強（六十甲子中以干支同類之氣最專）。",
+      "notes": [
+       "日柱干支上下相合（戊土合辰中癸水）：不入外格時以生合、剋合論，依本氣屬同類之合（講義第 46 頁；生剋歸類為推論）。",
+       "四墓之地藏干力量：土星本氣最大，其次餘氣，再次庫神；透出天干者最大（講義第 45 頁）。"
+      ],
+      "sourceDate": "講義第25章"
+     },
+     {
+      "id": "pillar-relation-4",
+      "pillar": "時柱",
+      "ganZhi": "丙辰",
+      "kind": "stem_generates_branch",
+      "kindLabel": "天干生地支",
+      "hiddenCombination": null,
+      "hiddenCombinationPure": false,
+      "stemFavor": "忌",
+      "verdict": "neutral",
+      "verdictLabel": "忌神稍有耗損",
+      "reason": "丙辰：火生土，土加強、火被洩減力。",
+      "notes": [
+       "四墓之地藏干力量：土星本氣最大，其次餘氣，再次庫神；透出天干者最大（講義第 45 頁）。"
+      ],
+      "sourceDate": "講義第25章"
+     }
+    ],
+    "limitations": [
+     "講義說同柱力量要配合時令、藏干與整體結構綜合論斷，沒有固定公式；這裡只標上下關係與喜忌方向，不改強弱與量化分數。",
+     "日柱的天干就是日主，不另判吉凶，只標自坐得生扶或坐剋。"
+    ],
+    "sources": [
+     "講義第25章"
+    ]
+   },
+   "interactionStrength": {
+    "title": "作用變化後強弱複核",
+    "conclusion": "作用變化後同黨 4：異黨 5（原 5：3），得勢✗；課堂判定可能由「強候選」變為「弱候選」，請人工複核。",
+    "samePartyCount": 4,
+    "opposingPartyCount": 5,
+    "momentum": false,
+    "classification": "弱候選",
+    "changed": true,
+    "changes": [
+     "年干丁合化為木：由同黨（印）改歸異黨（官殺）（書明說：合化後兩干以化神論）",
+     "月干壬合化為木：由異黨（財）改歸異黨（官殺）（書明說：合化後兩干以化神論）",
+     "子辰半合水局：水屬異黨（財），該黨加一（推論權重：局不論化，成員黨別不變，只記其合力）"
+    ],
+    "limitations": [
+     "只做提醒，不取代課堂三步法的判定，也不改量化分數。",
+     "天干合化改黨別是講義明說；地支成局「該黨加一」是為了反映「增其合力」的工程權重，講義沒有給數字。",
+     "講義說八字結構複雜多端、沒有固定公式；從格、專旺、調候（如火炎土燥、金寒水冷）不在這個複核裡。"
+    ],
+    "sources": [
+     "講義第26章"
+    ]
+   }
+  }
+ },
+ "b3": {
+  "label": "講義第26章地支例三 辛巳 壬辰 辛卯 庚寅",
+  "analysis": {
+   "version": "classroom-2026-10-v2",
+   "status": "conditional",
+   "facts": {
+    "title": "排盤事實",
+    "conclusion": "日主辛屬金，月令辰本氣戊屬土；根氣與透干均保留原柱位及藏干層位。",
+    "pillars": [
+     {
+      "pillar": "年柱",
+      "ganZhi": "辛巳",
+      "stem": "辛",
+      "stemElement": "金",
+      "stemTenGod": "比肩",
+      "branch": "巳",
+      "branchMainElement": "火",
+      "hiddenStems": [
+       {
+        "stem": "丙",
+        "element": "火",
+        "tenGod": "正官",
+        "layer": "本氣"
+       },
+       {
+        "stem": "庚",
+        "element": "金",
+        "tenGod": "劫財",
+        "layer": "中氣"
+       },
+       {
+        "stem": "戊",
+        "element": "土",
+        "tenGod": "正印",
+        "layer": "餘氣"
+       }
+      ]
+     },
+     {
+      "pillar": "月柱",
+      "ganZhi": "壬辰",
+      "stem": "壬",
+      "stemElement": "水",
+      "stemTenGod": "傷官",
+      "branch": "辰",
+      "branchMainElement": "土",
+      "hiddenStems": [
+       {
+        "stem": "戊",
+        "element": "土",
+        "tenGod": "正印",
+        "layer": "本氣"
+       },
+       {
+        "stem": "乙",
+        "element": "木",
+        "tenGod": "偏財",
+        "layer": "中氣"
+       },
+       {
+        "stem": "癸",
+        "element": "水",
+        "tenGod": "食神",
+        "layer": "餘氣"
+       }
+      ]
+     },
+     {
+      "pillar": "日柱",
+      "ganZhi": "辛卯",
+      "stem": "辛",
+      "stemElement": "金",
+      "stemTenGod": "日元",
+      "branch": "卯",
+      "branchMainElement": "木",
+      "hiddenStems": [
+       {
+        "stem": "乙",
+        "element": "木",
+        "tenGod": "偏財",
+        "layer": "本氣"
+       }
+      ]
+     },
+     {
+      "pillar": "時柱",
+      "ganZhi": "庚寅",
+      "stem": "庚",
+      "stemElement": "金",
+      "stemTenGod": "劫財",
+      "branch": "寅",
+      "branchMainElement": "木",
+      "hiddenStems": [
+       {
+        "stem": "甲",
+        "element": "木",
+        "tenGod": "正財",
+        "layer": "本氣"
+       },
+       {
+        "stem": "丙",
+        "element": "火",
+        "tenGod": "正官",
+        "layer": "中氣"
+       },
+       {
+        "stem": "戊",
+        "element": "土",
+        "tenGod": "正印",
+        "layer": "餘氣"
+       }
+      ]
+     }
+    ],
+    "dayMaster": {
+     "stem": "辛",
+     "element": "金"
+    },
+    "monthCommand": {
+     "branch": "辰",
+     "mainStem": "戊",
+     "element": "土",
+     "tenGod": "正印"
+    },
+    "transparencies": [
+     {
+      "hiddenStem": "戊",
+      "hiddenStemLayer": "本氣",
+      "tenGod": "正印",
+      "visibleLocations": [],
+      "evidenceId": "fact-transparency-1"
+     },
+     {
+      "hiddenStem": "乙",
+      "hiddenStemLayer": "中氣",
+      "tenGod": "偏財",
+      "visibleLocations": [],
+      "evidenceId": "fact-transparency-2"
+     },
+     {
+      "hiddenStem": "癸",
+      "hiddenStemLayer": "餘氣",
+      "tenGod": "食神",
+      "visibleLocations": [],
+      "evidenceId": "fact-transparency-3"
+     }
+    ],
+    "roots": [
+     {
+      "pillar": "年支",
+      "branch": "巳",
+      "hiddenStem": "庚",
+      "hiddenStemLayer": "中氣",
+      "element": "金",
+      "tenGod": "劫財",
+      "rootKind": "same_element",
+      "evidenceId": "fact-hidden-1-2"
+     }
+    ],
+    "tenGodDistribution": [
+     {
+      "family": "印",
+      "element": "土",
+      "surfaceLocations": [
+       "月支辰本氣戊"
+      ],
+      "hiddenLocations": [
+       "年支巳餘氣戊",
+       "月支辰本氣戊",
+       "時支寅餘氣戊"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-hidden-2-1"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-1-3",
+       "fact-hidden-2-1",
+       "fact-hidden-4-3"
+      ]
+     },
+     {
+      "family": "比劫",
+      "element": "金",
+      "surfaceLocations": [
+       "年干辛",
+       "時干庚"
+      ],
+      "hiddenLocations": [
+       "年支巳中氣庚"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-stem-1",
+       "fact-stem-4"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-1-2"
+      ]
+     },
+     {
+      "family": "食傷",
+      "element": "水",
+      "surfaceLocations": [
+       "月干壬"
+      ],
+      "hiddenLocations": [
+       "月支辰餘氣癸"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-stem-2"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-2-3"
+      ]
+     },
+     {
+      "family": "財",
+      "element": "木",
+      "surfaceLocations": [
+       "日支卯本氣乙",
+       "時支寅本氣甲"
+      ],
+      "hiddenLocations": [
+       "月支辰中氣乙",
+       "日支卯本氣乙",
+       "時支寅本氣甲"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-hidden-3-1",
+       "fact-hidden-4-1"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-2-2",
+       "fact-hidden-3-1",
+       "fact-hidden-4-1"
+      ]
+     },
+     {
+      "family": "官殺",
+      "element": "火",
+      "surfaceLocations": [
+       "年支巳本氣丙"
+      ],
+      "hiddenLocations": [
+       "年支巳本氣丙",
+       "時支寅中氣丙"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-hidden-1-1"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-1-1",
+       "fact-hidden-4-2"
+      ]
+     }
+    ],
+    "evidence": [
+     {
+      "id": "fact-hidden-1-1",
+      "kind": "chart_fact",
+      "pillar": "年支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "年支巳藏丙（本氣、火）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-1-2",
+      "kind": "chart_fact",
+      "pillar": "年支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "年支巳藏庚（中氣、金）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-1-3",
+      "kind": "chart_fact",
+      "pillar": "年支",
+      "hiddenStemLayer": "餘氣",
+      "interactionId": null,
+      "description": "年支巳藏戊（餘氣、土）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-1",
+      "kind": "chart_fact",
+      "pillar": "年干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "年干為辛，五行金，相對日主為比肩。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-2-1",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "月支辰藏戊（本氣、土）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-2-2",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "月支辰藏乙（中氣、木）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-2-3",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "餘氣",
+      "interactionId": null,
+      "description": "月支辰藏癸（餘氣、水）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-2",
+      "kind": "chart_fact",
+      "pillar": "月干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "月干為壬，五行水，相對日主為傷官。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-3-1",
+      "kind": "chart_fact",
+      "pillar": "日支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "日支卯藏乙（本氣、木）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-3",
+      "kind": "chart_fact",
+      "pillar": "日干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "日干為辛，五行金，相對日主為日元。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-4-1",
+      "kind": "chart_fact",
+      "pillar": "時支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "時支寅藏甲（本氣、木）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-4-2",
+      "kind": "chart_fact",
+      "pillar": "時支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "時支寅藏丙（中氣、火）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-4-3",
+      "kind": "chart_fact",
+      "pillar": "時支",
+      "hiddenStemLayer": "餘氣",
+      "interactionId": null,
+      "description": "時支寅藏戊（餘氣、土）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-4",
+      "kind": "chart_fact",
+      "pillar": "時干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "時干為庚，五行金，相對日主為劫財。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-transparency-1",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "月令藏干戊未在年、月、時干透出。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-transparency-2",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "月令藏干乙未在年、月、時干透出。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-transparency-3",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "餘氣",
+      "interactionId": null,
+      "description": "月令藏干癸未在年、月、時干透出。",
+      "sourceDate": null
+     }
+    ],
+    "limitations": [
+     "藏干事實不因合沖而刪除；互動後是否仍有效另在強弱步驟標為待定。"
+    ]
+   },
+   "strength": {
+    "title": "第二步：日主強弱",
+    "conclusion": "三項觀察命中 2 項；表層剋洩耗家族為食傷、財、官殺，初判強候選。",
+    "status": "conditional",
+    "classification": "強候選",
+    "sameSeasonElement": false,
+    "sealInSeason": true,
+    "supportStemCount": 2,
+    "supportBranchCount": 1,
+    "samePartyCount": 4,
+    "opposingPartyCount": 4,
+    "monthCommandSameParty": true,
+    "momentumProxy": true,
+    "rootCount": 1,
+    "observationCount": 2,
+    "samePartyCharacters": [
+     "年干辛（比肩）",
+     "月支辰（正印）",
+     "日干辛（日元）",
+     "時干庚（劫財）"
+    ],
+    "opposingPartyCharacters": [
+     "年支巳（正官）",
+     "月干壬（傷官）",
+     "日支卯（偏財）",
+     "時支寅（正財）"
+    ],
+    "checks": [
+     {
+      "item": "得令（得時）",
+      "hit": false,
+      "rule": "日干生在同五行當旺的月令：木寅卯、火巳午、土辰戌丑未、金申酉、水亥子。",
+      "finding": "日主辛屬金，生於辰月（本氣戊屬土，為正印）；金要生於申酉月才算得令 → 失令。月令是印（同黨），能生身，但不算得令。",
+      "sourceDate": "2026-07-22"
+     },
+     {
+      "item": "得勢",
+      "hit": true,
+      "rule": "八個字（四天干含日主、四地支取本氣）分同黨（印、比劫）與異黨（食傷、財、官殺），多者勝；四比四時看月令屬哪一黨（得令者為旺）。",
+      "finding": "同黨 4 個、異黨 4 個；兩黨相同，依「得令者為旺」看月令：月令辰屬同黨 → 得勢。",
+      "sourceDate": "2026-09-02"
+     },
+     {
+      "item": "得地",
+      "hit": true,
+      "rule": "地支藏干中有與日干同五行者即通根，不分陰陽；根以本氣最穩，其次長生，再次餘氣、墓庫。",
+      "finding": "年支巳藏庚（中氣根，劫財） → 得地（共 1 處根）。",
+      "sourceDate": "2026-07-22"
+     }
+    ],
+    "verdictReason": "得令✗、得勢✓、得地✓；三者得其二（得勢＋得地）→ 強；不得時但得勢得地，衰中轉強（2026-07-22、07-29）。",
+    "pressureFamiliesSurface": [
+     "食傷",
+     "財",
+     "官殺"
+    ],
+    "pressureFamiliesHidden": [
+     "食傷",
+     "財",
+     "官殺"
+    ],
+    "interactions": [
+     {
+      "id": "interaction-1-三會",
+      "scope": "地支",
+      "interactionType": "三會",
+      "target": "辰卯寅",
+      "outcome": "-",
+      "pillars": "月柱(辰)、日柱(卯)、時柱(寅)",
+      "detail": "量化模型偵測到地支三會木局，但未達合化條件",
+      "assessment": "conditional_not_rescored"
+     },
+     {
+      "id": "interaction-2-刑",
+      "scope": "地支",
+      "interactionType": "刑",
+      "target": "寅巳",
+      "outcome": "-",
+      "pillars": "時柱(寅)、年柱(巳)",
+      "detail": "寅巳申三刑(恃勢之刑)",
+      "assessment": "conditional_not_rescored"
+     }
+    ],
+    "evidence": [
+     {
+      "id": "strength-same-season",
+      "kind": "lesson_rule",
+      "pillar": "月支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "同氣得時=false；印當令=true，兩者分開記錄。",
+      "sourceDate": "2026-07-22"
+     },
+     {
+      "id": "strength-party-count",
+      "kind": "lesson_rule",
+      "pillar": null,
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "得勢：八字中同黨（印、比劫）4 個、異黨（食傷、財、官殺）4 個（天干與地支本氣，含日主）；數量相同，依「得令者為旺」看月令，月令屬同黨，得勢=true。",
+      "sourceDate": "2026-09-02"
+     },
+     {
+      "id": "strength-roots",
+      "kind": "chart_fact",
+      "pillar": null,
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "同五行藏干根共 1 處，保留全部層位。",
+      "sourceDate": null
+     },
+     {
+      "id": "strength-interaction-1-三會",
+      "kind": "chart_fact",
+      "pillar": "月柱(辰)、日柱(卯)、時柱(寅)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-1-三會",
+      "description": "地支三會（辰卯寅，-）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     },
+     {
+      "id": "strength-interaction-2-刑",
+      "kind": "chart_fact",
+      "pillar": "時柱(寅)、年柱(巳)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-2-刑",
+      "description": "地支刑（寅巳，-）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     }
+    ],
+    "limitations": [
+     "得勢只數八字的五行黨別（地支取本氣），不計干支力量大小與合沖後的變化。",
+     "表層剋洩耗與藏干出現分欄；不以藏干反向力量冒稱表層壓力。",
+     "互動後有效力量未定；保留初判並標 conditional。"
+    ]
+   },
+   "stemInteractions": {
+    "title": "天干生剋合化",
+    "conclusion": "天干沒有五合；生剋 3 組（其中不論 0 組）。",
+    "status": "conditional",
+    "combinations": [],
+    "relations": [
+     {
+      "id": "stem-relation-1-2",
+      "from": "年干辛（比肩）",
+      "to": "月干壬（傷官）",
+      "relation": "生",
+      "distance": "鄰近",
+      "status": "active",
+      "statusLabel": "論生",
+      "reason": "相鄰貼近，生力大，坐旺通根生力足。",
+      "sourceDate": "2026-10-07"
+     },
+     {
+      "id": "stem-relation-3-2",
+      "from": "日干辛（日元）",
+      "to": "月干壬（傷官）",
+      "relation": "生",
+      "distance": "鄰近",
+      "status": "active",
+      "statusLabel": "論生",
+      "reason": "相鄰貼近，生力大，但坐下無根（坐剋虛浮），生力打折。",
+      "sourceDate": "2026-10-07"
+     },
+     {
+      "id": "stem-relation-4-2",
+      "from": "時干庚（劫財）",
+      "to": "月干壬（傷官）",
+      "relation": "生",
+      "distance": "隔一位",
+      "status": "active",
+      "statusLabel": "論生",
+      "reason": "隔一位，生力較小，但坐下無根（坐剋虛浮），生力打折。",
+      "sourceDate": "2026-10-07"
+     }
+    ],
+    "limitations": [
+     "吉凶依課堂三步法的喜忌方案；多方案時，元素只有在沒有方案相反時才算喜或忌。",
+     "牽絆方向、虛浮與否用根氣粗估，不是老師的量化公式。",
+     "合化後的五行沒有回頭重算強弱；量化五行力分數不受影響。"
+    ],
+    "sources": [
+     "2026-10-07",
+     "2026-10-14"
+    ]
+   },
+   "branchInteractions": {
+    "title": "地支沖合會刑害",
+    "conclusion": "寅卯辰三會東方木（會成木為喜，論吉）；寅巳相刑（寅巳申三刑缺申）（兼六害）：木生火（依生剋論，對日主有利）；辰卯相害：木剋土（依生剋論，對日主有利）。",
+    "status": "conditional",
+    "clashes": [],
+    "combinations": [],
+    "gatherings": [
+     {
+      "id": "branch-gathering-meeting-寅卯辰",
+      "kind": "three_meeting",
+      "kindLabel": "寅卯辰三會東方木",
+      "branches": "寅卯辰",
+      "positions": [
+       "月支辰",
+       "日支卯",
+       "時支寅"
+      ],
+      "element": "木",
+      "formed": true,
+      "forceLabel": "三字連珠含月令，合神不透（推論）",
+      "verdict": "good",
+      "verdictLabel": "會成木為喜，論吉",
+      "reason": "寅卯辰會成，木之力增強（木為喜用）。",
+      "notes": [
+       "辰（土）仍保留本氣，只是氣被局神牽引（講義第 26 章：「非月令戌土化為火，戌仍是戌」「戊土之氣盡洩於金，但非化為金」）。",
+       "月令辰本氣不是木、也沒透干，依「三字連珠」順排含月令仍論成方（講義第 26 章地支例三：寅卯辰三會木方增強木力），屬推論。",
+       "三會只論會成氣或不成氣，不能論化（講義第 34 頁）。"
+      ],
+      "sourceDate": "講義第24章"
+     }
+    ],
+    "punishments": [
+     {
+      "id": "branch-punishment-寅巳申",
+      "kind": "punishment",
+      "kindLabel": "寅巳相刑（寅巳申三刑缺申）（兼六害）",
+      "branches": "寅巳",
+      "positions": [
+       "時支寅",
+       "年支巳"
+      ],
+      "relation": "木生火",
+      "verdict": "good",
+      "verdictLabel": "依生剋論，對日主有利",
+      "reason": "以本氣生剋論：木生火；加強火（喜用）。",
+      "notes": [
+       "講義第五節：刑害的傳統論法近乎神煞，不足憑；改以五行本氣藏氣論生剋制化，配合喜忌與十神類化。"
+      ],
+      "sourceDate": "講義第24章"
+     },
+     {
+      "id": "branch-harm-2-3",
+      "kind": "harm",
+      "kindLabel": "辰卯相害",
+      "branches": "辰卯",
+      "positions": [
+       "月支辰",
+       "日支卯"
+      ],
+      "relation": "木剋土",
+      "verdict": "good",
+      "verdictLabel": "依生剋論，對日主有利",
+      "reason": "以本氣生剋論：木剋土；削減土（忌）。",
+      "notes": [
+       "講義第五節：刑害的傳統論法近乎神煞，不足憑；改以五行本氣藏氣論生剋制化，配合喜忌與十神類化。"
+      ],
+      "sourceDate": "講義第24章"
+     }
+    ],
+    "limitations": [
+     "勝負用「本氣同五行的地支數，得令再加一」粗估；天干透出、半合三合的助力沒有計入，與老師逐例的文字判斷可能不同。",
+     "敗方有兩處以上生扶（同柱天干或地支本氣）時判為各有損傷，這是依講義例七整理的工程門檻。",
+     "三合、三會、刑害（講義第三至五節）課堂還沒講，依講義整理：成局條件是依第 26 章例題歸納的推論；刑害只依本氣生剋論，不論刑害本身吉凶（老師：害屬神煞）。",
+     "沖合結果沒有回頭重算強弱與喜忌；量化五行力分數不受影響。"
+    ],
+    "sources": [
+     "2026-10-21",
+     "講義第24章"
+    ]
+   },
+   "pillarRelations": {
+    "title": "同柱干支",
+    "conclusion": "辛巳地支剋天干・暗合；壬辰地支剋天干；辛卯天干剋地支；庚寅天干剋地支。",
+    "relations": [
+     {
+      "id": "pillar-relation-1",
+      "pillar": "年柱",
+      "ganZhi": "辛巳",
+      "kind": "branch_controls_stem",
+      "kindLabel": "地支剋天干",
+      "hiddenCombination": "辛金合巳中丙火",
+      "hiddenCombinationPure": true,
+      "stemFavor": "忌",
+      "verdict": "mixed",
+      "verdictLabel": "暗合互絆，喜忌皆有",
+      "reason": "辛巳：火剋金，金坐剋（截腳）減弱，火也因剋而損力。",
+      "notes": [
+       "干支暗合：辛金合巳中丙火，屬六組較純粹者，影響絕對；天干與支中藏干互相合絆，喜則有合壞之虞，忌則減其作用（講義第 46 頁）。",
+       "四生之地藏干力量：本氣最大，其次長生，再次寄土；透出天干者最大（講義第 45 頁）。"
+      ],
+      "sourceDate": "講義第25章"
+     },
+     {
+      "id": "pillar-relation-2",
+      "pillar": "月柱",
+      "ganZhi": "壬辰",
+      "kind": "branch_controls_stem",
+      "kindLabel": "地支剋天干",
+      "hiddenCombination": null,
+      "hiddenCombinationPure": false,
+      "stemFavor": "喜用",
+      "verdict": "bad",
+      "verdictLabel": "喜神坐剋受損",
+      "reason": "壬辰：土剋水，水坐剋（截腳）減弱，土也因剋而損力。",
+      "notes": [
+       "四墓之地藏干力量：土星本氣最大，其次餘氣，再次庫神；透出天干者最大（講義第 45 頁）。"
+      ],
+      "sourceDate": "講義第25章"
+     },
+     {
+      "id": "pillar-relation-3",
+      "pillar": "日柱",
+      "ganZhi": "辛卯",
+      "kind": "stem_controls_branch",
+      "kindLabel": "天干剋地支",
+      "hiddenCombination": null,
+      "hiddenCombinationPure": false,
+      "stemFavor": "忌",
+      "verdict": "neutral",
+      "verdictLabel": "日主坐下耗洩",
+      "reason": "辛卯：金剋木，木減弱，金也因剋而損力。",
+      "notes": [],
+      "sourceDate": "講義第25章"
+     },
+     {
+      "id": "pillar-relation-4",
+      "pillar": "時柱",
+      "ganZhi": "庚寅",
+      "kind": "stem_controls_branch",
+      "kindLabel": "天干剋地支",
+      "hiddenCombination": null,
+      "hiddenCombinationPure": false,
+      "stemFavor": "忌",
+      "verdict": "neutral",
+      "verdictLabel": "忌神稍有耗損",
+      "reason": "庚寅：金剋木，木減弱，金也因剋而損力。",
+      "notes": [
+       "四生之地藏干力量：本氣最大，其次長生，再次寄土；透出天干者最大（講義第 45 頁）。"
+      ],
+      "sourceDate": "講義第25章"
+     }
+    ],
+    "limitations": [
+     "講義說同柱力量要配合時令、藏干與整體結構綜合論斷，沒有固定公式；這裡只標上下關係與喜忌方向，不改強弱與量化分數。",
+     "日柱的天干就是日主，不另判吉凶，只標自坐得生扶或坐剋。"
+    ],
+    "sources": [
+     "講義第25章"
+    ]
+   },
+   "interactionStrength": {
+    "title": "作用變化後強弱複核",
+    "conclusion": "作用變化後同黨 4：異黨 5（原 4：4），得勢✗；課堂判定可能由「強候選」變為「弱候選」，請人工複核。",
+    "samePartyCount": 4,
+    "opposingPartyCount": 5,
+    "momentum": false,
+    "classification": "弱候選",
+    "changed": true,
+    "changes": [
+     "寅卯辰三會東方木：木屬異黨（財），該黨加一（推論權重：局不論化，成員黨別不變，只記其合力）"
+    ],
+    "limitations": [
+     "只做提醒，不取代課堂三步法的判定，也不改量化分數。",
+     "天干合化改黨別是講義明說；地支成局「該黨加一」是為了反映「增其合力」的工程權重，講義沒有給數字。",
+     "講義說八字結構複雜多端、沒有固定公式；從格、專旺、調候（如火炎土燥、金寒水冷）不在這個複核裡。"
+    ],
+    "sources": [
+     "講義第26章"
+    ]
+   }
+  }
+ },
+ "x6": {
+  "label": "辛未 丙申 丁亥 壬寅（合去、合來、寅申沖、亥寅生合）",
+  "analysis": {
+   "version": "classroom-2026-10-v2",
+   "status": "conditional",
+   "facts": {
+    "title": "排盤事實",
+    "conclusion": "日主丁屬火，月令申本氣庚屬金；根氣與透干均保留原柱位及藏干層位。",
+    "pillars": [
+     {
+      "pillar": "年柱",
+      "ganZhi": "辛未",
+      "stem": "辛",
+      "stemElement": "金",
+      "stemTenGod": "偏財",
+      "branch": "未",
+      "branchMainElement": "土",
+      "hiddenStems": [
+       {
+        "stem": "己",
+        "element": "土",
+        "tenGod": "食神",
+        "layer": "本氣"
+       },
+       {
+        "stem": "丁",
+        "element": "火",
+        "tenGod": "比肩",
+        "layer": "中氣"
+       },
+       {
+        "stem": "乙",
+        "element": "木",
+        "tenGod": "偏印",
+        "layer": "餘氣"
+       }
+      ]
+     },
+     {
+      "pillar": "月柱",
+      "ganZhi": "丙申",
+      "stem": "丙",
+      "stemElement": "火",
+      "stemTenGod": "劫財",
+      "branch": "申",
+      "branchMainElement": "金",
+      "hiddenStems": [
+       {
+        "stem": "庚",
+        "element": "金",
+        "tenGod": "正財",
+        "layer": "本氣"
+       },
+       {
+        "stem": "壬",
+        "element": "水",
+        "tenGod": "正官",
+        "layer": "中氣"
+       },
+       {
+        "stem": "戊",
+        "element": "土",
+        "tenGod": "傷官",
+        "layer": "餘氣"
+       }
+      ]
+     },
+     {
+      "pillar": "日柱",
+      "ganZhi": "丁亥",
+      "stem": "丁",
+      "stemElement": "火",
+      "stemTenGod": "日元",
+      "branch": "亥",
+      "branchMainElement": "水",
+      "hiddenStems": [
+       {
+        "stem": "壬",
+        "element": "水",
+        "tenGod": "正官",
+        "layer": "本氣"
+       },
+       {
+        "stem": "甲",
+        "element": "木",
+        "tenGod": "正印",
+        "layer": "中氣"
+       }
+      ]
+     },
+     {
+      "pillar": "時柱",
+      "ganZhi": "壬寅",
+      "stem": "壬",
+      "stemElement": "水",
+      "stemTenGod": "正官",
+      "branch": "寅",
+      "branchMainElement": "木",
+      "hiddenStems": [
+       {
+        "stem": "甲",
+        "element": "木",
+        "tenGod": "正印",
+        "layer": "本氣"
+       },
+       {
+        "stem": "丙",
+        "element": "火",
+        "tenGod": "劫財",
+        "layer": "中氣"
+       },
+       {
+        "stem": "戊",
+        "element": "土",
+        "tenGod": "傷官",
+        "layer": "餘氣"
+       }
+      ]
+     }
+    ],
+    "dayMaster": {
+     "stem": "丁",
+     "element": "火"
+    },
+    "monthCommand": {
+     "branch": "申",
+     "mainStem": "庚",
+     "element": "金",
+     "tenGod": "正財"
+    },
+    "transparencies": [
+     {
+      "hiddenStem": "庚",
+      "hiddenStemLayer": "本氣",
+      "tenGod": "正財",
+      "visibleLocations": [],
+      "evidenceId": "fact-transparency-1"
+     },
+     {
+      "hiddenStem": "壬",
+      "hiddenStemLayer": "中氣",
+      "tenGod": "正官",
+      "visibleLocations": [
+       "時干"
+      ],
+      "evidenceId": "fact-transparency-2"
+     },
+     {
+      "hiddenStem": "戊",
+      "hiddenStemLayer": "餘氣",
+      "tenGod": "傷官",
+      "visibleLocations": [],
+      "evidenceId": "fact-transparency-3"
+     }
+    ],
+    "roots": [
+     {
+      "pillar": "年支",
+      "branch": "未",
+      "hiddenStem": "丁",
+      "hiddenStemLayer": "中氣",
+      "element": "火",
+      "tenGod": "比肩",
+      "rootKind": "same_stem",
+      "evidenceId": "fact-hidden-1-2"
+     },
+     {
+      "pillar": "時支",
+      "branch": "寅",
+      "hiddenStem": "丙",
+      "hiddenStemLayer": "中氣",
+      "element": "火",
+      "tenGod": "劫財",
+      "rootKind": "same_element",
+      "evidenceId": "fact-hidden-4-2"
+     }
+    ],
+    "tenGodDistribution": [
+     {
+      "family": "印",
+      "element": "木",
+      "surfaceLocations": [
+       "時支寅本氣甲"
+      ],
+      "hiddenLocations": [
+       "年支未餘氣乙",
+       "日支亥中氣甲",
+       "時支寅本氣甲"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-hidden-4-1"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-1-3",
+       "fact-hidden-3-2",
+       "fact-hidden-4-1"
+      ]
+     },
+     {
+      "family": "比劫",
+      "element": "火",
+      "surfaceLocations": [
+       "月干丙"
+      ],
+      "hiddenLocations": [
+       "年支未中氣丁",
+       "時支寅中氣丙"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-stem-2"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-1-2",
+       "fact-hidden-4-2"
+      ]
+     },
+     {
+      "family": "食傷",
+      "element": "土",
+      "surfaceLocations": [
+       "年支未本氣己"
+      ],
+      "hiddenLocations": [
+       "年支未本氣己",
+       "月支申餘氣戊",
+       "時支寅餘氣戊"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-hidden-1-1"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-1-1",
+       "fact-hidden-2-3",
+       "fact-hidden-4-3"
+      ]
+     },
+     {
+      "family": "財",
+      "element": "金",
+      "surfaceLocations": [
+       "年干辛",
+       "月支申本氣庚"
+      ],
+      "hiddenLocations": [
+       "月支申本氣庚"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-stem-1",
+       "fact-hidden-2-1"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-2-1"
+      ]
+     },
+     {
+      "family": "官殺",
+      "element": "水",
+      "surfaceLocations": [
+       "日支亥本氣壬",
+       "時干壬"
+      ],
+      "hiddenLocations": [
+       "月支申中氣壬",
+       "日支亥本氣壬"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-hidden-3-1",
+       "fact-stem-4"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-2-2",
+       "fact-hidden-3-1"
+      ]
+     }
+    ],
+    "evidence": [
+     {
+      "id": "fact-hidden-1-1",
+      "kind": "chart_fact",
+      "pillar": "年支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "年支未藏己（本氣、土）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-1-2",
+      "kind": "chart_fact",
+      "pillar": "年支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "年支未藏丁（中氣、火）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-1-3",
+      "kind": "chart_fact",
+      "pillar": "年支",
+      "hiddenStemLayer": "餘氣",
+      "interactionId": null,
+      "description": "年支未藏乙（餘氣、木）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-1",
+      "kind": "chart_fact",
+      "pillar": "年干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "年干為辛，五行金，相對日主為偏財。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-2-1",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "月支申藏庚（本氣、金）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-2-2",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "月支申藏壬（中氣、水）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-2-3",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "餘氣",
+      "interactionId": null,
+      "description": "月支申藏戊（餘氣、土）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-2",
+      "kind": "chart_fact",
+      "pillar": "月干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "月干為丙，五行火，相對日主為劫財。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-3-1",
+      "kind": "chart_fact",
+      "pillar": "日支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "日支亥藏壬（本氣、水）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-3-2",
+      "kind": "chart_fact",
+      "pillar": "日支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "日支亥藏甲（中氣、木）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-3",
+      "kind": "chart_fact",
+      "pillar": "日干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "日干為丁，五行火，相對日主為日元。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-4-1",
+      "kind": "chart_fact",
+      "pillar": "時支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "時支寅藏甲（本氣、木）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-4-2",
+      "kind": "chart_fact",
+      "pillar": "時支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "時支寅藏丙（中氣、火）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-4-3",
+      "kind": "chart_fact",
+      "pillar": "時支",
+      "hiddenStemLayer": "餘氣",
+      "interactionId": null,
+      "description": "時支寅藏戊（餘氣、土）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-4",
+      "kind": "chart_fact",
+      "pillar": "時干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "時干為壬，五行水，相對日主為正官。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-transparency-1",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "月令藏干庚未在年、月、時干透出。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-transparency-2",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "月令藏干壬透於時干。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-transparency-3",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "餘氣",
+      "interactionId": null,
+      "description": "月令藏干戊未在年、月、時干透出。",
+      "sourceDate": null
+     }
+    ],
+    "limitations": [
+     "藏干事實不因合沖而刪除；互動後是否仍有效另在強弱步驟標為待定。"
+    ]
+   },
+   "strength": {
+    "title": "第二步：日主強弱",
+    "conclusion": "三項觀察命中 1 項；表層剋洩耗家族為食傷、財、官殺，初判弱候選。",
+    "status": "conditional",
+    "classification": "弱候選",
+    "sameSeasonElement": false,
+    "sealInSeason": false,
+    "supportStemCount": 1,
+    "supportBranchCount": 1,
+    "samePartyCount": 3,
+    "opposingPartyCount": 5,
+    "monthCommandSameParty": false,
+    "momentumProxy": false,
+    "rootCount": 2,
+    "observationCount": 1,
+    "samePartyCharacters": [
+     "月干丙（劫財）",
+     "日干丁（日元）",
+     "時支寅（正印）"
+    ],
+    "opposingPartyCharacters": [
+     "年干辛（偏財）",
+     "年支未（食神）",
+     "月支申（正財）",
+     "日支亥（正官）",
+     "時干壬（正官）"
+    ],
+    "checks": [
+     {
+      "item": "得令（得時）",
+      "hit": false,
+      "rule": "日干生在同五行當旺的月令：木寅卯、火巳午、土辰戌丑未、金申酉、水亥子。",
+      "finding": "日主丁屬火，生於申月（本氣庚屬金，為正財）；火要生於巳午月才算得令 → 失令。",
+      "sourceDate": "2026-07-22"
+     },
+     {
+      "item": "得勢",
+      "hit": false,
+      "rule": "八個字（四天干含日主、四地支取本氣）分同黨（印、比劫）與異黨（食傷、財、官殺），多者勝；四比四時看月令屬哪一黨（得令者為旺）。",
+      "finding": "同黨 3 個、異黨 5 個；異黨較多 → 失勢。",
+      "sourceDate": "2026-09-02"
+     },
+     {
+      "item": "得地",
+      "hit": true,
+      "rule": "地支藏干中有與日干同五行者即通根，不分陰陽；根以本氣最穩，其次長生，再次餘氣、墓庫。",
+      "finding": "年支未藏丁（中氣根，比肩）、時支寅藏丙（中氣根，劫財） → 得地（共 2 處根）。",
+      "sourceDate": "2026-07-22"
+     }
+    ],
+    "verdictReason": "得令✗、得勢✗、得地✓；三者只得其一（得地）→ 弱（2026-07-29）。",
+    "pressureFamiliesSurface": [
+     "食傷",
+     "財",
+     "官殺"
+    ],
+    "pressureFamiliesHidden": [
+     "食傷",
+     "財",
+     "官殺"
+    ],
+    "interactions": [
+     {
+      "id": "interaction-1-刑",
+      "scope": "地支",
+      "interactionType": "刑",
+      "target": "寅申",
+      "outcome": "-",
+      "pillars": "時柱(寅)、月柱(申)",
+      "detail": "寅巳申三刑(恃勢之刑)",
+      "assessment": "conditional_not_rescored"
+     },
+     {
+      "id": "interaction-2-合",
+      "scope": "地支",
+      "interactionType": "合",
+      "target": "寅亥",
+      "outcome": "木而不化",
+      "pillars": "時柱(寅)、日柱(亥)",
+      "detail": "量化模型裁決為地支六合木而不化，保留餘力 0.52",
+      "assessment": "conditional_not_rescored"
+     },
+     {
+      "id": "interaction-3-破",
+      "scope": "地支",
+      "interactionType": "破",
+      "target": "寅亥",
+      "outcome": "-",
+      "pillars": "時柱(寅)、日柱(亥)",
+      "detail": "地支相破",
+      "assessment": "conditional_not_rescored"
+     },
+     {
+      "id": "interaction-4-合",
+      "scope": "天干",
+      "interactionType": "合",
+      "target": "辛丙",
+      "outcome": "化水",
+      "pillars": "年柱(辛)、月柱(丙)",
+      "detail": "量化模型裁決為天干丙辛合水（工程近似：按化氣改論）",
+      "assessment": "conditional_not_rescored"
+     }
+    ],
+    "evidence": [
+     {
+      "id": "strength-same-season",
+      "kind": "lesson_rule",
+      "pillar": "月支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "同氣得時=false；印當令=false，兩者分開記錄。",
+      "sourceDate": "2026-07-22"
+     },
+     {
+      "id": "strength-party-count",
+      "kind": "lesson_rule",
+      "pillar": null,
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "得勢：八字中同黨（印、比劫）3 個、異黨（食傷、財、官殺）5 個（天干與地支本氣，含日主）；異黨較多，得勢=false。",
+      "sourceDate": "2026-09-02"
+     },
+     {
+      "id": "strength-roots",
+      "kind": "chart_fact",
+      "pillar": null,
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "同五行藏干根共 2 處，保留全部層位。",
+      "sourceDate": null
+     },
+     {
+      "id": "strength-interaction-1-刑",
+      "kind": "chart_fact",
+      "pillar": "時柱(寅)、月柱(申)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-1-刑",
+      "description": "地支刑（寅申，-）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     },
+     {
+      "id": "strength-interaction-2-合",
+      "kind": "chart_fact",
+      "pillar": "時柱(寅)、日柱(亥)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-2-合",
+      "description": "地支合（寅亥，木而不化）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     },
+     {
+      "id": "strength-interaction-3-破",
+      "kind": "chart_fact",
+      "pillar": "時柱(寅)、日柱(亥)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-3-破",
+      "description": "地支破（寅亥，-）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     },
+     {
+      "id": "strength-interaction-4-合",
+      "kind": "chart_fact",
+      "pillar": "年柱(辛)、月柱(丙)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-4-合",
+      "description": "天干合（辛丙，化水）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     }
+    ],
+    "limitations": [
+     "得勢只數八字的五行黨別（地支取本氣），不計干支力量大小與合沖後的變化。",
+     "表層剋洩耗與藏干出現分欄；不以藏干反向力量冒稱表層壓力。",
+     "互動後有效力量未定；保留初判並標 conditional。"
+    ]
+   },
+   "stemInteractions": {
+    "title": "天干生剋合化",
+    "conclusion": "天干五合：辛丙合而不化・合去（合去減凶）；丁壬合而不化・合來（合來增凶）。生剋 3 組（其中不論 0 組）。",
+    "status": "conditional",
+    "combinations": [
+     {
+      "id": "stem-combination-1-2",
+      "stems": "辛丙",
+      "positions": [
+       "年干辛（偏財）",
+       "月干丙（劫財）"
+      ],
+      "element": "水",
+      "scope": "日干以外之合",
+      "kind": "bound",
+      "kindLabel": "合而不化",
+      "direction": "合去",
+      "boundStems": [
+       "年干辛（偏財）"
+      ],
+      "verdict": "good",
+      "verdictLabel": "合去減凶",
+      "reason": "年月辛丙合而不化，力大者絆住力小者：月干丙絆住年干辛（偏財），年干辛不為日主所用。金為忌 → 減凶。",
+      "notes": [
+       "合而不化以剋合論：合中仍帶剋，只是陰陽相見剋力較小（10/07）。",
+       "力量：年干辛 1.0、月干丙 1.6（根氣本氣1、中氣0.6、餘氣0.3，天干同黨各0.4）"
+      ],
+      "needsConfirmation": false,
+      "sourceDate": "2026-10-14"
+     },
+     {
+      "id": "stem-combination-3-4",
+      "stems": "丁壬",
+      "positions": [
+       "日干丁（日元）",
+       "時干壬（正官）"
+      ],
+      "element": "木",
+      "scope": "日干本身之合",
+      "kind": "bound",
+      "kindLabel": "合而不化",
+      "direction": "合來",
+      "boundStems": [
+       "時干壬（正官）"
+      ],
+      "verdict": "bad",
+      "verdictLabel": "合來增凶",
+      "reason": "丁壬合，化神之力不足而不化；日干本身之合為合來，時干壬（正官）心向日主。水為忌 → 合來增凶。",
+      "notes": [
+       "合而不化以剋合論：合中仍帶剋，只是陰陽相見剋力較小（10/07）。",
+       "日干本身之合不論羈絆、不為合去（三命通會、徐樂吾）。"
+      ],
+      "needsConfirmation": false,
+      "sourceDate": "2026-10-14"
+     }
+    ],
+    "relations": [
+     {
+      "id": "stem-relation-1-4",
+      "from": "年干辛（偏財）",
+      "to": "時干壬（正官）",
+      "relation": "生",
+      "distance": "遙隔",
+      "status": "active",
+      "statusLabel": "論生",
+      "reason": "遙隔，生力更小，但坐下無根（坐剋虛浮），生力打折。",
+      "sourceDate": "2026-10-07"
+     },
+     {
+      "id": "stem-relation-3-1",
+      "from": "日干丁（日元）",
+      "to": "年干辛（偏財）",
+      "relation": "剋",
+      "distance": "隔一位",
+      "status": "active",
+      "statusLabel": "論剋",
+      "reason": "隔一位，剋力較輕。",
+      "sourceDate": "2026-10-07"
+     },
+     {
+      "id": "stem-relation-4-2",
+      "from": "時干壬（正官）",
+      "to": "月干丙（劫財）",
+      "relation": "剋",
+      "distance": "隔一位",
+      "status": "active",
+      "statusLabel": "論剋",
+      "reason": "隔一位，剋力較輕。",
+      "sourceDate": "2026-10-07"
+     }
+    ],
+    "limitations": [
+     "吉凶依課堂三步法的喜忌方案；多方案時，元素只有在沒有方案相反時才算喜或忌。",
+     "牽絆方向、虛浮與否用根氣粗估，不是老師的量化公式。",
+     "合化後的五行沒有回頭重算強弱；量化五行力分數不受影響。"
+    ],
+    "sources": [
+     "2026-10-07",
+     "2026-10-14"
+    ]
+   },
+   "branchInteractions": {
+    "title": "地支沖合會刑害",
+    "conclusion": "申寅沖（各有損傷：雖沖去忌神，喜神亦傷）；亥寅生合（加強喜神，吉）；申亥相害：金生水（依生剋論，對日主不利）。",
+    "status": "conditional",
+    "clashes": [
+     {
+      "id": "branch-clash-2-4",
+      "branches": "申寅",
+      "positions": [
+       "月支申（金，財）",
+       "時支寅（木，印）"
+      ],
+      "distance": "隔一位",
+      "forceLabel": "沖力較小",
+      "winner": "月支申",
+      "loser": "時支寅",
+      "outcome": "both_damaged",
+      "outcomeLabel": "各有損傷",
+      "verdict": "mixed",
+      "verdictLabel": "各有損傷：雖沖去忌神，喜神亦傷",
+      "reason": "申寅相沖（隔一位，沖力較小）。月支申較旺，但時支寅得時干壬、日支亥生扶，兩邊交戰各有損傷；須行運補足。",
+      "notes": [
+       "衰神沖旺，旺神發：木去沖旺金，杯水車薪反激其勢，逆其旺氣禍害必起（旺神為忌，更凶）。",
+       "黨眾（本氣同五行地支數，得令另加一）：金 2、木 1。",
+       "宮位：父母宮沖子女宮（例：日支喜神被月支沖，可聯想婆媳不合）。"
+      ],
+      "sourceDate": "2026-10-21"
+     }
+    ],
+    "combinations": [
+     {
+      "id": "branch-combination-3-4",
+      "branches": "亥寅",
+      "positions": [
+       "日支亥（水，官殺）",
+       "時支寅（木，印）"
+      ],
+      "kind": "generating",
+      "kindLabel": "生合",
+      "adjacent": true,
+      "verdict": "good",
+      "verdictLabel": "加強喜神，吉",
+      "reason": "亥寅合為水生木，加強木（喜用）之力，亥的性質依然存在。",
+      "clashEffect": "月支申貪生日支亥，減低對時支寅的沖力；在原局只能減沖，在大運是通關解沖，運過恢復沖力。",
+      "notes": [
+       "地支有合無化：不採「辰酉合化金」「寅亥合化木」等說法（講義第 25–26 頁）。"
+      ],
+      "sourceDate": "2026-10-21"
+     }
+    ],
+    "gatherings": [],
+    "punishments": [
+     {
+      "id": "branch-harm-2-3",
+      "kind": "harm",
+      "kindLabel": "申亥相害",
+      "branches": "申亥",
+      "positions": [
+       "月支申",
+       "日支亥"
+      ],
+      "relation": "金生水",
+      "verdict": "bad",
+      "verdictLabel": "依生剋論，對日主不利",
+      "reason": "以本氣生剋論：金生水；加強水（忌）。",
+      "notes": [
+       "講義第五節：刑害的傳統論法近乎神煞，不足憑；改以五行本氣藏氣論生剋制化，配合喜忌與十神類化。"
+      ],
+      "sourceDate": "講義第24章"
+     }
+    ],
+    "limitations": [
+     "勝負用「本氣同五行的地支數，得令再加一」粗估；天干透出、半合三合的助力沒有計入，與老師逐例的文字判斷可能不同。",
+     "敗方有兩處以上生扶（同柱天干或地支本氣）時判為各有損傷，這是依講義例七整理的工程門檻。",
+     "三合、三會、刑害（講義第三至五節）課堂還沒講，依講義整理：成局條件是依第 26 章例題歸納的推論；刑害只依本氣生剋論，不論刑害本身吉凶（老師：害屬神煞）。",
+     "沖合結果沒有回頭重算強弱與喜忌；量化五行力分數不受影響。"
+    ],
+    "sources": [
+     "2026-10-21",
+     "講義第24章"
+    ]
+   },
+   "pillarRelations": {
+    "title": "同柱干支",
+    "conclusion": "辛未地支生天干；丙申天干剋地支；丁亥地支剋天干・暗合；壬寅天干生地支。",
+    "relations": [
+     {
+      "id": "pillar-relation-1",
+      "pillar": "年柱",
+      "ganZhi": "辛未",
+      "kind": "branch_generates_stem",
+      "kindLabel": "地支生天干",
+      "hiddenCombination": null,
+      "hiddenCombinationPure": false,
+      "stemFavor": "忌",
+      "verdict": "bad",
+      "verdictLabel": "忌神通根乘旺",
+      "reason": "辛未：土生金，金加強、土被洩減力。",
+      "notes": [
+       "四墓之地藏干力量：土星本氣最大，其次餘氣，再次庫神；透出天干者最大（講義第 45 頁）。"
+      ],
+      "sourceDate": "講義第25章"
+     },
+     {
+      "id": "pillar-relation-2",
+      "pillar": "月柱",
+      "ganZhi": "丙申",
+      "kind": "stem_controls_branch",
+      "kindLabel": "天干剋地支",
+      "hiddenCombination": null,
+      "hiddenCombinationPure": false,
+      "stemFavor": "喜用",
+      "verdict": "neutral",
+      "verdictLabel": "喜神稍有耗損",
+      "reason": "丙申：火剋金，金減弱，火也因剋而損力。",
+      "notes": [
+       "四生之地藏干力量：本氣最大，其次長生，再次寄土；透出天干者最大（講義第 45 頁）。"
+      ],
+      "sourceDate": "講義第25章"
+     },
+     {
+      "id": "pillar-relation-3",
+      "pillar": "日柱",
+      "ganZhi": "丁亥",
+      "kind": "branch_controls_stem",
+      "kindLabel": "地支剋天干",
+      "hiddenCombination": "丁火合亥中壬水",
+      "hiddenCombinationPure": true,
+      "stemFavor": "喜用",
+      "verdict": "neutral",
+      "verdictLabel": "日主坐剋",
+      "reason": "丁亥：水剋火，火坐剋（截腳）減弱，水也因剋而損力。",
+      "notes": [
+       "日柱干支上下相合（丁火合亥中壬水）：不入外格時以生合、剋合論，依本氣屬剋合（講義第 46 頁；生剋歸類為推論）。",
+       "四生之地藏干力量：本氣最大，其次長生，再次寄土；透出天干者最大（講義第 45 頁）。"
+      ],
+      "sourceDate": "講義第25章"
+     },
+     {
+      "id": "pillar-relation-4",
+      "pillar": "時柱",
+      "ganZhi": "壬寅",
+      "kind": "stem_generates_branch",
+      "kindLabel": "天干生地支",
+      "hiddenCombination": null,
+      "hiddenCombinationPure": false,
+      "stemFavor": "忌",
+      "verdict": "neutral",
+      "verdictLabel": "忌神稍有耗損",
+      "reason": "壬寅：水生木，木加強、水被洩減力。",
+      "notes": [
+       "四生之地藏干力量：本氣最大，其次長生，再次寄土；透出天干者最大（講義第 45 頁）。"
+      ],
+      "sourceDate": "講義第25章"
+     }
+    ],
+    "limitations": [
+     "講義說同柱力量要配合時令、藏干與整體結構綜合論斷，沒有固定公式；這裡只標上下關係與喜忌方向，不改強弱與量化分數。",
+     "日柱的天干就是日主，不另判吉凶，只標自坐得生扶或坐剋。"
+    ],
+    "sources": [
+     "講義第25章"
+    ]
+   },
+   "interactionStrength": {
+    "title": "作用變化後強弱複核",
+    "conclusion": "原局沒有天干合化或地支成局，作用變化不改變得勢點數。",
+    "samePartyCount": 3,
+    "opposingPartyCount": 5,
+    "momentum": false,
+    "classification": "弱候選",
+    "changed": false,
+    "changes": [],
+    "limitations": [
+     "只做提醒，不取代課堂三步法的判定，也不改量化分數。",
+     "天干合化改黨別是講義明說；地支成局「該黨加一」是為了反映「增其合力」的工程權重，講義沒有給數字。",
+     "講義說八字結構複雜多端、沒有固定公式；從格、專旺、調候（如火炎土燥、金寒水冷）不在這個複核裡。"
+    ],
+    "sources": [
+     "講義第26章"
+    ]
+   }
+  }
+ },
+ "f69": {
+  "label": "10-21 學員命例 庚申 丙戌 己未 丁卯",
+  "analysis": {
+   "version": "classroom-2026-10-v2",
+   "status": "conditional",
+   "facts": {
+    "title": "排盤事實",
+    "conclusion": "日主己屬土，月令戌本氣戊屬土；根氣與透干均保留原柱位及藏干層位。",
+    "pillars": [
+     {
+      "pillar": "年柱",
+      "ganZhi": "庚申",
+      "stem": "庚",
+      "stemElement": "金",
+      "stemTenGod": "傷官",
+      "branch": "申",
+      "branchMainElement": "金",
+      "hiddenStems": [
+       {
+        "stem": "庚",
+        "element": "金",
+        "tenGod": "傷官",
+        "layer": "本氣"
+       },
+       {
+        "stem": "壬",
+        "element": "水",
+        "tenGod": "正財",
+        "layer": "中氣"
+       },
+       {
+        "stem": "戊",
+        "element": "土",
+        "tenGod": "劫財",
+        "layer": "餘氣"
+       }
+      ]
+     },
+     {
+      "pillar": "月柱",
+      "ganZhi": "丙戌",
+      "stem": "丙",
+      "stemElement": "火",
+      "stemTenGod": "正印",
+      "branch": "戌",
+      "branchMainElement": "土",
+      "hiddenStems": [
+       {
+        "stem": "戊",
+        "element": "土",
+        "tenGod": "劫財",
+        "layer": "本氣"
+       },
+       {
+        "stem": "辛",
+        "element": "金",
+        "tenGod": "食神",
+        "layer": "中氣"
+       },
+       {
+        "stem": "丁",
+        "element": "火",
+        "tenGod": "偏印",
+        "layer": "餘氣"
+       }
+      ]
+     },
+     {
+      "pillar": "日柱",
+      "ganZhi": "己未",
+      "stem": "己",
+      "stemElement": "土",
+      "stemTenGod": "日元",
+      "branch": "未",
+      "branchMainElement": "土",
+      "hiddenStems": [
+       {
+        "stem": "己",
+        "element": "土",
+        "tenGod": "比肩",
+        "layer": "本氣"
+       },
+       {
+        "stem": "丁",
+        "element": "火",
+        "tenGod": "偏印",
+        "layer": "中氣"
+       },
+       {
+        "stem": "乙",
+        "element": "木",
+        "tenGod": "七殺",
+        "layer": "餘氣"
+       }
+      ]
+     },
+     {
+      "pillar": "時柱",
+      "ganZhi": "丁卯",
+      "stem": "丁",
+      "stemElement": "火",
+      "stemTenGod": "偏印",
+      "branch": "卯",
+      "branchMainElement": "木",
+      "hiddenStems": [
+       {
+        "stem": "乙",
+        "element": "木",
+        "tenGod": "七殺",
+        "layer": "本氣"
+       }
+      ]
+     }
+    ],
+    "dayMaster": {
+     "stem": "己",
+     "element": "土"
+    },
+    "monthCommand": {
+     "branch": "戌",
+     "mainStem": "戊",
+     "element": "土",
+     "tenGod": "劫財"
+    },
+    "transparencies": [
+     {
+      "hiddenStem": "戊",
+      "hiddenStemLayer": "本氣",
+      "tenGod": "劫財",
+      "visibleLocations": [],
+      "evidenceId": "fact-transparency-1"
+     },
+     {
+      "hiddenStem": "辛",
+      "hiddenStemLayer": "中氣",
+      "tenGod": "食神",
+      "visibleLocations": [],
+      "evidenceId": "fact-transparency-2"
+     },
+     {
+      "hiddenStem": "丁",
+      "hiddenStemLayer": "餘氣",
+      "tenGod": "偏印",
+      "visibleLocations": [
+       "時干"
+      ],
+      "evidenceId": "fact-transparency-3"
+     }
+    ],
+    "roots": [
+     {
+      "pillar": "年支",
+      "branch": "申",
+      "hiddenStem": "戊",
+      "hiddenStemLayer": "餘氣",
+      "element": "土",
+      "tenGod": "劫財",
+      "rootKind": "same_element",
+      "evidenceId": "fact-hidden-1-3"
+     },
+     {
+      "pillar": "月支",
+      "branch": "戌",
+      "hiddenStem": "戊",
+      "hiddenStemLayer": "本氣",
+      "element": "土",
+      "tenGod": "劫財",
+      "rootKind": "same_element",
+      "evidenceId": "fact-hidden-2-1"
+     },
+     {
+      "pillar": "日支",
+      "branch": "未",
+      "hiddenStem": "己",
+      "hiddenStemLayer": "本氣",
+      "element": "土",
+      "tenGod": "比肩",
+      "rootKind": "same_stem",
+      "evidenceId": "fact-hidden-3-1"
+     }
+    ],
+    "tenGodDistribution": [
+     {
+      "family": "印",
+      "element": "火",
+      "surfaceLocations": [
+       "月干丙",
+       "時干丁"
+      ],
+      "hiddenLocations": [
+       "月支戌餘氣丁",
+       "日支未中氣丁"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-stem-2",
+       "fact-stem-4"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-2-3",
+       "fact-hidden-3-2"
+      ]
+     },
+     {
+      "family": "比劫",
+      "element": "土",
+      "surfaceLocations": [
+       "月支戌本氣戊",
+       "日支未本氣己"
+      ],
+      "hiddenLocations": [
+       "年支申餘氣戊",
+       "月支戌本氣戊",
+       "日支未本氣己"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-hidden-2-1",
+       "fact-hidden-3-1"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-1-3",
+       "fact-hidden-2-1",
+       "fact-hidden-3-1"
+      ]
+     },
+     {
+      "family": "食傷",
+      "element": "金",
+      "surfaceLocations": [
+       "年干庚",
+       "年支申本氣庚"
+      ],
+      "hiddenLocations": [
+       "年支申本氣庚",
+       "月支戌中氣辛"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-stem-1",
+       "fact-hidden-1-1"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-1-1",
+       "fact-hidden-2-2"
+      ]
+     },
+     {
+      "family": "財",
+      "element": "水",
+      "surfaceLocations": [],
+      "hiddenLocations": [
+       "年支申中氣壬"
+      ],
+      "surfaceEvidenceIds": [],
+      "hiddenEvidenceIds": [
+       "fact-hidden-1-2"
+      ]
+     },
+     {
+      "family": "官殺",
+      "element": "木",
+      "surfaceLocations": [
+       "時支卯本氣乙"
+      ],
+      "hiddenLocations": [
+       "日支未餘氣乙",
+       "時支卯本氣乙"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-hidden-4-1"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-3-3",
+       "fact-hidden-4-1"
+      ]
+     }
+    ],
+    "evidence": [
+     {
+      "id": "fact-hidden-1-1",
+      "kind": "chart_fact",
+      "pillar": "年支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "年支申藏庚（本氣、金）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-1-2",
+      "kind": "chart_fact",
+      "pillar": "年支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "年支申藏壬（中氣、水）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-1-3",
+      "kind": "chart_fact",
+      "pillar": "年支",
+      "hiddenStemLayer": "餘氣",
+      "interactionId": null,
+      "description": "年支申藏戊（餘氣、土）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-1",
+      "kind": "chart_fact",
+      "pillar": "年干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "年干為庚，五行金，相對日主為傷官。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-2-1",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "月支戌藏戊（本氣、土）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-2-2",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "月支戌藏辛（中氣、金）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-2-3",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "餘氣",
+      "interactionId": null,
+      "description": "月支戌藏丁（餘氣、火）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-2",
+      "kind": "chart_fact",
+      "pillar": "月干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "月干為丙，五行火，相對日主為正印。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-3-1",
+      "kind": "chart_fact",
+      "pillar": "日支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "日支未藏己（本氣、土）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-3-2",
+      "kind": "chart_fact",
+      "pillar": "日支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "日支未藏丁（中氣、火）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-3-3",
+      "kind": "chart_fact",
+      "pillar": "日支",
+      "hiddenStemLayer": "餘氣",
+      "interactionId": null,
+      "description": "日支未藏乙（餘氣、木）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-3",
+      "kind": "chart_fact",
+      "pillar": "日干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "日干為己，五行土，相對日主為日元。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-4-1",
+      "kind": "chart_fact",
+      "pillar": "時支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "時支卯藏乙（本氣、木）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-4",
+      "kind": "chart_fact",
+      "pillar": "時干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "時干為丁，五行火，相對日主為偏印。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-transparency-1",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "月令藏干戊未在年、月、時干透出。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-transparency-2",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "月令藏干辛未在年、月、時干透出。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-transparency-3",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "餘氣",
+      "interactionId": null,
+      "description": "月令藏干丁透於時干。",
+      "sourceDate": null
+     }
+    ],
+    "limitations": [
+     "藏干事實不因合沖而刪除；互動後是否仍有效另在強弱步驟標為待定。"
+    ]
+   },
+   "strength": {
+    "title": "第二步：日主強弱",
+    "conclusion": "三項觀察命中 3 項；表層剋洩耗家族為食傷、官殺，初判旺候選。",
+    "status": "conditional",
+    "classification": "旺候選",
+    "sameSeasonElement": true,
+    "sealInSeason": false,
+    "supportStemCount": 2,
+    "supportBranchCount": 2,
+    "samePartyCount": 5,
+    "opposingPartyCount": 3,
+    "monthCommandSameParty": true,
+    "momentumProxy": true,
+    "rootCount": 3,
+    "observationCount": 3,
+    "samePartyCharacters": [
+     "月干丙（正印）",
+     "月支戌（劫財）",
+     "日干己（日元）",
+     "日支未（比肩）",
+     "時干丁（偏印）"
+    ],
+    "opposingPartyCharacters": [
+     "年干庚（傷官）",
+     "年支申（傷官）",
+     "時支卯（七殺）"
+    ],
+    "checks": [
+     {
+      "item": "得令（得時）",
+      "hit": true,
+      "rule": "日干生在同五行當旺的月令：木寅卯、火巳午、土辰戌丑未、金申酉、水亥子。",
+      "finding": "日主己屬土，生於戌月（本氣戊屬土），月令與日主同五行 → 得令。",
+      "sourceDate": "2026-07-22"
+     },
+     {
+      "item": "得勢",
+      "hit": true,
+      "rule": "八個字（四天干含日主、四地支取本氣）分同黨（印、比劫）與異黨（食傷、財、官殺），多者勝；四比四時看月令屬哪一黨（得令者為旺）。",
+      "finding": "同黨 5 個、異黨 3 個；同黨較多 → 得勢。",
+      "sourceDate": "2026-09-02"
+     },
+     {
+      "item": "得地",
+      "hit": true,
+      "rule": "地支藏干中有與日干同五行者即通根，不分陰陽；根以本氣最穩，其次長生，再次餘氣、墓庫。",
+      "finding": "年支申藏戊（餘氣根，劫財）、月支戌藏戊（本氣根，劫財）、日支未藏己（本氣根，比肩） → 得地（共 3 處根）。",
+      "sourceDate": "2026-07-22"
+     }
+    ],
+    "verdictReason": "得令✓、得勢✓、得地✓；三者兼備，但見食傷、官殺 → 旺，仍屬普通格局（2026-07-29）。",
+    "pressureFamiliesSurface": [
+     "食傷",
+     "官殺"
+    ],
+    "pressureFamiliesHidden": [
+     "食傷",
+     "財",
+     "官殺"
+    ],
+    "interactions": [
+     {
+      "id": "interaction-1-刑",
+      "scope": "地支",
+      "interactionType": "刑",
+      "target": "未戌",
+      "outcome": "-",
+      "pillars": "日柱(未)、月柱(戌)",
+      "detail": "丑戌未三刑(無恩之刑)",
+      "assessment": "conditional_not_rescored"
+     },
+     {
+      "id": "interaction-2-半合",
+      "scope": "地支",
+      "interactionType": "半合",
+      "target": "卯未",
+      "outcome": "不化",
+      "pillars": "時柱(卯)、日柱(未)",
+      "detail": "量化模型偵測到地支半合木，但未達合化條件",
+      "assessment": "conditional_not_rescored"
+     },
+     {
+      "id": "interaction-3-合",
+      "scope": "地支",
+      "interactionType": "合",
+      "target": "卯戌",
+      "outcome": "-",
+      "pillars": "時柱(卯)、月柱(戌)",
+      "detail": "地支六合，對應火",
+      "assessment": "conditional_not_rescored"
+     },
+     {
+      "id": "interaction-4-破",
+      "scope": "地支",
+      "interactionType": "破",
+      "target": "未戌",
+      "outcome": "-",
+      "pillars": "日柱(未)、月柱(戌)",
+      "detail": "地支相破",
+      "assessment": "conditional_not_rescored"
+     }
+    ],
+    "evidence": [
+     {
+      "id": "strength-same-season",
+      "kind": "lesson_rule",
+      "pillar": "月支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "同氣得時=true；印當令=false，兩者分開記錄。",
+      "sourceDate": "2026-07-22"
+     },
+     {
+      "id": "strength-party-count",
+      "kind": "lesson_rule",
+      "pillar": null,
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "得勢：八字中同黨（印、比劫）5 個、異黨（食傷、財、官殺）3 個（天干與地支本氣，含日主）；同黨較多，得勢=true。",
+      "sourceDate": "2026-09-02"
+     },
+     {
+      "id": "strength-roots",
+      "kind": "chart_fact",
+      "pillar": null,
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "同五行藏干根共 3 處，保留全部層位。",
+      "sourceDate": null
+     },
+     {
+      "id": "strength-interaction-1-刑",
+      "kind": "chart_fact",
+      "pillar": "日柱(未)、月柱(戌)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-1-刑",
+      "description": "地支刑（未戌，-）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     },
+     {
+      "id": "strength-interaction-2-半合",
+      "kind": "chart_fact",
+      "pillar": "時柱(卯)、日柱(未)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-2-半合",
+      "description": "地支半合（卯未，不化）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     },
+     {
+      "id": "strength-interaction-3-合",
+      "kind": "chart_fact",
+      "pillar": "時柱(卯)、月柱(戌)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-3-合",
+      "description": "地支合（卯戌，-）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     },
+     {
+      "id": "strength-interaction-4-破",
+      "kind": "chart_fact",
+      "pillar": "日柱(未)、月柱(戌)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-4-破",
+      "description": "地支破（未戌，-）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     }
+    ],
+    "limitations": [
+     "得勢只數八字的五行黨別（地支取本氣），不計干支力量大小與合沖後的變化。",
+     "表層剋洩耗與藏干出現分欄；不以藏干反向力量冒稱表層壓力。",
+     "互動後有效力量未定；保留初判並標 conditional。"
+    ]
+   },
+   "stemInteractions": {
+    "title": "天干生剋合化",
+    "conclusion": "天干沒有五合；生剋 5 組（其中不論 1 組）。",
+    "status": "conditional",
+    "combinations": [],
+    "relations": [
+     {
+      "id": "stem-relation-2-1",
+      "from": "月干丙（正印）",
+      "to": "年干庚（傷官）",
+      "relation": "剋",
+      "distance": "鄰近",
+      "status": "active",
+      "statusLabel": "論剋",
+      "reason": "相鄰貼近，剋力較大。日干己雖可通關，但遠隔，月干丙、年干庚相鄰先剋（近者優先）。",
+      "sourceDate": "2026-10-07"
+     },
+     {
+      "id": "stem-relation-2-3",
+      "from": "月干丙（正印）",
+      "to": "日干己（日元）",
+      "relation": "生",
+      "distance": "鄰近",
+      "status": "active",
+      "statusLabel": "論生",
+      "reason": "相鄰貼近，生力大，坐旺通根生力足。",
+      "sourceDate": "2026-10-07"
+     },
+     {
+      "id": "stem-relation-3-1",
+      "from": "日干己（日元）",
+      "to": "年干庚（傷官）",
+      "relation": "生",
+      "distance": "隔一位",
+      "status": "active",
+      "statusLabel": "論生",
+      "reason": "隔一位，生力較小，坐旺通根生力足。",
+      "sourceDate": "2026-10-07"
+     },
+     {
+      "id": "stem-relation-4-1",
+      "from": "時干丁（偏印）",
+      "to": "年干庚（傷官）",
+      "relation": "剋",
+      "distance": "遙隔",
+      "status": "ignored",
+      "statusLabel": "不論剋",
+      "reason": "通關：時干丁生日干己、日干己生年干庚，論轉生不論剋（貪生忘剋）。",
+      "sourceDate": "2026-10-07"
+     },
+     {
+      "id": "stem-relation-4-3",
+      "from": "時干丁（偏印）",
+      "to": "日干己（日元）",
+      "relation": "生",
+      "distance": "鄰近",
+      "status": "active",
+      "statusLabel": "論生",
+      "reason": "相鄰貼近，生力大，但坐下無根（坐剋虛浮），生力打折。",
+      "sourceDate": "2026-10-07"
+     }
+    ],
+    "limitations": [
+     "吉凶依課堂三步法的喜忌方案；多方案時，元素只有在沒有方案相反時才算喜或忌。",
+     "牽絆方向、虛浮與否用根氣粗估，不是老師的量化公式。",
+     "合化後的五行沒有回頭重算強弱；量化五行力分數不受影響。"
+    ],
+    "sources": [
+     "2026-10-07",
+     "2026-10-14"
+    ]
+   },
+   "branchInteractions": {
+    "title": "地支沖合會刑害",
+    "conclusion": "戌卯剋合（削減忌神，吉）；未卯半合木局（半合成木為喜，論吉）；戌未相刑（丑戌未三刑缺丑）：同屬土，加強土力（依生剋論，對日主不利）。",
+    "status": "conditional",
+    "clashes": [],
+    "combinations": [
+     {
+      "id": "branch-combination-2-4",
+      "branches": "戌卯",
+      "positions": [
+       "月支戌（土，比劫）",
+       "時支卯（木，官殺）"
+      ],
+      "kind": "controlling",
+      "kindLabel": "剋合",
+      "adjacent": false,
+      "verdict": "good",
+      "verdictLabel": "削減忌神，吉",
+      "reason": "戌卯合為木剋土，削減土（忌）之力，但戌仍是土，不因合而消失。",
+      "clashEffect": null,
+      "notes": [
+       "講義六合例題都是相鄰兩支；隔位六合的力量老師沒有另外說明，僅供參考。",
+       "地支有合無化：不採「辰酉合化金」「寅亥合化木」等說法（講義第 25–26 頁）。"
+      ],
+      "sourceDate": "2026-10-21"
+     }
+    ],
+    "gatherings": [
+     {
+      "id": "branch-gathering-half-3-4",
+      "kind": "half_combination",
+      "kindLabel": "未卯半合木局",
+      "branches": "未卯",
+      "positions": [
+       "日支未",
+       "時支卯"
+      ],
+      "element": "木",
+      "formed": true,
+      "forceLabel": "半合",
+      "verdict": "good",
+      "verdictLabel": "半合成木為喜，論吉",
+      "reason": "未卯半合木局，木之力增強（木為喜用）。",
+      "notes": [
+       "未（土）的氣被木局牽引：生木者洩、被木剋者減，但未仍保留本氣（半合不論化）。"
+      ],
+      "sourceDate": "講義第24章"
+     }
+    ],
+    "punishments": [
+     {
+      "id": "branch-punishment-丑戌未",
+      "kind": "punishment",
+      "kindLabel": "戌未相刑（丑戌未三刑缺丑）",
+      "branches": "戌未",
+      "positions": [
+       "月支戌",
+       "日支未"
+      ],
+      "relation": "同屬土，加強土力",
+      "verdict": "bad",
+      "verdictLabel": "依生剋論，對日主不利",
+      "reason": "以本氣生剋論：同屬土，加強土力；加強土（忌）。",
+      "notes": [
+       "講義第五節：刑害的傳統論法近乎神煞，不足憑；改以五行本氣藏氣論生剋制化，配合喜忌與十神類化。"
+      ],
+      "sourceDate": "講義第24章"
+     }
+    ],
+    "limitations": [
+     "勝負用「本氣同五行的地支數，得令再加一」粗估；天干透出、半合三合的助力沒有計入，與老師逐例的文字判斷可能不同。",
+     "敗方有兩處以上生扶（同柱天干或地支本氣）時判為各有損傷，這是依講義例七整理的工程門檻。",
+     "三合、三會、刑害（講義第三至五節）課堂還沒講，依講義整理：成局條件是依第 26 章例題歸納的推論；刑害只依本氣生剋論，不論刑害本身吉凶（老師：害屬神煞）。",
+     "沖合結果沒有回頭重算強弱與喜忌；量化五行力分數不受影響。"
+    ],
+    "sources": [
+     "2026-10-21",
+     "講義第24章"
+    ]
+   },
+   "pillarRelations": {
+    "title": "同柱干支",
+    "conclusion": "庚申干支同類；丙戌天干生地支・暗合；己未干支同類；丁卯地支生天干。",
+    "relations": [
+     {
+      "id": "pillar-relation-1",
+      "pillar": "年柱",
+      "ganZhi": "庚申",
+      "kind": "same",
+      "kindLabel": "干支同類",
+      "hiddenCombination": null,
+      "hiddenCombinationPure": false,
+      "stemFavor": "喜用",
+      "verdict": "good",
+      "verdictLabel": "喜神通根乘旺",
+      "reason": "庚申：上下比助，金力加強（六十甲子中以干支同類之氣最專）。",
+      "notes": [
+       "四生之地藏干力量：本氣最大，其次長生，再次寄土；透出天干者最大（講義第 45 頁）。"
+      ],
+      "sourceDate": "講義第25章"
+     },
+     {
+      "id": "pillar-relation-2",
+      "pillar": "月柱",
+      "ganZhi": "丙戌",
+      "kind": "stem_generates_branch",
+      "kindLabel": "天干生地支",
+      "hiddenCombination": "丙火合戌中辛金",
+      "hiddenCombinationPure": false,
+      "stemFavor": "忌",
+      "verdict": "neutral",
+      "verdictLabel": "忌神稍有耗損",
+      "reason": "丙戌：火生土，土加強、火被洩減力。",
+      "notes": [
+       "干支暗合：丙火合戌中辛金；天干與支中藏干互相合絆，喜則有合壞之虞，忌則減其作用（講義第 46 頁）。",
+       "四墓之地藏干力量：土星本氣最大，其次餘氣，再次庫神；透出天干者最大（講義第 45 頁）。"
+      ],
+      "sourceDate": "講義第25章"
+     },
+     {
+      "id": "pillar-relation-3",
+      "pillar": "日柱",
+      "ganZhi": "己未",
+      "kind": "same",
+      "kindLabel": "干支同類",
+      "hiddenCombination": null,
+      "hiddenCombinationPure": false,
+      "stemFavor": "忌",
+      "verdict": "neutral",
+      "verdictLabel": "日主自坐得生扶",
+      "reason": "己未：上下比助，土力加強（六十甲子中以干支同類之氣最專）。",
+      "notes": [
+       "四墓之地藏干力量：土星本氣最大，其次餘氣，再次庫神；透出天干者最大（講義第 45 頁）。"
+      ],
+      "sourceDate": "講義第25章"
+     },
+     {
+      "id": "pillar-relation-4",
+      "pillar": "時柱",
+      "ganZhi": "丁卯",
+      "kind": "branch_generates_stem",
+      "kindLabel": "地支生天干",
+      "hiddenCombination": null,
+      "hiddenCombinationPure": false,
+      "stemFavor": "忌",
+      "verdict": "bad",
+      "verdictLabel": "忌神通根乘旺",
+      "reason": "丁卯：木生火，火加強、木被洩減力。",
+      "notes": [],
+      "sourceDate": "講義第25章"
+     }
+    ],
+    "limitations": [
+     "講義說同柱力量要配合時令、藏干與整體結構綜合論斷，沒有固定公式；這裡只標上下關係與喜忌方向，不改強弱與量化分數。",
+     "日柱的天干就是日主，不另判吉凶，只標自坐得生扶或坐剋。"
+    ],
+    "sources": [
+     "講義第25章"
+    ]
+   },
+   "interactionStrength": {
+    "title": "作用變化後強弱複核",
+    "conclusion": "作用變化後同黨 5：異黨 4（原 5：3），得勢✓，課堂判定仍是「旺候選」。",
+    "samePartyCount": 5,
+    "opposingPartyCount": 4,
+    "momentum": true,
+    "classification": "旺候選",
+    "changed": false,
+    "changes": [
+     "未卯半合木局：木屬異黨（官殺），該黨加一（推論權重：局不論化，成員黨別不變，只記其合力）"
+    ],
+    "limitations": [
+     "只做提醒，不取代課堂三步法的判定，也不改量化分數。",
+     "天干合化改黨別是講義明說；地支成局「該黨加一」是為了反映「增其合力」的工程權重，講義沒有給數字。",
+     "講義說八字結構複雜多端、沒有固定公式；從格、專旺、調候（如火炎土燥、金寒水冷）不在這個複核裡。"
+    ],
+    "sources": [
+     "講義第26章"
+    ]
+   }
+  }
+ },
+ "stir": {
+  "label": "丙寅 甲午 丙午 甲午（原局無水，子運沖月令）",
+  "analysis": {
+   "version": "classroom-2026-10-v2",
+   "status": "conditional",
+   "facts": {
+    "title": "排盤事實",
+    "conclusion": "日主丙屬火，月令午本氣丁屬火；根氣與透干均保留原柱位及藏干層位。",
+    "pillars": [
+     {
+      "pillar": "年柱",
+      "ganZhi": "丙寅",
+      "stem": "丙",
+      "stemElement": "火",
+      "stemTenGod": "比肩",
+      "branch": "寅",
+      "branchMainElement": "木",
+      "hiddenStems": [
+       {
+        "stem": "甲",
+        "element": "木",
+        "tenGod": "偏印",
+        "layer": "本氣"
+       },
+       {
+        "stem": "丙",
+        "element": "火",
+        "tenGod": "比肩",
+        "layer": "中氣"
+       },
+       {
+        "stem": "戊",
+        "element": "土",
+        "tenGod": "食神",
+        "layer": "餘氣"
+       }
+      ]
+     },
+     {
+      "pillar": "月柱",
+      "ganZhi": "甲午",
+      "stem": "甲",
+      "stemElement": "木",
+      "stemTenGod": "偏印",
+      "branch": "午",
+      "branchMainElement": "火",
+      "hiddenStems": [
+       {
+        "stem": "丁",
+        "element": "火",
+        "tenGod": "劫財",
+        "layer": "本氣"
+       },
+       {
+        "stem": "己",
+        "element": "土",
+        "tenGod": "傷官",
+        "layer": "中氣"
+       }
+      ]
+     },
+     {
+      "pillar": "日柱",
+      "ganZhi": "丙午",
+      "stem": "丙",
+      "stemElement": "火",
+      "stemTenGod": "日元",
+      "branch": "午",
+      "branchMainElement": "火",
+      "hiddenStems": [
+       {
+        "stem": "丁",
+        "element": "火",
+        "tenGod": "劫財",
+        "layer": "本氣"
+       },
+       {
+        "stem": "己",
+        "element": "土",
+        "tenGod": "傷官",
+        "layer": "中氣"
+       }
+      ]
+     },
+     {
+      "pillar": "時柱",
+      "ganZhi": "甲午",
+      "stem": "甲",
+      "stemElement": "木",
+      "stemTenGod": "偏印",
+      "branch": "午",
+      "branchMainElement": "火",
+      "hiddenStems": [
+       {
+        "stem": "丁",
+        "element": "火",
+        "tenGod": "劫財",
+        "layer": "本氣"
+       },
+       {
+        "stem": "己",
+        "element": "土",
+        "tenGod": "傷官",
+        "layer": "中氣"
+       }
+      ]
+     }
+    ],
+    "dayMaster": {
+     "stem": "丙",
+     "element": "火"
+    },
+    "monthCommand": {
+     "branch": "午",
+     "mainStem": "丁",
+     "element": "火",
+     "tenGod": "劫財"
+    },
+    "transparencies": [
+     {
+      "hiddenStem": "丁",
+      "hiddenStemLayer": "本氣",
+      "tenGod": "劫財",
+      "visibleLocations": [],
+      "evidenceId": "fact-transparency-1"
+     },
+     {
+      "hiddenStem": "己",
+      "hiddenStemLayer": "中氣",
+      "tenGod": "傷官",
+      "visibleLocations": [],
+      "evidenceId": "fact-transparency-2"
+     }
+    ],
+    "roots": [
+     {
+      "pillar": "年支",
+      "branch": "寅",
+      "hiddenStem": "丙",
+      "hiddenStemLayer": "中氣",
+      "element": "火",
+      "tenGod": "比肩",
+      "rootKind": "same_stem",
+      "evidenceId": "fact-hidden-1-2"
+     },
+     {
+      "pillar": "月支",
+      "branch": "午",
+      "hiddenStem": "丁",
+      "hiddenStemLayer": "本氣",
+      "element": "火",
+      "tenGod": "劫財",
+      "rootKind": "same_element",
+      "evidenceId": "fact-hidden-2-1"
+     },
+     {
+      "pillar": "日支",
+      "branch": "午",
+      "hiddenStem": "丁",
+      "hiddenStemLayer": "本氣",
+      "element": "火",
+      "tenGod": "劫財",
+      "rootKind": "same_element",
+      "evidenceId": "fact-hidden-3-1"
+     },
+     {
+      "pillar": "時支",
+      "branch": "午",
+      "hiddenStem": "丁",
+      "hiddenStemLayer": "本氣",
+      "element": "火",
+      "tenGod": "劫財",
+      "rootKind": "same_element",
+      "evidenceId": "fact-hidden-4-1"
+     }
+    ],
+    "tenGodDistribution": [
+     {
+      "family": "印",
+      "element": "木",
+      "surfaceLocations": [
+       "年支寅本氣甲",
+       "月干甲",
+       "時干甲"
+      ],
+      "hiddenLocations": [
+       "年支寅本氣甲"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-hidden-1-1",
+       "fact-stem-2",
+       "fact-stem-4"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-1-1"
+      ]
+     },
+     {
+      "family": "比劫",
+      "element": "火",
+      "surfaceLocations": [
+       "年干丙",
+       "月支午本氣丁",
+       "日支午本氣丁",
+       "時支午本氣丁"
+      ],
+      "hiddenLocations": [
+       "年支寅中氣丙",
+       "月支午本氣丁",
+       "日支午本氣丁",
+       "時支午本氣丁"
+      ],
+      "surfaceEvidenceIds": [
+       "fact-stem-1",
+       "fact-hidden-2-1",
+       "fact-hidden-3-1",
+       "fact-hidden-4-1"
+      ],
+      "hiddenEvidenceIds": [
+       "fact-hidden-1-2",
+       "fact-hidden-2-1",
+       "fact-hidden-3-1",
+       "fact-hidden-4-1"
+      ]
+     },
+     {
+      "family": "食傷",
+      "element": "土",
+      "surfaceLocations": [],
+      "hiddenLocations": [
+       "年支寅餘氣戊",
+       "月支午中氣己",
+       "日支午中氣己",
+       "時支午中氣己"
+      ],
+      "surfaceEvidenceIds": [],
+      "hiddenEvidenceIds": [
+       "fact-hidden-1-3",
+       "fact-hidden-2-2",
+       "fact-hidden-3-2",
+       "fact-hidden-4-2"
+      ]
+     },
+     {
+      "family": "財",
+      "element": "金",
+      "surfaceLocations": [],
+      "hiddenLocations": [],
+      "surfaceEvidenceIds": [],
+      "hiddenEvidenceIds": []
+     },
+     {
+      "family": "官殺",
+      "element": "水",
+      "surfaceLocations": [],
+      "hiddenLocations": [],
+      "surfaceEvidenceIds": [],
+      "hiddenEvidenceIds": []
+     }
+    ],
+    "evidence": [
+     {
+      "id": "fact-hidden-1-1",
+      "kind": "chart_fact",
+      "pillar": "年支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "年支寅藏甲（本氣、木）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-1-2",
+      "kind": "chart_fact",
+      "pillar": "年支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "年支寅藏丙（中氣、火）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-1-3",
+      "kind": "chart_fact",
+      "pillar": "年支",
+      "hiddenStemLayer": "餘氣",
+      "interactionId": null,
+      "description": "年支寅藏戊（餘氣、土）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-1",
+      "kind": "chart_fact",
+      "pillar": "年干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "年干為丙，五行火，相對日主為比肩。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-2-1",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "月支午藏丁（本氣、火）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-2-2",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "月支午藏己（中氣、土）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-2",
+      "kind": "chart_fact",
+      "pillar": "月干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "月干為甲，五行木，相對日主為偏印。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-3-1",
+      "kind": "chart_fact",
+      "pillar": "日支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "日支午藏丁（本氣、火）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-3-2",
+      "kind": "chart_fact",
+      "pillar": "日支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "日支午藏己（中氣、土）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-3",
+      "kind": "chart_fact",
+      "pillar": "日干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "日干為丙，五行火，相對日主為日元。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-4-1",
+      "kind": "chart_fact",
+      "pillar": "時支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "時支午藏丁（本氣、火）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-hidden-4-2",
+      "kind": "chart_fact",
+      "pillar": "時支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "時支午藏己（中氣、土）。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-stem-4",
+      "kind": "chart_fact",
+      "pillar": "時干",
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "時干為甲，五行木，相對日主為偏印。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-transparency-1",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "月令藏干丁未在年、月、時干透出。",
+      "sourceDate": null
+     },
+     {
+      "id": "fact-transparency-2",
+      "kind": "chart_fact",
+      "pillar": "月支",
+      "hiddenStemLayer": "中氣",
+      "interactionId": null,
+      "description": "月令藏干己未在年、月、時干透出。",
+      "sourceDate": null
+     }
+    ],
+    "limitations": [
+     "藏干事實不因合沖而刪除；互動後是否仍有效另在強弱步驟標為待定。"
+    ]
+   },
+   "strength": {
+    "title": "第二步：日主強弱",
+    "conclusion": "三項觀察命中 3 項；表層剋洩耗家族為無，初判旺極候選。",
+    "status": "conditional",
+    "classification": "旺極候選",
+    "sameSeasonElement": true,
+    "sealInSeason": false,
+    "supportStemCount": 3,
+    "supportBranchCount": 4,
+    "samePartyCount": 8,
+    "opposingPartyCount": 0,
+    "monthCommandSameParty": true,
+    "momentumProxy": true,
+    "rootCount": 4,
+    "observationCount": 3,
+    "samePartyCharacters": [
+     "年干丙（比肩）",
+     "年支寅（偏印）",
+     "月干甲（偏印）",
+     "月支午（劫財）",
+     "日干丙（日元）",
+     "日支午（劫財）",
+     "時干甲（偏印）",
+     "時支午（劫財）"
+    ],
+    "opposingPartyCharacters": [],
+    "checks": [
+     {
+      "item": "得令（得時）",
+      "hit": true,
+      "rule": "日干生在同五行當旺的月令：木寅卯、火巳午、土辰戌丑未、金申酉、水亥子。",
+      "finding": "日主丙屬火，生於午月（本氣丁屬火），月令與日主同五行 → 得令。",
+      "sourceDate": "2026-07-22"
+     },
+     {
+      "item": "得勢",
+      "hit": true,
+      "rule": "八個字（四天干含日主、四地支取本氣）分同黨（印、比劫）與異黨（食傷、財、官殺），多者勝；四比四時看月令屬哪一黨（得令者為旺）。",
+      "finding": "同黨 8 個、異黨 0 個；同黨較多 → 得勢。",
+      "sourceDate": "2026-09-02"
+     },
+     {
+      "item": "得地",
+      "hit": true,
+      "rule": "地支藏干中有與日干同五行者即通根，不分陰陽；根以本氣最穩，其次長生，再次餘氣、墓庫。",
+      "finding": "年支寅藏丙（中氣根，比肩）、月支午藏丁（本氣根，劫財）、日支午藏丁（本氣根，劫財）、時支午藏丁（本氣根，劫財） → 得地（共 4 處根）。",
+      "sourceDate": "2026-07-22"
+     }
+    ],
+    "verdictReason": "得令✓、得勢✓、得地✓；三者兼備，天干與地支本氣都不見剋洩耗 → 旺極，入專旺格候選（2026-07-22、07-29）。",
+    "pressureFamiliesSurface": [],
+    "pressureFamiliesHidden": [
+     "食傷"
+    ],
+    "interactions": [
+     {
+      "id": "interaction-1-刑",
+      "scope": "地支",
+      "interactionType": "刑",
+      "target": "午午",
+      "outcome": "-",
+      "pillars": "月柱(午)、日柱(午)、時柱(午)",
+      "detail": "自刑",
+      "assessment": "conditional_not_rescored"
+     },
+     {
+      "id": "interaction-2-半合化",
+      "scope": "地支",
+      "interactionType": "半合化",
+      "target": "午寅",
+      "outcome": "化火",
+      "pillars": "日柱(午)、年柱(寅)",
+      "detail": "量化模型裁決為地支半合化火",
+      "assessment": "conditional_not_rescored"
+     },
+     {
+      "id": "interaction-3-半合化",
+      "scope": "地支",
+      "interactionType": "半合化",
+      "target": "午寅",
+      "outcome": "化火",
+      "pillars": "時柱(午)、年柱(寅)",
+      "detail": "量化模型裁決為地支半合化火",
+      "assessment": "conditional_not_rescored"
+     },
+     {
+      "id": "interaction-4-半合化",
+      "scope": "地支",
+      "interactionType": "半合化",
+      "target": "午寅",
+      "outcome": "化火",
+      "pillars": "月柱(午)、年柱(寅)",
+      "detail": "量化模型裁決為地支半合化火",
+      "assessment": "conditional_not_rescored"
+     }
+    ],
+    "evidence": [
+     {
+      "id": "strength-same-season",
+      "kind": "lesson_rule",
+      "pillar": "月支",
+      "hiddenStemLayer": "本氣",
+      "interactionId": null,
+      "description": "同氣得時=true；印當令=false，兩者分開記錄。",
+      "sourceDate": "2026-07-22"
+     },
+     {
+      "id": "strength-party-count",
+      "kind": "lesson_rule",
+      "pillar": null,
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "得勢：八字中同黨（印、比劫）8 個、異黨（食傷、財、官殺）0 個（天干與地支本氣，含日主）；同黨較多，得勢=true。",
+      "sourceDate": "2026-09-02"
+     },
+     {
+      "id": "strength-roots",
+      "kind": "chart_fact",
+      "pillar": null,
+      "hiddenStemLayer": null,
+      "interactionId": null,
+      "description": "同五行藏干根共 4 處，保留全部層位。",
+      "sourceDate": null
+     },
+     {
+      "id": "strength-interaction-1-刑",
+      "kind": "chart_fact",
+      "pillar": "月柱(午)、日柱(午)、時柱(午)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-1-刑",
+      "description": "地支刑（午午，-）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     },
+     {
+      "id": "strength-interaction-2-半合化",
+      "kind": "chart_fact",
+      "pillar": "日柱(午)、年柱(寅)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-2-半合化",
+      "description": "地支半合化（午寅，化火）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     },
+     {
+      "id": "strength-interaction-3-半合化",
+      "kind": "chart_fact",
+      "pillar": "時柱(午)、年柱(寅)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-3-半合化",
+      "description": "地支半合化（午寅，化火）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     },
+     {
+      "id": "strength-interaction-4-半合化",
+      "kind": "chart_fact",
+      "pillar": "月柱(午)、年柱(寅)",
+      "hiddenStemLayer": null,
+      "interactionId": "interaction-4-半合化",
+      "description": "地支半合化（午寅，化火）；只保留關係與模型裁決，不另加扣分。",
+      "sourceDate": "2026-07-29"
+     }
+    ],
+    "limitations": [
+     "得勢只數八字的五行黨別（地支取本氣），不計干支力量大小與合沖後的變化。",
+     "表層剋洩耗與藏干出現分欄；不以藏干反向力量冒稱表層壓力。",
+     "互動後有效力量未定；保留初判並標 conditional。"
+    ]
+   },
+   "stemInteractions": {
+    "title": "天干生剋合化",
+    "conclusion": "天干沒有五合；生剋 4 組（其中不論 0 組）。",
+    "status": "candidate",
+    "combinations": [],
+    "relations": [
+     {
+      "id": "stem-relation-2-1",
+      "from": "月干甲（偏印）",
+      "to": "年干丙（比肩）",
+      "relation": "生",
+      "distance": "鄰近",
+      "status": "active",
+      "statusLabel": "論生",
+      "reason": "相鄰貼近，生力大，但坐下無根（坐剋虛浮），生力打折。",
+      "sourceDate": "2026-10-07"
+     },
+     {
+      "id": "stem-relation-2-3",
+      "from": "月干甲（偏印）",
+      "to": "日干丙（日元）",
+      "relation": "生",
+      "distance": "鄰近",
+      "status": "active",
+      "statusLabel": "論生",
+      "reason": "相鄰貼近，生力大，但坐下無根（坐剋虛浮），生力打折。",
+      "sourceDate": "2026-10-07"
+     },
+     {
+      "id": "stem-relation-4-1",
+      "from": "時干甲（偏印）",
+      "to": "年干丙（比肩）",
+      "relation": "生",
+      "distance": "遙隔",
+      "status": "active",
+      "statusLabel": "論生",
+      "reason": "遙隔，生力更小，但坐下無根（坐剋虛浮），生力打折。",
+      "sourceDate": "2026-10-07"
+     },
+     {
+      "id": "stem-relation-4-3",
+      "from": "時干甲（偏印）",
+      "to": "日干丙（日元）",
+      "relation": "生",
+      "distance": "鄰近",
+      "status": "active",
+      "statusLabel": "論生",
+      "reason": "相鄰貼近，生力大，但坐下無根（坐剋虛浮），生力打折。",
+      "sourceDate": "2026-10-07"
+     }
+    ],
+    "limitations": [
+     "吉凶依課堂三步法的喜忌方案；多方案時，元素只有在沒有方案相反時才算喜或忌。",
+     "牽絆方向、虛浮與否用根氣粗估，不是老師的量化公式。",
+     "合化後的五行沒有回頭重算強弱；量化五行力分數不受影響。"
+    ],
+    "sources": [
+     "2026-10-07",
+     "2026-10-14"
+    ]
+   },
+   "branchInteractions": {
+    "title": "地支沖合會刑害",
+    "conclusion": "寅午半合火局（半合成火為忌，論凶）；午午自刑：同屬火，加強火力（依生剋論，對日主不利）。",
+    "status": "candidate",
+    "clashes": [],
+    "combinations": [],
+    "gatherings": [
+     {
+      "id": "branch-gathering-half-1-2",
+      "kind": "half_combination",
+      "kindLabel": "寅午半合火局",
+      "branches": "寅午",
+      "positions": [
+       "年支寅",
+       "月支午"
+      ],
+      "element": "火",
+      "formed": true,
+      "forceLabel": "合力次之（年干透火）",
+      "verdict": "bad",
+      "verdictLabel": "半合成火為忌，論凶",
+      "reason": "寅午半合火局，火之力增強（火為忌）。",
+      "notes": [
+       "寅（木）的氣被火局牽引：生火者洩、被火剋者減，但寅仍保留本氣（半合不論化）。"
+      ],
+      "sourceDate": "講義第24章"
+     }
+    ],
+    "punishments": [
+     {
+      "id": "branch-self-punishment-午",
+      "kind": "self_punishment",
+      "kindLabel": "午午自刑",
+      "branches": "午午午",
+      "positions": [
+       "月支午",
+       "日支午",
+       "時支午"
+      ],
+      "relation": "同屬火，加強火力",
+      "verdict": "bad",
+      "verdictLabel": "依生剋論，對日主不利",
+      "reason": "以本氣生剋論：同屬火，加強火力；加強火（忌）。",
+      "notes": [
+       "講義第五節：刑害的傳統論法近乎神煞，不足憑；改以五行本氣藏氣論生剋制化，配合喜忌與十神類化。"
+      ],
+      "sourceDate": "講義第24章"
+     }
+    ],
+    "limitations": [
+     "勝負用「本氣同五行的地支數，得令再加一」粗估；天干透出、半合三合的助力沒有計入，與老師逐例的文字判斷可能不同。",
+     "敗方有兩處以上生扶（同柱天干或地支本氣）時判為各有損傷，這是依講義例七整理的工程門檻。",
+     "三合、三會、刑害（講義第三至五節）課堂還沒講，依講義整理：成局條件是依第 26 章例題歸納的推論；刑害只依本氣生剋論，不論刑害本身吉凶（老師：害屬神煞）。",
+     "沖合結果沒有回頭重算強弱與喜忌；量化五行力分數不受影響。"
+    ],
+    "sources": [
+     "2026-10-21",
+     "講義第24章"
+    ]
+   },
+   "pillarRelations": {
+    "title": "同柱干支",
+    "conclusion": "丙寅地支生天干；甲午天干生地支・暗合；丙午干支同類；甲午天干生地支・暗合。",
+    "relations": [
+     {
+      "id": "pillar-relation-1",
+      "pillar": "年柱",
+      "ganZhi": "丙寅",
+      "kind": "branch_generates_stem",
+      "kindLabel": "地支生天干",
+      "hiddenCombination": null,
+      "hiddenCombinationPure": false,
+      "stemFavor": "忌",
+      "verdict": "bad",
+      "verdictLabel": "忌神通根乘旺",
+      "reason": "丙寅：木生火，火加強、木被洩減力。",
+      "notes": [
+       "四生之地藏干力量：本氣最大，其次長生，再次寄土；透出天干者最大（講義第 45 頁）。"
+      ],
+      "sourceDate": "講義第25章"
+     },
+     {
+      "id": "pillar-relation-2",
+      "pillar": "月柱",
+      "ganZhi": "甲午",
+      "kind": "stem_generates_branch",
+      "kindLabel": "天干生地支",
+      "hiddenCombination": "甲木合午中己土",
+      "hiddenCombinationPure": true,
+      "stemFavor": "忌",
+      "verdict": "mixed",
+      "verdictLabel": "暗合互絆，喜忌皆有",
+      "reason": "甲午：木生火，火加強、木被洩減力。",
+      "notes": [
+       "干支暗合：甲木合午中己土，屬六組較純粹者，影響絕對；天干與支中藏干互相合絆，喜則有合壞之虞，忌則減其作用（講義第 46 頁）。"
+      ],
+      "sourceDate": "講義第25章"
+     },
+     {
+      "id": "pillar-relation-3",
+      "pillar": "日柱",
+      "ganZhi": "丙午",
+      "kind": "same",
+      "kindLabel": "干支同類",
+      "hiddenCombination": null,
+      "hiddenCombinationPure": false,
+      "stemFavor": "忌",
+      "verdict": "neutral",
+      "verdictLabel": "日主自坐得生扶",
+      "reason": "丙午：上下比助，火力加強（六十甲子中以干支同類之氣最專）。",
+      "notes": [],
+      "sourceDate": "講義第25章"
+     },
+     {
+      "id": "pillar-relation-4",
+      "pillar": "時柱",
+      "ganZhi": "甲午",
+      "kind": "stem_generates_branch",
+      "kindLabel": "天干生地支",
+      "hiddenCombination": "甲木合午中己土",
+      "hiddenCombinationPure": true,
+      "stemFavor": "忌",
+      "verdict": "mixed",
+      "verdictLabel": "暗合互絆，喜忌皆有",
+      "reason": "甲午：木生火，火加強、木被洩減力。",
+      "notes": [
+       "干支暗合：甲木合午中己土，屬六組較純粹者，影響絕對；天干與支中藏干互相合絆，喜則有合壞之虞，忌則減其作用（講義第 46 頁）。"
+      ],
+      "sourceDate": "講義第25章"
+     }
+    ],
+    "limitations": [
+     "講義說同柱力量要配合時令、藏干與整體結構綜合論斷，沒有固定公式；這裡只標上下關係與喜忌方向，不改強弱與量化分數。",
+     "日柱的天干就是日主，不另判吉凶，只標自坐得生扶或坐剋。"
+    ],
+    "sources": [
+     "講義第25章"
+    ]
+   },
+   "interactionStrength": {
+    "title": "作用變化後強弱複核",
+    "conclusion": "作用變化後同黨 9：異黨 0（原 8：0），得勢✓，課堂判定仍是「旺極候選」。",
+    "samePartyCount": 9,
+    "opposingPartyCount": 0,
+    "momentum": true,
+    "classification": "旺極候選",
+    "changed": false,
+    "changes": [
+     "寅午半合火局：火屬同黨（比劫），該黨加一（推論權重：局不論化，成員黨別不變，只記其合力）"
+    ],
+    "limitations": [
+     "只做提醒，不取代課堂三步法的判定，也不改量化分數。",
+     "天干合化改黨別是講義明說；地支成局「該黨加一」是為了反映「增其合力」的工程權重，講義沒有給數字。",
+     "講義說八字結構複雜多端、沒有固定公式；從格、專旺、調候（如火炎土燥、金寒水冷）不在這個複核裡。"
+    ],
+    "sources": [
+     "講義第26章"
+    ]
+   }
+  }
+ }
+}

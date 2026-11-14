@@ -31,7 +31,7 @@
   --wx-wood: #2f7d45;
   --wx-fire: #b42318;
   --wx-earth: #8a5a28;
-  --wx-metal: #53606a;
+  --wx-metal: #d4a500; /* 亮金黃 */
   --wx-water: #1d5fa7;
   font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", sans-serif;
   color: var(--bazi-text);
@@ -973,4 +973,187 @@ body {
     .compact-layout .el-alert__title {
     font-size: calc(11px * var(--app-font-scale));
   }
+}
+
+/* ---- 2026-11-08 新手友善版面：細工具列、輸入摘要、手機底部分頁 ---- */
+.app-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  max-width: 1440px;
+  margin: 0 auto 14px;
+  padding: 10px 18px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(67, 20, 7, 0.98), rgba(124, 45, 18, 0.94) 60%, rgba(180, 83, 9, 0.9));
+  color: #fffaf0;
+  box-shadow: var(--bazi-shadow-sm);
+}
+
+.app-toolbar h1 {
+  margin: 0;
+  font-family: "Noto Serif TC", "PMingLiU", "MingLiU", serif;
+  font-size: calc(24px * var(--app-font-scale));
+  letter-spacing: 0.06em;
+}
+
+.toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.view-mode-switch {
+  --el-segmented-bg-color: rgba(255, 250, 240, 0.18);
+  --el-segmented-color: #fffaf0;
+  --el-segmented-item-selected-bg-color: #fffdf8;
+  --el-segmented-item-selected-color: var(--bazi-primary);
+}
+
+.settings-body {
+  display: grid;
+  gap: 10px;
+}
+
+.settings-note {
+  margin: 0;
+  color: var(--bazi-text-muted);
+  font-size: calc(13px * var(--app-font-scale));
+  line-height: 1.6;
+}
+
+.input-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 8px 14px;
+  border: 1px solid var(--bazi-border);
+  border-radius: 12px;
+  background: var(--bazi-surface-strong);
+  color: var(--bazi-text);
+}
+
+.input-summary-sep {
+  margin: 0 8px;
+  color: var(--bazi-text-subtle);
+}
+
+.more-card .el-card__body {
+  display: grid;
+  gap: 12px;
+}
+
+.more-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.more-label {
+  color: var(--bazi-text-muted);
+  font-weight: 700;
+}
+
+.more-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.more-actions .el-button {
+  margin-left: 0;
+}
+
+.mini-chart-sticky {
+  position: sticky;
+  top: calc(8px + env(safe-area-inset-top, 0px));
+  z-index: var(--bazi-z-sticky);
+  margin-bottom: 10px;
+}
+
+.bottom-tabs {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: var(--bazi-z-overlay);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 4px 6px calc(4px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--bazi-border);
+  background: rgba(255, 250, 243, 0.98);
+  box-shadow: 0 -6px 18px rgba(84, 45, 18, 0.1);
+  backdrop-filter: blur(12px);
+}
+
+.bottom-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--bazi-text-muted);
+  font-size: calc(13px * var(--app-font-scale));
+  cursor: pointer;
+}
+
+.bottom-tab-icon {
+  font-family: "Noto Serif TC", "PMingLiU", serif;
+  font-size: calc(18px * var(--app-font-scale));
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.bottom-tab.active {
+  background: rgba(180, 83, 9, 0.12);
+  color: var(--bazi-primary);
+  font-weight: 700;
+}
+
+.has-bottom-tabs {
+  padding-bottom: calc(72px * var(--app-font-scale) + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 768px) {
+  .app-toolbar {
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    border-radius: 14px;
+  }
+
+  .app-toolbar h1 {
+    font-size: calc(20px * var(--app-font-scale));
+  }
+}
+
+/* 電腦版兩欄：左欄結論卡隨捲動固定 */
+.side-sticky {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 1100px) {
+  .page-grid.is-two-column {
+    grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+  }
+
+  .page-grid.is-two-column .left-column {
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+    align-self: start;
+  }
+}
+
+.page-grid.is-two-column .left-column {
+  padding-bottom: 12px;
 }

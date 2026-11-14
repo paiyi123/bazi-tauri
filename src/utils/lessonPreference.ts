@@ -155,12 +155,16 @@ function agree(verdicts: Verdict[]): Verdict {
  * 2026-09-09：地支有合無化。子丑合看作土剋水、寅亥合看作水生木，照五行生剋判斷：
  * 被生的一方變強、被剋或被洩的一方變弱，再看那一方是喜用還是忌。
  */
-function judgeBranchCombination(luck: RelationSide, natal: RelationSide, preferences: LessonPreferences): RelationJudgement {
+function judgeBranchCombination(
+  luck: RelationSide,
+  natal: RelationSide,
+  preferences: LessonPreferences,
+  prefix = "地支有合無化，",
+): RelationJudgement {
   const luckPref = preferences.elements[luck.element];
   const natalPref = preferences.elements[natal.element];
   const luckLabel = `大運${luck.char}${luckPref.name}（${luckPref.label}）`;
   const natalLabel = `原局${natal.char}${natalPref.name}（${natalPref.label}）`;
-  const prefix = "地支有合無化，";
   if (GENERATES[luck.element] === natal.element) {
     return { favor: strengthened(natalPref.favor), reason: `${prefix}看作${luckLabel}生${natalLabel}` };
   }
@@ -186,20 +190,33 @@ function judgeBranchCombination(luck: RelationSide, natal: RelationSide, prefere
  *   不化 → 合絆 (2026-10-14): binding a natal 喜用 is 減吉, binding a 忌 is 減凶.
  * - 地支六合、半合: 有合無化 (2026-09-09), judged as plain 生剋 between the two branches.
  * - 伏吟: the repeated element's role.
- * - 害 is 神煞 and not used in class (2026-09-23); 刑、破、暗合、暗會 get no verdict yet.
+ * - 地支刑: read as plain 生剋 between the two branches, like 合 (2026-11-04).
+ * - 害 is 神煞 and not used in class (2026-09-23); 破、暗合、暗會 get no verdict yet.
+ * - context (2026-11-04「命運相沖不一定大運贏」): the luck branch clashes the natal month branch while the
+ *   natal chart has none of the luck branch's element → the clash may only stir up the 旺神, so no verdict.
  */
+export type RelationContext = { natalIsMonthBranch?: boolean; natalHasLuckElement?: boolean };
+
 export function judgeLuckRelation(
   text: string,
   scope: "stem" | "branch",
   luck: RelationSide,
   natalSide: RelationSide,
   preferences: LessonPreferences,
+  context: RelationContext = {},
 ): RelationJudgement {
   const natal = preferences.elements[natalSide.element];
   const natalLabel = `原局${natalSide.char}${natal.name}（${natal.label}）`;
   const kind = relationKind(text);
 
   if (kind === "clash") {
+    if (scope === "branch" && context.natalIsMonthBranch && context.natalHasLuckElement === false && natal.favor !== "good") {
+      const luckName = preferences.elements[luck.element].name;
+      return {
+        favor: "neutral",
+        reason: `沖${natalLabel}；但原局沒有${luckName}，月令${natalSide.char}又得令，大運不一定沖得贏，可能反而激怒旺神（11/04）`,
+      };
+    }
     if (natal.favor === "good") return { favor: "bad", reason: `沖動${natalLabel}` };
     if (natal.favor === "bad") return { favor: "good", reason: `沖去${natalLabel}` };
     return { favor: "neutral", reason: `沖${natalLabel}` };
@@ -251,7 +268,11 @@ export function judgeLuckRelation(
     return { favor: "neutral", reason: `涉及${natalLabel}；害屬神煞，課堂不採用` };
   }
 
-  return { favor: "neutral", reason: `涉及${natalLabel}；刑、破、暗合、暗會暫不判吉凶` };
+  if (kind === "punish" && scope === "branch") {
+    return judgeBranchCombination(luck, natalSide, preferences, "刑讀成五行生剋（11/04），");
+  }
+
+  return { favor: "neutral", reason: `涉及${natalLabel}；破、暗合、暗會暫不判吉凶` };
 }
 
 // Several natal pillars can share one tag (e.g. 午 twice); a single 有利 and 不利 cancel to 中性.
