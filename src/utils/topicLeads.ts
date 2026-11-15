@@ -3,6 +3,7 @@ import { BRANCH_WUXING, STEM_WUXING, type WuXing } from "../constants/wuxing";
 import { ELEMENT_NAMES, lessonPreferences, type Favor } from "./lessonPreference";
 import { conclusionOf } from "./conclusion";
 import { pillarSummary } from "./pillarSummary";
+import { patternGrade } from "./patternGrade";
 
 // 分析頁每個主題最上面的「一句白話重點」。主答案依課堂三步法的喜忌；
 // 六親、健康、財富用各書共同的簡單原則（見《八字諸書融會貫通指南》第六～八章），不新增推論規則。
@@ -53,6 +54,13 @@ function patternLeads(result: BaziResponse): LeadLine[] {
   const analysis = result.quantModel?.lessonContent?.threeStepAnalysis;
   const special = result.quantModel?.specialPattern?.primaryPattern;
   const lines: LeadLine[] = [];
+  const grade = patternGrade(result);
+  if (grade) {
+    lines.push({
+      text: `格局高低總評：${grade.level}（合計 ${grade.total > 0 ? "+" : ""}${grade.total}，滿分 ±${grade.max}）${grade.headline ? `。${grade.headline}` : ""}。只是提示，每一條加減分的理由與出處見下方「格局高低總評」卡。`,
+      tone: grade.level === "上" || grade.level === "中上" ? "good" : grade.level === "中" ? "mixed" : "bad",
+    });
+  }
   if (analysis?.pattern?.ordinaryResult) {
     lines.push({ text: `課堂取格：${analysis.pattern.ordinaryResult}（看月令藏干透出哪一個十神）。格局是這張盤的主題，用神才是答案。`, tone: "info" });
   }

@@ -41,6 +41,7 @@
             </SourceFold>
           </template>
           <template v-else-if="topic.key === 'pattern'">
+            <PatternGradePanel v-if="hasLesson" :result="result" />
             <TenGodComboPanel :result="result" />
             <SourceFold :open="isResearch" label="各書細節" :hint="isResearch ? '蘇民峰特別格局、陸致極結構圖' : '蘇民峰特別格局'">
               <SpecialPatternPanel :result="result" />
@@ -105,6 +106,7 @@ import QuantFivePhasePanel from "./QuantFivePhasePanel.vue";
 import SpecialPatternPanel from "./SpecialPatternPanel.vue";
 import StrengthComparisonPanel from "./StrengthComparisonPanel.vue";
 import TenGodComboPanel from "./TenGodComboPanel.vue";
+import PatternGradePanel from "./PatternGradePanel.vue";
 import TenGodPanel from "./TenGodPanel.vue";
 import YongShenPanel from "./YongShenPanel.vue";
 import SourceFold from "./SourceFold.vue";
