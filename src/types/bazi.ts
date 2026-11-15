@@ -29,6 +29,45 @@ export interface BaziRequest {
   baziSect: number;
   yunSect: number;
   leapMonth: boolean;
+  /** 出生地、夏令時間、真太陽時；沒送時後端不校正。 */
+  timeCorrection?: TimeCorrectionRequest;
+}
+
+/** 出生地與時間校正設定（夏令時間、真太陽時）。 */
+export interface TimeCorrectionRequest {
+  /** auto：出生地在台灣時依夏令時間表自動扣 1 小時；on：一律扣；off：不扣。 */
+  dst: "auto" | "on" | "off";
+  /** TW：出生地在台灣。 */
+  region?: string | null;
+  placeName?: string | null;
+  /** 東經（度） */
+  longitude?: number | null;
+  /** 標準時區（分鐘，台灣 +480） */
+  utcOffsetMinutes?: number | null;
+  trueSolarTime: boolean;
+}
+
+export interface TimeCorrectionInfo {
+  clockTime: string;
+  standardTime: string;
+  usedTime: string;
+  placeName?: string | null;
+  longitude?: number | null;
+  dstMinutes: number;
+  dstLabel?: string | null;
+  trueSolarApplied: boolean;
+  trueSolarTime?: string | null;
+  longitudeMinutes?: number | null;
+  equationMinutes?: number | null;
+  lines: string[];
+}
+
+/** 節氣交界、時辰交界、夜子時、夏令時間等出生時間提醒。 */
+export interface BirthWarning {
+  kind: "jie" | "hour" | "zi" | "correction" | "true_solar" | "dst" | string;
+  level: "warn" | "info" | string;
+  title: string;
+  detail: string;
 }
 
 export interface PillarAnalyzeRequest {
@@ -121,6 +160,8 @@ export interface BirthRecordRequest {
   leapMonth: boolean;
   timeLabel?: string;
   notes?: string;
+  /** 出生地與時間校正設定（舊紀錄沒有）。 */
+  timeCorrection?: TimeCorrectionRequest;
 }
 
 export interface BirthRecordResponse extends BirthRecordRequest {
@@ -340,7 +381,7 @@ export interface LessonPatternCandidate { pattern: string; tenGod: string; month
 export interface LessonPatternAnalysis { title: string; conclusion: string; status: string; ordinaryResult: string | null; ordinaryCandidates: LessonPatternCandidate[]; specialReview: { required: boolean; reasons: string[]; modelReferencePattern: string | null; modelReferenceCategory: string | null; specializedUseVersions: Array<{ sourceDate: string; useDirection: string; favorableDirection: string; limitation: string }>; followChildPeerException: string }; evidence: LessonEvidence[]; limitations: string[]; }
 export interface LessonInteractionEvidence { id: string; scope: string; interactionType: string; target: string; outcome: string; pillars: string; detail: string; assessment: string; }
 export interface LessonStrengthCheck { item: string; hit: boolean; rule: string; finding: string; sourceDate: string; }
-export interface LessonStrengthAnalysis { title: string; conclusion: string; status: string; classification: string; sameSeasonElement: boolean; sealInSeason: boolean; supportStemCount: number; supportBranchCount: number; samePartyCount: number; opposingPartyCount: number; monthCommandSameParty: boolean; momentumProxy: boolean; rootCount: number; observationCount: number; samePartyCharacters: string[]; opposingPartyCharacters: string[]; checks: LessonStrengthCheck[]; verdictReason: string; pressureFamiliesSurface: string[]; pressureFamiliesHidden: string[]; interactions: LessonInteractionEvidence[]; evidence: LessonEvidence[]; limitations: string[]; }
+export interface LessonStrengthAnalysis { title: string; conclusion: string; status: string; classification: string; sameSeasonElement: boolean; sealInSeason: boolean; supportStemCount: number; supportBranchCount: number; samePartyCount: number; opposingPartyCount: number; monthCommandSameParty: boolean; momentumProxy: boolean; rootCount: number; observationCount: number; samePartyCharacters: string[]; opposingPartyCharacters: string[]; checks: LessonStrengthCheck[]; verdictReason: string; pressureFamiliesSurface: string[]; pressureFamiliesHidden: string[]; interactions: LessonInteractionEvidence[]; evidence: LessonEvidence[]; limitations: string[]; /** 11/04：被刑沖打掉、不算得地的根 */ rootKnockouts?: string[]; /** 母慈滅子（印太多反埋日主） */ motherOverload?: string | null; /** 中和提示 */ balanceHint?: string | null; }
 export interface LessonDirection { family: string; element: string; role: string; reason: string; }
 export interface LessonPreferencePlan { ruleId: string; title: string; applicability: string; condition: string; useDirections: LessonDirection[]; favorableDirections: LessonDirection[]; unfavorableDirections: LessonDirection[]; conditionalDirections: LessonDirection[]; evidenceIds: string[]; rejections: string[]; sources: string[]; }
 export interface LessonPreferenceAnalysis { title: string; conclusion: string; status: string; plans: LessonPreferencePlan[]; noPlanReasons: string[]; bridgePaths: Array<{ conflictFrom: string; intermediary: string; conflictTo: string; path: string[]; actualNodes: string[]; missingNodes: string[]; status: string; explanation: string }>; medicineNotes: Array<{ protectedPlanRuleId: string; protectedFamily: string; protectedElement: string; hindranceFamily: string; medicineFamily: string | null; status: string; explanation: string }>; seasonalCompatibility: Array<{ planRuleId: string | null; season: string; monthBranches: string[]; status: string; element: string | null; explanation: string }>; evidence: LessonEvidence[]; limitations: string[]; }
@@ -445,6 +486,8 @@ export interface BaziResponse {
   luckStart: LuckStart;
   daYun: DaYun[];
   quantModel?: QuantModelResponse;
+  timeCorrection?: TimeCorrectionInfo | null;
+  birthWarnings?: BirthWarning[];
   gender?: Gender;
 }
 

@@ -330,3 +330,81 @@ fn lesson_sources() -> Vec<LessonSource> {
 
 #[cfg(test)]
 mod tests;
+
+const KNOCK_CLASH_PAIRS: [(&str, &str); 6] = [
+    ("子", "午"),
+    ("丑", "未"),
+    ("寅", "申"),
+    ("卯", "酉"),
+    ("辰", "戌"),
+    ("巳", "亥"),
+];
+const KNOCK_PUNISH_GROUPS: [&[&str]; 3] = [&["子", "卯"], &["寅", "巳", "申"], &["丑", "戌", "未"]];
+const KNOCK_SELF_PUNISH: [&str; 4] = ["辰", "午", "酉", "亥"];
+/// 六合與半合（三合帶帝旺的兩字）。
+const KNOCK_COMBINE_PAIRS: [(&str, &str); 14] = [
+    ("子", "丑"),
+    ("寅", "亥"),
+    ("卯", "戌"),
+    ("辰", "酉"),
+    ("巳", "申"),
+    ("午", "未"),
+    ("申", "子"),
+    ("子", "辰"),
+    ("寅", "午"),
+    ("午", "戌"),
+    ("亥", "卯"),
+    ("卯", "未"),
+    ("巳", "酉"),
+    ("酉", "丑"),
+];
+
+/// 兩個地支是沖、刑或自刑（丑未、寅申又刑又沖，記成沖）。
+fn clash_or_punish_kind(a: &str, b: &str) -> Option<&'static str> {
+    if KNOCK_CLASH_PAIRS
+        .iter()
+        .any(|(x, y)| (a == *x && b == *y) || (a == *y && b == *x))
+    {
+        return Some("沖");
+    }
+    if a == b {
+        return KNOCK_SELF_PUNISH.contains(&a).then_some("自刑");
+    }
+    KNOCK_PUNISH_GROUPS
+        .iter()
+        .any(|group| group.contains(&a) && group.contains(&b))
+        .then_some("刑")
+}
+
+/// 2026-11-04：被刑、被沖的地支，餘氣、雜氣被打掉，只剩本氣。只算相鄰兩柱（貼身），
+/// 隔位的刑沖力量小，不套用。自刑不算：同一個五行互相加強（講義例八「亥亥自刑，加強水力生木；
+/// 亥中藏甲」仍算根）。回傳「年支未刑」這類說明；空的表示這個地支沒被刑沖。
+///
+/// 被刑沖的地支若同時和相鄰地支六合或半合（例：講義 26-1-22 己卯 甲戌 壬辰 辛亥「卯戌合絆戌，
+/// 貪合忘沖」；10-21 學員命例卯未半合解未戌刑），刑沖被緩解，不打掉藏干。
+fn adjacent_knocks(facts: &LessonFacts, index: usize) -> Vec<String> {
+    let Some(target) = facts.pillars.get(index) else {
+        return Vec::new();
+    };
+    let neighbours = [index.checked_sub(1), Some(index + 1)];
+    let bound_by_combination = neighbours.into_iter().flatten().any(|other| {
+        facts.pillars.get(other).is_some_and(|pillar| {
+            KNOCK_COMBINE_PAIRS.iter().any(|(x, y)| {
+                (target.branch == *x && pillar.branch == *y) || (target.branch == *y && pillar.branch == *x)
+            })
+        })
+    });
+    if bound_by_combination {
+        return Vec::new();
+    }
+    neighbours
+        .into_iter()
+        .flatten()
+        .filter_map(|other| {
+            let pillar = facts.pillars.get(other)?;
+            let kind = clash_or_punish_kind(&target.branch, &pillar.branch)
+                .filter(|kind| *kind != "自刑")?;
+            Some(format!("{}{}{}", BRANCH_LOCATION_LABELS[other], pillar.branch, kind))
+        })
+        .collect()
+}

@@ -345,7 +345,7 @@ export async function buildReport(input = {}) {
       cong: q.congPattern?.conclusion,
       special: q.specialPattern?.conclusion,
       interactions: (q.interactions ?? []).map((x) => `${x.scope}${x.target}${x.type}（${x.pillars}）${x.detail}`),
-      readingRule: "量化分數正＝幫日主、負＝剋洩耗；App「傾向」欄只看正負。這份報告改看作用後命局離 0 遠近：靠近 0 為趨中和（有利）。",
+      readingRule: "量化分數正＝幫日主、負＝剋洩耗；App「傾向」欄已依身強身弱判讀（身強喜負分、身弱喜正分，從格反過來）。這份報告另看作用後命局離 0 遠近：靠近 0 為趨中和（有利）。",
     },
     lu: lu ? { verdict: lu.verdict, score: lu.score, threshold: lu.threshold, conclusion: lu.conclusion, flags: lu.flags.map((f) => `${f.title}：${f.detail}`) } : null,
     basic: { pattern: pattern.pattern, useGod: pattern.useGod, checks: pattern.checks, climate: `${pattern.climate.total}（${pattern.climate.level}）` },

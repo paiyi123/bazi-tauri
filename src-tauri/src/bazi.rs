@@ -71,6 +71,9 @@ pub struct BaziRequest {
     pub bazi_sect: u8,
     pub yun_sect: u8,
     pub leap_month: bool,
+    /// 出生地、夏令時間、真太陽時設定；沒送時不校正。
+    #[serde(default)]
+    pub time_correction: Option<crate::birth_time::TimeCorrectionRequest>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -515,6 +518,10 @@ pub struct BaziResponse {
     pub da_yun: Vec<DaYunDto>,
     pub quant_model: Option<QuantModelResponse>,
     pub gender: Gender,
+    /// 夏令時間／真太陽時校正（輸入出生時間時才有）。
+    pub time_correction: Option<crate::birth_time::TimeCorrectionDto>,
+    /// 節氣交界、時辰交界、夜子時、夏令時間等出生時間提醒。
+    pub birth_warnings: Vec<crate::birth_time::BirthBoundaryWarningDto>,
 }
 
 #[derive(Debug, Clone)]
@@ -619,7 +626,17 @@ pub fn get_lunar_month_detail(
 #[tauri::command]
 pub fn calculate_bazi(request: BaziRequest) -> Result<BaziResponse, String> {
     let normalized_year = normalize_year(request.year, &request.year_era)?;
-    let solar_time = create_solar_time(&request, normalized_year)?;
+    let clock_time = create_solar_time(&request, normalized_year)?;
+    // 夏令時間、真太陽時校正後的時間才拿來排盤（起運、大運也用它）。
+    let (solar_time, time_correction) =
+        crate::birth_time::correct(clock_time, request.time_correction.as_ref());
+    let birth_warnings = crate::birth_time::boundary_warnings(
+        &clock_time,
+        &solar_time,
+        request.bazi_sect,
+        time_correction.as_ref(),
+        request.time_correction.as_ref(),
+    );
     let lunar_hour = solar_time.get_lunar_hour();
     let eight_char = create_eight_char(request.bazi_sect, lunar_hour.clone());
     let day_master = eight_char.get_day().get_heaven_stem();
@@ -739,6 +756,8 @@ pub fn calculate_bazi(request: BaziRequest) -> Result<BaziResponse, String> {
         da_yun,
         quant_model,
         gender: request.gender.clone(),
+        time_correction,
+        birth_warnings,
     };
     response.shen_sha = Some(analyze_shen_sha(&response));
     Ok(finalize_bazi_response(response))
@@ -838,6 +857,8 @@ pub fn analyze_pillars(request: PillarAnalyzeRequest) -> Result<BaziResponse, St
         da_yun,
         quant_model,
         gender: gender.clone(),
+        time_correction: None,
+        birth_warnings: Vec::new(),
     };
     response.shen_sha = Some(analyze_shen_sha(&response));
     Ok(finalize_bazi_response(response))
@@ -1016,6 +1037,7 @@ mod tests {
             bazi_sect: 2,
             yun_sect: 1,
             leap_month: false,
+            time_correction: None,
         }
     }
 
@@ -1033,6 +1055,7 @@ mod tests {
             bazi_sect: 2,
             yun_sect: 1,
             leap_month: false,
+            time_correction: None,
         }
     }
 
@@ -1914,6 +1937,7 @@ mod tests {
             bazi_sect: 2,
             yun_sect: 1,
             leap_month: false,
+            time_correction: None,
         })
         .expect("chart should build");
 
@@ -1941,6 +1965,7 @@ mod tests {
             bazi_sect: 2,
             yun_sect: 1,
             leap_month: false,
+            time_correction: None,
         })
         .expect("chart should build");
 
@@ -1987,6 +2012,7 @@ mod tests {
             bazi_sect: 2,
             yun_sect: 1,
             leap_month: false,
+            time_correction: None,
         })
         .expect("chart should build");
 

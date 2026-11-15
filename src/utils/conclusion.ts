@@ -1,3 +1,4 @@
+import { baziYearAt, currentLuckRow, luckStartTimes } from "./baziNow";
 import type { BaziResponse, DaYun, LiuNian } from "../types/bazi";
 import { BRANCH_WUXING, STEM_WUXING, type WuXing } from "../constants/wuxing";
 import { ELEMENT_NAMES, lessonPreferences, type Favor } from "./lessonPreference";
@@ -95,13 +96,20 @@ export function overallOf(marks: FavorMark[]): Favor {
   return "mixed";
 }
 
+/**
+ * 只知道干支年時找目前大運：每步大運列 11 個流年、交運那年兩步都有，所以取「起運年份不晚於這年」的最後一步
+ * （交運年當作已交運）。知道確切時刻時請用 baziNow.ts 的 currentLuckRow（看交運那一刻）。
+ */
 export function findCurrentLuck(daYun: DaYun[], year: number): { luck: DaYun | null; annual: LiuNian | null } {
-  const luck = daYun.find((row) => row.liuNian?.some((item) => item.year === year)) ?? null;
+  const listed = daYun.filter((row) => row.liuNian?.some((item) => item.year === year));
+  const luck = listed.reduce<DaYun | null>((best, row) => (!best || (row.startYear ?? 0) > (best.startYear ?? 0) ? row : best), null);
   const annual = luck?.liuNian?.find((item) => item.year === year) ?? null;
   return { luck, annual };
 }
 
-export function conclusionOf(result: BaziResponse, year = new Date().getFullYear()): Conclusion | null {
+/** when：干支年（數字）或時刻（預設現在；以立春分年、以交運時刻分大運）。 */
+export function conclusionOf(result: BaziResponse, when: number | Date = new Date()): Conclusion | null {
+  const year = typeof when === "number" ? when : baziYearAt(when);
   const analysis = result.quantModel?.lessonContent?.threeStepAnalysis;
   if (!analysis) return null;
   const strength = analysis.strength;
@@ -115,7 +123,11 @@ export function conclusionOf(result: BaziResponse, year = new Date().getFullYear
   const natal = [result.yearPillar, result.monthPillar, result.dayPillar, result.hourPillar].map(
     (pillar) => `${pillar?.stem ?? ""}${pillar?.branch ?? ""}`,
   );
-  const { luck, annual } = findCurrentLuck(result.daYun ?? [], year);
+  const exactLuck = typeof when === "number" ? undefined : currentLuckRow(result, when);
+  const { luck, annual } =
+    exactLuck !== undefined && luckStartTimes(result).size
+      ? { luck: exactLuck, annual: exactLuck?.liuNian?.find((item) => item.year === year) ?? null }
+      : findCurrentLuck(result.daYun ?? [], year);
   const luckView = luck?.ganZhi
     ? (() => {
         const marks = marksOf(luck.ganZhi, favorOf);

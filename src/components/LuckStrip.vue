@@ -55,6 +55,7 @@
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import type { BaziResponse, LuckPreviewPillar } from "../types/bazi";
 import { annualKey, annualPreviewPillar, annualRows, luckPreviewPillar, luckRows, type AnnualRowView, type LuckRowView } from "../utils/luckPreview";
+import { baziYearAt } from "../utils/baziNow";
 import { BRANCH_WUXING, STEM_WUXING } from "../constants/wuxing";
 import { useLuckSelection } from "../composables/useLuckSelection";
 
@@ -71,9 +72,10 @@ watch(
   { immediate: true },
 );
 
-const year = new Date().getFullYear();
+// 今年以立春分年；目前大運看交運時刻（luckRows 內處理）。
+const year = baziYearAt();
 // 和大運面板一樣由右到左（最早的在右邊）。
-const rows = computed(() => luckRows(props.result, year).reverse());
+const rows = computed(() => luckRows(props.result).reverse());
 
 const selectedIndex = computed(() => luckIndex.value);
 const shownKey = computed(() => props.previewPillars?.find((item) => item.key.startsWith("luck-"))?.key ?? null);

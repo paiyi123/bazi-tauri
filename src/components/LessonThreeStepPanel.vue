@@ -26,7 +26,7 @@
       <article class="lesson-step">
         <h4>{{ analysis.strength.title }}</h4><p>{{ analysis.strength.conclusion }}</p>
         <div class="fact-grid"><span>分類：{{ statusLabel(analysis.strength.classification) }}</span><span>同氣得時：{{ yesNo(analysis.strength.sameSeasonElement) }}</span><span>印當令：{{ yesNo(analysis.strength.sealInSeason) }}</span><span>得勢：{{ yesNo(analysis.strength.momentumProxy) }}（同黨 {{ analysis.strength.samePartyCount }}：異黨 {{ analysis.strength.opposingPartyCount }}）</span><span>根氣：{{ analysis.strength.rootCount }} 處</span></div>
-        <p v-if="analysis.strength.interactions.length" class="notice">互動存在，互動後有效力量未定。</p>
+        <p v-if="analysis.strength.motherOverload" class="notice">{{ analysis.strength.motherOverload }}</p><p v-if="analysis.strength.balanceHint" class="notice">{{ analysis.strength.balanceHint }}</p><p v-if="analysis.strength.rootKnockouts?.length" class="notice">刑沖後只剩本氣（11/04）：{{ analysis.strength.rootKnockouts.join("；") }}，不算得地。</p><p v-if="analysis.strength.interactions.length" class="notice">互動存在，互動後有效力量未定。</p>
         <details><summary>強弱證據、互動與工程細節</summary>
           <ul><li v-for="interaction in analysis.strength.interactions" :key="interaction.id">{{ interaction.interactionType }}：{{ interaction.target }}（{{ interaction.outcome }}）— {{ statusLabel(interaction.assessment) }}</li></ul>
           <ul v-if="analysis.strength.evidence.length"><li v-for="item in analysis.strength.evidence" :key="item.id">{{ item.id }}：{{ item.description }}<small v-if="item.sourceDate">（{{ item.sourceDate }}）</small></li></ul><ul v-if="analysis.strength.limitations.length" class="limitations"><li v-for="item in analysis.strength.limitations" :key="item">限制：{{ item }}</li></ul>
@@ -133,6 +133,7 @@ defineProps<{ analysis?: LessonThreeStepAnalysis | null; part?: 'core' | 'intera
 const statusLabels: Record<string, string> = {
   candidate: '候選',
   fallback_candidate: '備選候選',
+  knocked_candidate: '月令被刑沖，本氣取格時不取（舊取法）',
   selected: '選定候選',
   conditional: '有條件',
   insufficient: '依據不足',

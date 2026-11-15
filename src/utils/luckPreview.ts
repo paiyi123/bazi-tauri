@@ -1,4 +1,5 @@
 import type { BaziResponse, DaYun, LiuNian, LuckPreviewPillar } from "../types/bazi";
+import { baziYearAt, currentLuckIndex } from "./baziNow";
 
 // 大運加進四柱當預覽柱：四柱下方的大運列和四柱上的「換大運」清單共用同一套做法。
 
@@ -11,15 +12,16 @@ export interface LuckRowView extends DaYun {
 
 const span = (a: number | null, b: number | null) => (a == null ? "" : b == null ? `${a}` : `${a}-${b}`);
 
-/** 命盤的大運列表（原本順序：最早的在前）。 */
-export function luckRows(result: BaziResponse, year = new Date().getFullYear()): LuckRowView[] {
+/** 命盤的大運列表（原本順序：最早的在前）。目前大運看交運時刻（不是西曆年份）。 */
+export function luckRows(result: BaziResponse, now: Date = new Date()): LuckRowView[] {
+  const current = currentLuckIndex(result, now);
   return (result.daYun ?? [])
     .filter((row) => row.ganZhi?.length === 2)
     .map((row) => ({
       ...row,
       ages: span(row.startAge, row.endAge == null ? null : row.endAge + 1),
       years: span(row.startYear, row.endYear),
-      isCurrent: !!row.liuNian?.some((item) => item.year === year),
+      isCurrent: row.index === current,
     }));
 }
 
@@ -44,7 +46,8 @@ export interface AnnualRowView extends LiuNian {
 }
 
 /** 一步大運裡的流年（原本順序：最早的在前）。 */
-export function annualRows(row: DaYun | null | undefined, year = new Date().getFullYear()): AnnualRowView[] {
+/** year：今年的干支年（以立春分年）。 */
+export function annualRows(row: DaYun | null | undefined, year = baziYearAt()): AnnualRowView[] {
   return (row?.liuNian ?? [])
     .filter((item) => item.ganZhi?.length === 2)
     .map((item) => ({ ...item, luckIndex: row!.index, isCurrent: item.year === year }));
@@ -69,7 +72,7 @@ export function annualPreviewPillar(row: AnnualRowView): LuckPreviewPillar {
 }
 
 /** 從預覽柱的 key 找回它是哪一個流年。 */
-export function annualFromKey(result: BaziResponse, key: string | null | undefined, year = new Date().getFullYear()): AnnualRowView | null {
+export function annualFromKey(result: BaziResponse, key: string | null | undefined, year = baziYearAt()): AnnualRowView | null {
   const match = key?.match(/^annual-(\d+)-(\d+)$/);
   if (!match) return null;
   const luck = result.daYun?.find((row) => row.index === Number(match[1]));

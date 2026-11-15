@@ -1,4 +1,5 @@
 mod bazi;
+mod birth_time;
 mod lesson_analysis;
 mod lu_strength;
 mod print_template;

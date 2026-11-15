@@ -204,6 +204,12 @@ pub struct LessonStrengthAnalysis {
     pub interactions: Vec<LessonInteractionEvidence>,
     pub evidence: Vec<LessonEvidence>,
     pub limitations: Vec<String>,
+    /// 2026-11-04：被相鄰地支刑沖打掉、不算得地的根（餘氣、中氣）。
+    pub root_knockouts: Vec<String>,
+    /// 母慈滅子（印太多、無比劫、無本氣根）：不論身強（講義例一、滴天髓）。
+    pub mother_overload: Option<String>,
+    /// 中和提示：強弱差距小、五行分佈平均（講義例三「行五運皆可，只忌歲運逢沖」）。
+    pub balance_hint: Option<String>,
 }
 
 /// One of the classroom's three strength observations (得令／得勢／得地), spelled out for display.

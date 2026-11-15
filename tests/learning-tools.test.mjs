@@ -75,6 +75,16 @@ test('解盤第 1 步：月柱不合五虎遁、子時交界會警告', () => {
   assert.match(steps[0].why.join('\n'), /子時/);
 });
 
+test('解盤第 1 步：後端的出生時間提醒（節氣、夏令時間）列進核對', () => {
+  const warn = readingSteps(makeResult({ solarDateTime: '1974-07-06 08:30:00', birthWarnings: [{ kind: 'correction', level: 'warn', title: '時間校正改變了四柱', detail: '時柱丁巳→丙辰' }], timeCorrection: { lines: ['台灣夏令時間：鐘錶 09:30 → 標準時間 08:30。'] } }));
+  assert.equal(warn[0].status, 'warn');
+  assert.match(warn[0].summary, /時間校正改變了四柱/);
+  assert.match(warn[0].why.join('\n'), /夏令時間/);
+  const info = readingSteps(makeResult({ solarDateTime: '1974-03-06 23:30:00', birthWarnings: [{ kind: 'jie', level: 'info', title: '出生在驚蟄前 6 小時', detail: '月柱丙寅→丁卯' }] }));
+  assert.equal(info[0].status, 'info');
+  assert.doesNotMatch(info[0].why.join('\n'), /接近子時/);
+});
+
 test('反驗筆記：好事在喜年、壞事在忌年算符合', () => {
   const notes = [
     { id: '1', year: 2026, kind: 'good', text: '升職' }, // 丙午 火 喜

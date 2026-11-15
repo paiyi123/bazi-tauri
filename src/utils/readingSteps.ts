@@ -50,22 +50,29 @@ function checkChart(result: BaziResponse): Pick<ReadingStep, "status" | "summary
   if (hour && hour !== result.hourPillar.stem) {
     why.push(`五鼠遁：${result.dayPillar.stem}日的${result.hourPillar.branch}時應該是${hour}${result.hourPillar.branch}，這裡是${result.hourPillar.ganZhi}，請核對時柱。`);
   }
-  const time = result.solarDateTime?.match(/\s(\d{1,2}):(\d{2})/);
+  // 後端算好的出生時間提醒（節氣交界、時辰交界、夏令時間、校正改變四柱……）。
+  const warnings = result.birthWarnings ?? [];
+  warnings.filter((item) => item.level === "warn").forEach((item) => why.push(`${item.title}：${item.detail}`));
+  const notes = [
+    ...(result.timeCorrection?.lines ?? []).map((line) => `時間校正：${line}`),
+    ...warnings.filter((item) => item.level !== "warn").map((item) => `${item.title}：${item.detail}`),
+  ];
+  // 舊版後端沒有提醒時，才用時間粗估子時交界。
+  const time = result.birthWarnings === undefined ? result.solarDateTime?.match(/\s(\d{1,2}):(\d{2})/) : null;
   if (time) {
     const minutes = Number(time[1]) * 60 + Number(time[2]);
     if (minutes >= 22 * 60 + 40 || minutes <= 60 + 20) {
       why.push("出生時間接近子時：早子時、晚子時的換日方式，以及真太陽時，都可能讓日柱或時柱不同。");
     }
   }
-  if (!why.length) {
-    return { status: "ok", summary: "月柱、時柱符合五虎遁、五鼠遁，出生時間不在子時交界。", why: ["五虎遁由年干推月干，五鼠遁由日干推時干；書上命例也常有錯，所以先核對。"] };
-  }
-  return { status: "warn", summary: why[0], why };
+  if (why.length) return { status: "warn", summary: why[0], why: [...why, ...notes] };
+  if (notes.length) return { status: "info", summary: notes[0], why: notes };
+  return { status: "ok", summary: "月柱、時柱符合五虎遁、五鼠遁，出生時間不在交界。", why: ["五虎遁由年干推月干，五鼠遁由日干推時干；書上命例也常有錯，所以先核對。"] };
 }
 
 /**
  * 11/04：月令被刑或被沖之後只剩本氣，取格要用本氣（例一：戌月被刑，時干透丁也取本氣戊的偏印格）。
- * App 的取格還沒照這條改，這裡只提醒對照。
+ * 課堂取格已經照這條改（相鄰的刑沖、沒有被合緩解時）；這裡只在 App 沒套用時（隔位刑沖或有合）提醒對照。
  */
 function monthBranchDisturbed(result: BaziResponse): string | null {
   const branches = result.quantModel?.lessonContent?.threeStepAnalysis?.branchInteractions;
@@ -77,10 +84,11 @@ function monthBranchDisturbed(result: BaziResponse): string | null {
       .map((item) => item.kindLabel),
   ];
   if (!hits.length) return null;
+  if (result.quantModel?.lessonContent?.threeStepAnalysis?.pattern?.conclusion?.includes("只剩本氣")) return null;
   const main = result.monthHiddenStems?.[0];
   const mainGod = result.monthBranchTenGods?.[0];
   const mainText = main && mainGod ? `月令${result.monthPillar.branch}的本氣是${main}（${mainGod}）` : "請看月令本氣";
-  return `月令被刑沖（${hits.join("、")}）：老師 11/04 說刑沖之後月令只剩本氣，取格要用本氣。${mainText}，請和上面的格局對照。`;
+  return `月令有刑沖（${hits.join("、")}），但是隔位或被合緩解，App 沒有改用本氣取格。老師 11/04 說刑沖之後月令只剩本氣，取格要用本氣；${mainText}，請和上面的格局對照。`;
 }
 
 export function readingSteps(result: BaziResponse): ReadingStep[] {

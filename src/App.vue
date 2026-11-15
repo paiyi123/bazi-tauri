@@ -25,6 +25,9 @@
       <section class="left-column">
         <div v-if="result && !showInputPanel" class="input-summary">
           <span>{{ result.solarDateTime }}<span class="input-summary-sep">·</span>{{ genderText }}</span>
+          <el-tooltip v-if="birthWarnCount" placement="bottom" :content="birthWarnText">
+            <el-tag type="warning" size="small" effect="light">出生時間要確認 {{ birthWarnCount }}</el-tag>
+          </el-tooltip>
           <el-button link type="primary" @click="showInputPanel = true">修改／新排盤</el-button>
         </div>
         <div v-if="useSideColumn && result" class="side-sticky">
@@ -210,9 +213,11 @@ import SummaryPanel from "./components/SummaryPanel.vue";
 import SourceFold from "./components/SourceFold.vue";
 import TopicSideNav from "./components/TopicSideNav.vue";
 import { analyzePillars, calculateBazi, renderPrintHtml } from "./services/bazi";
+import { usePillarImport } from "./composables/usePillarImport";
 import type {
   BaziRequest,
   BaziResponse,
+  Gender,
   LuckPreviewPillar,
   PillarAnalyzeRequest,
   PrintContext,
@@ -245,6 +250,10 @@ const viewModeOptions: { label: string; value: ViewMode }[] = [
 const genderText = computed(() =>
   result.value?.gender === "FEMALE" ? "女" : result.value?.gender === "MALE" ? "男" : "性別未填",
 );
+// 節氣交界、時辰交界、夏令時間等需要確認出生時間的提醒（詳細列在命盤摘要和解盤第 1 步）。
+const birthWarnings = computed(() => (result.value?.birthWarnings ?? []).filter((item) => item.level === "warn"));
+const birthWarnCount = computed(() => birthWarnings.value.length);
+const birthWarnText = computed(() => birthWarnings.value.map((item) => item.title).join("；"));
 const prefillBirthDraft = ref<BaziRequest | null>(null);
 const printContext = ref<PrintContext | null>(null);
 const showPrintPreview = ref(false);
@@ -409,6 +418,33 @@ async function handleSubmitPillars(payload: PillarAnalyzeRequest) {
     loading.value = false;
   }
 }
+
+// 「書上相似命例」按「排這個盤」：存進直接輸入四柱的表單，再直接分析（性別沿用目前這張盤）。
+const PILLAR_INPUT_KEY = "bazi:pillar-input:v1";
+const { request: pillarImport } = usePillarImport();
+watch(pillarImport, (req) => {
+  if (!req) return;
+  const { year, month, day, hour } = req.pillars;
+  let saved: Record<string, unknown> = {};
+  try {
+    saved = JSON.parse(window.localStorage.getItem(PILLAR_INPUT_KEY) || "{}");
+  } catch {
+    saved = {};
+  }
+  const gender = (result.value?.gender ?? (saved.gender as Gender | undefined) ?? "FEMALE") as Gender;
+  try {
+    window.localStorage.setItem(
+      PILLAR_INPUT_KEY,
+      JSON.stringify({ ...saved, yearStem: year[0], yearBranch: year[1], monthStem: month[0], monthBranch: month[1], dayStem: day[0], dayBranch: day[1], hourStem: hour[0], hourBranch: hour[1], gender }),
+    );
+  } catch {
+    // 存不了只影響表單顯示
+  }
+  inputMode.value = "pillars";
+  handlePrintContext({ source: "pillars", gender, inputText: `四柱：${year} ${month} ${day} ${hour}${req.source ? `（${req.source}）` : ""}` });
+  void handleSubmitPillars({ yearPillar: year, monthPillar: month, dayPillar: day, hourPillar: hour, gender, selectedGregorianYear: null });
+  pillarImport.value = null;
+});
 
 function handleApplyBirthDraft(payload: BaziRequest) {
   prefillBirthDraft.value = { ...payload };

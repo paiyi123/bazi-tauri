@@ -1942,7 +1942,7 @@ fn build_luck_scores(
                 total_score,
                 impact_ratio,
                 effective_natal_score,
-                tendency: tendency_label(total_score),
+                tendency: tendency_label(total_score, natal_total),
                 overview_lines: Some(overview_lines),
                 interaction_lines: Some(build_pillar_detail_lines(
                     luck_stem_pillar,
@@ -2212,8 +2212,8 @@ fn build_annual_score(
         full_impact_ratio,
         effective_natal_score,
         full_effective_natal_score,
-        tendency: tendency_label(combined_score),
-        full_tendency: tendency_label(full_combined_score),
+        tendency: tendency_label(combined_score, natal_total),
+        full_tendency: tendency_label(full_combined_score, natal_total),
         overview_lines: Some(vec![
             format!("流年干：{:.1}", annual_stem_score),
             format!("流年支：{:.1}", annual_branch_score),
@@ -6922,7 +6922,15 @@ fn tomb_root_branches(element: &str) -> &'static [&'static str] {
     }
 }
 
-fn tendency_label(score: f64) -> String {
+const COND_FOLLOW_BOUNDARY: f64 = 210.0;
+
+/// 「傾向」要看身強身弱：分數正＝幫日主（印比）、負＝剋洩耗。正格身強喜負分（剋洩耗），
+/// 正格身弱喜正分（扶身）；從強（總分 ≥ +210）順印比之勢喜正分，從弱（≤ −210）順食財官之勢喜負分
+/// （第十篇〈從格〉臨界）。等於看運歲把作用後命局推向 0（中和）還是推離 0。
+fn tendency_label(score: f64, natal_total: f64) -> String {
+    let prefer_positive = natal_total >= COND_FOLLOW_BOUNDARY
+        || (natal_total < 0.0 && natal_total > -COND_FOLLOW_BOUNDARY);
+    let score = if prefer_positive { score } else { -score };
     if score >= 8.0 {
         "偏吉".to_string()
     } else if score >= 2.0 {
@@ -7299,5 +7307,24 @@ mod book_tests {
         assert_score(&map, "年支", -35.1);
         assert_score(&map, "月支", 21.2);
         assert_score(&map, "總分", -7.3);
+    }
+}
+
+#[cfg(test)]
+mod tendency_tests {
+    use super::tendency_label;
+
+    #[test]
+    fn tendency_follows_strength_instead_of_score_sign() {
+        // 正格身強：剋洩耗（負分）才是好運。
+        assert_eq!(tendency_label(-12.0, 120.0), "偏吉");
+        assert_eq!(tendency_label(12.0, 120.0), "偏壓");
+        // 正格身弱：扶身（正分）才是好運。
+        assert_eq!(tendency_label(12.0, -80.0), "偏吉");
+        assert_eq!(tendency_label(-3.0, -80.0), "需防");
+        // 從強順印比之勢、從弱順食財官之勢。
+        assert_eq!(tendency_label(12.0, 230.0), "偏吉");
+        assert_eq!(tendency_label(-12.0, -230.0), "偏吉");
+        assert_eq!(tendency_label(1.0, 50.0), "平");
     }
 }

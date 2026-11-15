@@ -60,13 +60,14 @@
 
     <el-card shadow="never" class="learn-card">
       <template #header><h2>書上相似命例</h2></template>
-      <p class="note">從筆記裡約 2,900 個命盤找日干、月令、日柱相同的例子，可以對照書上怎麼論。檔案在 docs/books（也有一份在 bazi-research\docs）。</p>
+      <p class="note">從筆記裡約 2,900 個命盤找日干、月令、日柱相同的例子，可以對照書上怎麼論。檔案在 docs/books（也有一份在 bazi-research\docs）。四柱依「年 月 日 時」排列；按右邊的 → 直接用這組四柱排盤（性別沿用目前這張盤）。</p>
       <p v-if="loadingCases" class="note">載入中…</p>
       <ul v-else-if="similar.length" class="cases">
         <li v-for="item in similar" :key="`${item.file}:${item.line}`">
           <div class="case-head">
             <strong>{{ item.natal.join(" ") }}</strong>
             <span class="why">{{ item.why }}</span>
+            <button type="button" class="case-import" :title="`用 ${item.natal.join(' ')} 排盤`" :aria-label="`用 ${item.natal.join(' ')} 排盤`" @click="openCase(item)">→</button>
           </div>
           <div class="case-src">《{{ item.book }}》{{ item.heading }}</div>
           <div class="case-file">{{ item.file }} 第 {{ item.line }} 行</div>
@@ -92,10 +93,12 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import type { BaziResponse } from "../types/bazi";
+import { baziYearAt } from "../utils/baziNow";
 import { COURSE_STAGES, useLearning } from "../composables/useLearning";
 import { GLOSSARY } from "../constants/glossary";
 import { NOTE_KINDS, chartKey, checkNotes, type NoteKind, type VerifyNote } from "../utils/verifyNotes";
-import { similarCases, type BookCase } from "../utils/similarCases";
+import { similarCases, type BookCase, type SimilarCase } from "../utils/similarCases";
+import { usePillarImport } from "../composables/usePillarImport";
 import type { FavorMark } from "../utils/conclusion";
 
 const props = defineProps<{ result: BaziResponse }>();
@@ -119,7 +122,7 @@ const notes = computed(() => allNotes.value[key.value] ?? []);
 const checked = computed(() => checkNotes(props.result, notes.value));
 
 const years = computed(() => (props.result.daYun ?? []).flatMap((luck) => luck.liuNian?.map((item) => item.year) ?? []));
-const thisYear = new Date().getFullYear();
+const thisYear = baziYearAt();
 const minYear = computed(() => Math.min(...years.value, thisYear));
 const maxYear = computed(() => Math.max(...years.value, thisYear));
 const draft = reactive<{ year: number; kind: NoteKind; text: string }>({ year: thisYear - 1, kind: "good", text: "" });
@@ -161,6 +164,12 @@ onMounted(async () => {
 });
 const natal = computed(() => [props.result.yearPillar, props.result.monthPillar, props.result.dayPillar, props.result.hourPillar].map((p) => `${p?.stem ?? ""}${p?.branch ?? ""}`));
 const similar = computed(() => similarCases(natal.value, bookCases.value));
+const { importPillars } = usePillarImport();
+// 索引裡的四柱是「年 月 日 時」
+function openCase(item: SimilarCase) {
+  const [year, month, day, hour] = item.natal;
+  importPillars({ year, month, day, hour }, `《${item.book}》${item.heading}`);
+}
 
 // ---- 名詞表 ----
 const query = ref("");
@@ -289,6 +298,24 @@ h2 {
   flex-wrap: wrap;
   gap: 2px 10px;
   align-items: baseline;
+}
+.case-import {
+  margin-left: auto;
+  align-self: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #d97706;
+  border-radius: 50%;
+  background: #fff7ea;
+  color: #b45309;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+.case-import:hover {
+  background: #d97706;
+  color: #fff;
 }
 .why, .case-file {
   color: var(--bazi-text-muted);

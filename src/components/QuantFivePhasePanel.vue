@@ -32,6 +32,7 @@
     <LuckQuantTable
       v-if="(result.quantModel?.luckScores || []).length"
       :scores="result.quantModel?.luckScores || []"
+      :current-luck-index="currentLuckIndex(result)"
       @preview-change="emit('preview-change', $event)"
     />
 
@@ -41,6 +42,7 @@
 
 <script setup lang="ts">
 import LuckQuantTable from "./LuckQuantTable.vue";
+import { currentLuckIndex } from "../utils/baziNow";
 import QuantBranchScoreList from "./QuantBranchScoreList.vue";
 import QuantStemScoreTable from "./QuantStemScoreTable.vue";
 import type { BaziResponse, LuckPreviewPillar } from "../types/bazi";

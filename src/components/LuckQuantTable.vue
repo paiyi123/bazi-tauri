@@ -174,10 +174,13 @@
 <script setup lang="ts">
 import { useLuckDetailPopover } from "../composables/useLuckDetailPopover";
 import type { LuckPreviewPillar, QuantAnnualLuckScore, QuantLuckScore } from "../types/bazi";
+import { baziYearAt } from "../utils/baziNow";
 import { BRANCH_WUXING, STEM_WUXING, type WuXing } from "../constants/wuxing";
 
-defineProps<{
+const props = defineProps<{
   scores: QuantLuckScore[];
+  /** 目前大運（依交運時刻）；沒給時退回干支年判斷。 */
+  currentLuckIndex?: number | null;
 }>();
 
 const emit = defineEmits<{
@@ -186,7 +189,7 @@ const emit = defineEmits<{
 
 type HiddenTenGodPair = { stem: string; tenGod: string };
 
-const currentYear = new Date().getFullYear();
+const currentYear = baziYearAt();
 
 const {
   annualCombinationMode,
@@ -246,7 +249,9 @@ function buildPreviewPillar(
 }
 
 function isCurrentLuckRow(row: QuantLuckScore) {
-  return !!row.annualScores?.some((item) => item.year === currentYear);
+  if (props.currentLuckIndex !== undefined) return row.index === props.currentLuckIndex;
+  const listed = props.scores.filter((item) => item.annualScores?.some((annual) => annual.year === currentYear));
+  return listed.length > 0 && listed[listed.length - 1].index === row.index;
 }
 
 function isCurrentAnnualRow(row: QuantAnnualLuckScore) {

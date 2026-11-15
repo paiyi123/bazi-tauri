@@ -1081,3 +1081,44 @@ mod textbook_24_26_cases {
         assert!(result.interaction_strength.changes.is_empty(), "{:#?}", result.interaction_strength);
     }
 }
+
+#[test]
+fn lesson_1104_month_knocked_uses_main_qi_and_mother_overload_is_weak() {
+    // 講義第 24 章例一：癸未 壬戌 庚戌 丁丑，戌未刑在月令，時干透丁也不取正官格，取本氣戊＝偏印格；
+    // 土厚埋金（母慈滅子），不論身強，只宜金運。
+    let result = analyze(&chart(["癸未", "壬戌", "庚戌", "丁丑"]), &reference(), &[]);
+    assert_eq!(result.pattern.ordinary_result.as_deref(), Some("偏印格"));
+    assert!(result.pattern.conclusion.contains("只剩本氣"), "{}", result.pattern.conclusion);
+    assert!(result.pattern.conclusion.contains("丁"), "{}", result.pattern.conclusion);
+    assert_eq!(result.strength.classification, "弱候選");
+    assert!(!result.strength.root_knockouts.is_empty());
+    assert!(result.strength.mother_overload.is_some());
+    assert_eq!(result.preferences.plans.len(), 1);
+    let plan = &result.preferences.plans[0];
+    assert_eq!(plan.rule_id, "weak-seal-overload-use-peer");
+    assert_eq!(plan.use_directions[0].element, "金");
+    assert!(plan.unfavorable_directions.iter().any(|item| item.element == "土"));
+}
+
+#[test]
+fn lesson_1104_unknocked_month_keeps_transparent_middle_qi() {
+    // 月令戌沒有被相鄰地支刑沖時，仍照透干取格（時干透丁 → 正官格候選）。
+    let result = analyze(&chart(["癸卯", "壬戌", "庚子", "丁亥"]), &reference(), &[]);
+    assert!(result
+        .pattern
+        .ordinary_candidates
+        .iter()
+        .any(|item| item.pattern == "正官格"));
+    assert!(result.strength.mother_overload.is_none());
+}
+
+#[test]
+fn lesson_1104_balanced_chart_gets_balance_hint_and_strong_seal_chart_does_not() {
+    // 例三：甲戌 丙子 癸卯 壬戌，講義判中和「行五運皆可，只忌歲運逢沖」。
+    let balanced = analyze(&chart(["甲戌", "丙子", "癸卯", "壬戌"]), &reference(), &[]);
+    assert!(balanced.strength.balance_hint.is_some());
+    // 例八：甲午 乙亥 乙亥 丙戌，印格身旺，有比劫 → 不是母慈滅子，也不算中和。
+    let strong = analyze(&chart(["甲午", "乙亥", "乙亥", "丙戌"]), &reference(), &[]);
+    assert!(strong.strength.mother_overload.is_none());
+    assert!(matches!(strong.strength.classification.as_str(), "強候選" | "旺候選"));
+}

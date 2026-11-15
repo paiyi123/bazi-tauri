@@ -65,7 +65,7 @@
               <p class="pillar-label">{{ item.label }}<span v-if="isLuckItem(item)" class="luck-switch-mark" aria-hidden="true">⇅</span></p>
               <span v-if="isResearch" class="compact-score-chip">{{ item.topScoreValue }}</span>
             </div>
-            <div :class="['compact-ten-god-chip', tenGodClass(item.stemTenGod)]">{{ tenGodText(item.stemTenGod) }}</div>
+            <div :class="['compact-ten-god-chip', tenGodClass(item.stemTenGod)]" data-align="chip">{{ tenGodText(item.stemTenGod) }}</div>
             <div class="compact-pillar-ganzhi">
               <div class="compact-pillar-char-block">
                 <div :class="['pillar-main-value', 'wuxing-char', `wuxing-${item.stemElement}`, { 'is-related': isRelated(index, 'stem') }, svClass(index, 'stem')]" :data-sv="`${index}-stem`">{{ item.value.stem }}</div>
@@ -83,7 +83,7 @@
               <div class="compact-pillar-char-block" data-align="branch">
                 <div :class="['pillar-main-value', 'wuxing-char', `wuxing-${item.branchElement}`, { 'is-related': isRelated(index, 'branch') }, svClass(index, 'branch')]" :data-sv="`${index}-branch`">{{ item.value.branch }}</div>
                 <div v-if="luTagsOf(index).length" class="lu-tags">
-                  <span v-for="tag in luTagsOf(index)" :key="tag.text" class="lu-tag" :title="tag.title">{{ tag.text }}</span>
+                  <span v-for="tag in luTagsOf(index)" :key="tag.text" :class="['lu-tag', { 'is-hidden-combo': tag.kind === 'hidden' }]" :title="tag.title">{{ tag.text }}</span>
                 </div>
                 <StrengthCharTags v-if="strengthOn" :info="svInfo(index, 'branch')" />
               </div>
@@ -110,7 +110,7 @@
               <span class="score-band-value">{{ item.topScoreValue }}</span>
             </div>
             <p class="pillar-label">{{ item.label }}<span v-if="isLuckItem(item)" class="luck-switch-mark" aria-hidden="true">⇅</span></p>
-            <div class="meta-row">
+            <div class="meta-row" data-align="chip">
               <div class="meta-value">{{ tenGodText(item.stemTenGod) }}</div>
             </div>
             <div class="pillar-main">
@@ -132,7 +132,7 @@
                 <span class="branch-anchor">
                   <div :class="['pillar-main-value', 'wuxing-char', `wuxing-${item.branchElement}`, { 'is-related': isRelated(index, 'branch') }, svClass(index, 'branch')]" :data-sv="`${index}-branch`">{{ item.value.branch }}</div>
                   <span v-if="luTagsOf(index).length" class="lu-float">
-                    <span v-for="tag in luTagsOf(index)" :key="tag.text" class="lu-tag" :title="tag.title">{{ tag.text }}</span>
+                    <span v-for="tag in luTagsOf(index)" :key="tag.text" :class="['lu-tag', { 'is-hidden-combo': tag.kind === 'hidden' }]" :title="tag.title">{{ tag.text }}</span>
                   </span>
                 </span>
                 <StrengthCharTags v-if="strengthOn" :info="svInfo(index, 'branch')" />
@@ -202,7 +202,7 @@
               <div :class="['relation-node-stem', 'wuxing-char', `wuxing-${stemElement(node.stem)}`, { 'is-related': isRelated(index, 'stem') }]">{{ node.stem }}</div>
               <div :class="['relation-node-branch', 'wuxing-char', `wuxing-${branchElement(node.branch)}`, { 'is-related': isRelated(index, 'branch') }]">{{ node.branch }}</div>
               <div v-if="luTagsOf(index).length" class="lu-tags">
-                <span v-for="tag in luTagsOf(index)" :key="tag.text" class="lu-tag" :title="tag.title">{{ tag.text }}</span>
+                <span v-for="tag in luTagsOf(index)" :key="tag.text" :class="['lu-tag', { 'is-hidden-combo': tag.kind === 'hidden' }]" :title="tag.title">{{ tag.text }}</span>
               </div>
             </div>
             <div :class="['relation-node-hidden-stems', { 'is-empty': !node.hiddenStemPairs.length }]">
@@ -286,6 +286,7 @@ import StrengthBar from './StrengthBar.vue'
 import ElementFlowRing from './ElementFlowRing.vue'
 import HiddenStemColumns, { type HiddenRootMark } from './HiddenStemColumns.vue'
 import { annualFromKey, annualKey, annualPreviewPillar, annualRows, luckPreviewPillar, luckRows, type AnnualRowView, type LuckRowView } from '../utils/luckPreview'
+import { baziYearAt } from '../utils/baziNow'
 import { useLuckSelection } from '../composables/useLuckSelection'
 import StrengthCharTags, { type StrengthCharInfo, type StrengthCharTag } from './StrengthCharTags.vue'
 import { cellStatesAt, helpsParty, strengthShift, type ShiftDir } from '../utils/strengthShift'
@@ -453,7 +454,31 @@ const RELATION_TYPE_STYLES: Record<string, {
   三會: { color: '#7c5cc4', strokeWidth: 0.84, opacity: 0.9, dasharray: '1.8 2.2' },
   沖: { color: '#c53030', strokeWidth: 0.92, opacity: 0.92, dasharray: '5.5 3' },
   刑: { color: '#dd6b20', strokeWidth: 0.82, opacity: 0.9, dasharray: '2.2 1.8' },
-  破: { color: '#718096', strokeWidth: 0.76, opacity: 0.84, dasharray: '1.2 2.4' }
+  破: { color: '#718096', strokeWidth: 0.76, opacity: 0.84, dasharray: '1.2 2.4' },
+  暗合: { color: '#2c9a9a', strokeWidth: 0.76, opacity: 0.84, dasharray: '1 2.4' }
+}
+
+// 地支暗合：兩支本氣天干相合（寅中甲合丑中己、午中丁合亥中壬、卯中乙合申中庚）。
+// 書上（蘇民峰、陸致極）常用的三組；老師不用暗合造格，所以只標出來、不判吉凶。
+const BRANCH_HIDDEN_COMBINATIONS: Array<{ pair: string; element: string; detail: string }> = [
+  { pair: '寅丑', element: '土', detail: '寅中甲木合丑中己土' },
+  { pair: '午亥', element: '木', detail: '午中丁火合亥中壬水' },
+  { pair: '卯申', element: '金', detail: '卯中乙木合申中庚金' }
+]
+// 同柱干支暗合：天干和自己坐下地支的藏干相合（講義第 25 章，十二組；六組較純粹）。
+const PILLAR_HIDDEN_COMBINATIONS: Record<string, { detail: string; pure: boolean }> = {
+  甲午: { detail: '甲木合午中己土', pure: true },
+  乙巳: { detail: '乙木合巳中庚金', pure: false },
+  丙戌: { detail: '丙火合戌中辛金', pure: false },
+  丁亥: { detail: '丁火合亥中壬水', pure: true },
+  戊子: { detail: '戊土合子中癸水', pure: true },
+  戊辰: { detail: '戊土合辰中癸水', pure: false },
+  己亥: { detail: '己土合亥中甲木', pure: true },
+  庚辰: { detail: '庚金合辰中乙木', pure: false },
+  辛巳: { detail: '辛金合巳中丙火', pure: true },
+  壬午: { detail: '壬水合午中丁火', pure: true },
+  壬戌: { detail: '壬水合戌中丁火', pure: false },
+  癸巳: { detail: '癸水合巳中戊土', pure: false }
 }
 
 function stemElement(stem: string): WuXing {
@@ -729,7 +754,8 @@ function sortInteractionRows(rows: InteractionRow[]) {
     三會: 5,
     沖: 6,
     刑: 7,
-    破: 8
+    破: 8,
+    暗合: 9
   }
 
   return [...rows].sort((a, b) => {
@@ -936,6 +962,15 @@ const derivedInteractionRows = computed<InteractionRow[]>(() => {
       if (breakRule) {
         rows.push(buildPairInteractionRow('地支', '破', breakRule.pair, left, right, breakRule.detail))
       }
+
+      const hiddenRule = BRANCH_HIDDEN_COMBINATIONS.find((rule) =>
+        rule.pair === `${left.value.branch}${right.value.branch}` || rule.pair === `${right.value.branch}${left.value.branch}`
+      )
+      if (hiddenRule) {
+        rows.push(
+          buildPairInteractionRow('地支', '暗合', hiddenRule.pair, left, right, `地支暗合：${hiddenRule.detail}，對應 ${hiddenRule.element}`)
+        )
+      }
     }
   }
 
@@ -1035,8 +1070,12 @@ const groupedInteractionSections = computed<{
   const fallbackNatalRows = derivedInteractionRows.value.filter((row) =>
     !row.participantKeys.some((key) => previewKeyGroups.value.annual.has(key) || previewKeyGroups.value.luck.has(key))
   )
+  // 後端（量化模型）沒有算暗合，原局的暗合由前端補上。
   const natalRows = backendNatalInteractionRows.value.length
-    ? backendNatalInteractionRows.value
+    ? sortInteractionRows([
+        ...backendNatalInteractionRows.value,
+        ...fallbackNatalRows.filter((row) => row.type === '暗合')
+      ])
     : fallbackNatalRows
 
   return {
@@ -1071,7 +1110,7 @@ const diagramNodes = computed<DiagramNode[]>(() =>
 )
 
 function resolveRelationLabel(row: InteractionRow) {
-  if (!['合', '半合', '三合', '三會'].includes(row.type)) {
+  if (!['合', '半合', '三合', '三會', '暗合'].includes(row.type)) {
     return row.type
   }
   const element = row.detail.match(/對應\s*([木火土金水])/)?.[1]
@@ -1085,7 +1124,8 @@ const BRACKET_DASH: Record<string, string | undefined> = {
   三會: '3 4',
   沖: '8 5',
   刑: '4 3',
-  破: '2 4'
+  破: '2 4',
+  暗合: '1.5 3.5'
 }
 const activeRelation = ref<string | null>(null)
 const columnOf = computed(() => new Map(pillarItems.value.map((item, index) => [item.key, index])))
@@ -1116,6 +1156,9 @@ function relationVerdict(row: InteractionRow, cols: number[]): RelationVerdict {
   const previews = items.filter((item) => item.isPreview)
   const natals = items.filter((item) => !item.isPreview)
   const scope = row.scope === '天干' ? 'stem' : 'branch'
+  if (row.type === '暗合') {
+    return { favor: 'neutral', reason: '暗合只標出來、暫不判吉凶（老師不用暗合論命，書上看法不一）' }
+  }
   if (!previews.length) {
     return (
       findNatalVerdict(natalVerdicts.value, scope, row.type, natals.map((item) => item.label))
@@ -1432,7 +1475,8 @@ const panelUid = `pp${Math.random().toString(36).slice(2, 8)}`
 function alignRows() {
   const grid = document.querySelector<HTMLElement>(`[data-pillar-grid="${panelUid}"]`)
   if (!grid) return
-  for (const name of ['branch', 'hidden']) {
+  // 由上往下對齊：十神、地支、藏干（上一排對齊後，天干自然跟著對齊）
+  for (const name of ['chip', 'branch', 'hidden']) {
     const rows = [...grid.querySelectorAll<HTMLElement>(`[data-align="${name}"]`)]
     rows.forEach((row) => (row.style.marginTop = ''))
     const tops = rows.map((row) => row.getBoundingClientRect().top)
@@ -1532,7 +1576,7 @@ function onPillarTap(item: DisplayPillarItem, event: MouseEvent) {
 }
 function pickLuck(row: LuckRowView) {
   luckPickerFor.value = null
-  const year = new Date().getFullYear()
+  const year = baziYearAt()
   luckIndex.value = row.index
   annualYear.value = row.liuNian?.some((item) => item.year === year) ? year : null
   monthIndex.value = null
@@ -1629,10 +1673,19 @@ function luTagsOf(col: number) {
     if (!resolveLuBranches(stemItem).includes(target.value.branch)) continue
     groups.set(stemItem.value.stem, [...(groups.get(stemItem.value.stem) ?? []), stemItem.label])
   }
-  return [...groups].map(([stem, labels]) => ({
+  const tags: Array<{ text: string; title: string; kind?: 'hidden' }> = [...groups].map(([stem, labels]) => ({
     text: `${stem}祿`,
     title: `${labels.join('、')}天干${stem}的祿在${target.value.branch}（${target.label}）`
   }))
+  const hidden = PILLAR_HIDDEN_COMBINATIONS[`${target.value.stem}${target.value.branch}`]
+  if (hidden) {
+    tags.push({
+      text: '暗合',
+      kind: 'hidden',
+      title: `${target.label}${target.value.stem}${target.value.branch}干支暗合：${hidden.detail}${hidden.pure ? '（六組較純粹之一）' : ''}。天干和坐下藏干互相牽絆，暫不判吉凶。`
+    })
+  }
+  return tags
 }
 </script>
 
@@ -1717,6 +1770,11 @@ function luTagsOf(col: number) {
 }
 .lu-tags .lu-tag {
   margin-left: 0;
+}
+.lu-tag.is-hidden-combo {
+  border-color: #2c9a9a;
+  background: #e8f6f6;
+  color: #237a7a;
 }
 .branch-anchor {
   position: relative;
@@ -2053,12 +2111,16 @@ function luTagsOf(col: number) {
 
 .compact-pillar-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 4px;
   margin-bottom: 4px;
 }
 
+.compact-pillar-header .pillar-label {
+  white-space: nowrap;
+}
 .compact-score-chip {
   display: inline-flex;
   align-items: center;

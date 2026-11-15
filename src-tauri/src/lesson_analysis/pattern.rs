@@ -5,15 +5,33 @@ pub(super) fn build_pattern(
     strength: &LessonStrengthAnalysis,
     reference: &LessonModelReference,
 ) -> LessonPatternAnalysis {
-    let transparent = facts
+    // 2026-11-04（講義例一）：月令被相鄰的地支刑或沖，餘氣、雜氣被打掉，只剩本氣，
+    // 取格只看本氣（例一戌月被未刑，時干透丁也不取正官格，取本氣戊＝偏印格）。
+    let month_knocks = adjacent_knocks(facts, 1);
+    let usable = facts
         .transparencies
         .iter()
+        .filter(|item| month_knocks.is_empty() || item.hidden_stem_layer == "本氣")
+        .collect::<Vec<_>>();
+    let transparent = usable
+        .iter()
+        .copied()
         .filter(|item| !item.visible_locations.is_empty())
         .collect::<Vec<_>>();
     let source = if transparent.is_empty() {
-        facts.transparencies.iter().collect::<Vec<_>>()
+        usable
     } else {
         transparent
+    };
+    let dropped_by_knock = if month_knocks.is_empty() {
+        Vec::new()
+    } else {
+        facts
+            .transparencies
+            .iter()
+            .filter(|item| item.hidden_stem_layer != "本氣" && !item.visible_locations.is_empty())
+            .map(|item| format!("{}（{}，透{}）", item.hidden_stem, item.ten_god, item.visible_locations.join("、")))
+            .collect::<Vec<_>>()
     };
     let multiple = source.len() > 1 && source.iter().all(|item| !item.visible_locations.is_empty());
     let ordinary_candidates = source
@@ -41,6 +59,26 @@ pub(super) fn build_pattern(
     } else {
         ordinary_candidates.first().map(|item| item.pattern.clone())
     };
+    // 刑沖後不取的透干仍列出：講義 26 章也有月令被刑、仍取透干的例子（己未 甲戌 壬子 丁未 取財格），
+    // 兩說並存，讓使用者自己比較。
+    let mut ordinary_candidates = ordinary_candidates;
+    if !month_knocks.is_empty() {
+        ordinary_candidates.extend(
+            facts
+                .transparencies
+                .iter()
+                .filter(|item| item.hidden_stem_layer != "本氣" && !item.visible_locations.is_empty())
+                .map(|item| LessonPatternCandidate {
+                    pattern: pattern_name(&item.ten_god),
+                    ten_god: item.ten_god.clone(),
+                    month_hidden_stem: item.hidden_stem.clone(),
+                    hidden_stem_layer: item.hidden_stem_layer.clone(),
+                    transparent_locations: item.visible_locations.clone(),
+                    selection: "knocked_candidate".to_string(),
+                    evidence_ids: vec![item.evidence_id.clone()],
+                }),
+        );
+    }
     let rootless_trigger = facts.roots.is_empty()
         && strength.support_stem_count == 0
         && strength.support_branch_count == 0;
@@ -62,6 +100,7 @@ pub(super) fn build_pattern(
     }
     let mut evidence = ordinary_candidates
         .iter()
+        .filter(|candidate| candidate.selection != "knocked_candidate")
         .enumerate()
         .map(|(index, candidate)| LessonEvidence {
             id: format!("pattern-rule-{}", index + 1),
@@ -85,6 +124,26 @@ pub(super) fn build_pattern(
             source_date: Some("2026-07-29".to_string()),
         })
         .collect::<Vec<_>>();
+    if !month_knocks.is_empty() {
+        evidence.push(LessonEvidence {
+            id: "pattern-month-knocked".to_string(),
+            kind: "lesson_rule".to_string(),
+            pillar: Some("月支".to_string()),
+            hidden_stem_layer: Some("本氣".to_string()),
+            interaction_id: None,
+            description: format!(
+                "月令{}被{}，刑沖後只剩本氣，取格只看本氣{}。",
+                facts.month_command.branch,
+                month_knocks.join("、"),
+                if dropped_by_knock.is_empty() {
+                    String::new()
+                } else {
+                    format!("；餘氣透出的{}不取", dropped_by_knock.join("、"))
+                }
+            ),
+            source_date: Some("2026-11-04".to_string()),
+        });
+    }
     evidence.push(LessonEvidence {
         id: "pattern-model-reference".to_string(),
         kind: "model_reference".to_string(),
@@ -105,6 +164,18 @@ pub(super) fn build_pattern(
                 .map(|item| item.pattern.as_str())
                 .collect::<Vec<_>>()
                 .join("、")
+        )
+    } else if let (Some(result), false) = (&ordinary_result, month_knocks.is_empty()) {
+        format!(
+            "普通格候選為{}（月令{}被{}，刑沖後只剩本氣，取格看本氣{}）。",
+            result,
+            facts.month_command.branch,
+            month_knocks.join("、"),
+            if dropped_by_knock.is_empty() {
+                String::new()
+            } else {
+                format!("，不取{}", dropped_by_knock.join("、"))
+            }
         )
     } else if let Some(result) = &ordinary_result {
         format!("普通格候選為{}。", result)

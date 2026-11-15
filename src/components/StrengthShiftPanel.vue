@@ -176,6 +176,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import type { BaziResponse } from "../types/bazi";
+import { currentLuckIndex } from "../utils/baziNow";
 import {
   bonusesAt,
   cellStatesAt,
@@ -196,7 +197,7 @@ import GlossaryText from "./GlossaryText.vue";
 const props = defineProps<{ result: BaziResponse; compact?: boolean }>();
 
 // 可以選一步大運加進來看（預設不加）。
-const thisYear = new Date().getFullYear();
+const currentLuck = currentLuckIndex(props.result);
 const luckRows = computed(() =>
   (props.result.daYun ?? [])
     .filter((row) => row.ganZhi?.length === 2)
@@ -205,7 +206,7 @@ const luckRows = computed(() =>
       ganZhi: row.ganZhi,
       // 歲數寫法和大運面板相同（結束歲數 +1）。
       ages: row.startAge == null ? "" : row.endAge == null ? `${row.startAge}` : `${row.startAge}–${row.endAge + 1}`,
-      isCurrent: !!row.liuNian?.some((item) => item.year === thisYear),
+      isCurrent: row.index === currentLuck,
     })),
 );
 const luckPick = ref<number | null>(null);

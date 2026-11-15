@@ -30,6 +30,31 @@
         </el-col>
 
         <el-col :span="24">
+          <!-- 直接貼上書上的四柱，自動拆成年月日時 -->
+          <div class="paste-box">
+            <div class="paste-title">貼上四柱</div>
+            <el-input
+              v-model="pasteText"
+              :size="formSize"
+              placeholder="例如：壬午 己酉 甲申 甲子"
+              clearable
+              @keyup.enter="applyPaste(true)"
+            />
+            <div class="paste-row">
+              <span class="paste-label">書上的順序</span>
+              <el-radio-group v-model="pasteOrder" :size="formSize">
+                <el-radio-button v-for="(label, key) in ORDER_LABEL" :key="key" :value="key">{{ label }}</el-radio-button>
+              </el-radio-group>
+            </div>
+            <div class="paste-row">
+              <el-button :size="formSize" :disabled="!pasteText.trim()" @click="applyPaste(false)">填入下面</el-button>
+              <el-button :size="formSize" type="primary" :disabled="!pasteText.trim()" :loading="loading" @click="applyPaste(true)">填入並排盤</el-button>
+            </div>
+            <div v-if="pasteMessage" :class="['paste-note', { 'is-error': pasteError }]">{{ pasteMessage }}</div>
+          </div>
+        </el-col>
+
+        <el-col :span="24">
           <el-alert :title="`目前四柱：${currentBaZi}`" type="success" :closable="false" show-icon />
         </el-col>
 
@@ -92,6 +117,7 @@
 import { computed, reactive, ref, watch } from "vue";
 import { analyzePillars } from "../services/bazi";
 import type { BaziRequest, DirectPillarBirthCandidate, PillarAnalyzeRequest, PrintContext } from "../types/bazi";
+import { ORDER_LABEL, parsePillarText, type PillarOrder } from "../utils/pillarText";
 
 const STORAGE_KEY = "bazi:pillar-input:v1";
 
@@ -245,6 +271,37 @@ function onSubmit() {
   });
 }
 
+// ---- 貼上四柱 ----
+const pasteText = ref("");
+const pasteOrder = ref<PillarOrder>("auto");
+const pasteMessage = ref("");
+const pasteError = ref(false);
+function applyPaste(submit: boolean) {
+  const parsed = parsePillarText(pasteText.value, pasteOrder.value);
+  if (!parsed.ok) {
+    pasteMessage.value = parsed.error;
+    pasteError.value = true;
+    return;
+  }
+  const { year, month, day, hour } = parsed.pillars;
+  Object.assign(form, {
+    yearStem: year[0],
+    yearBranch: year[1],
+    monthStem: month[0],
+    monthBranch: month[1],
+    dayStem: day[0],
+    dayBranch: day[1],
+    hourStem: hour[0],
+    hourBranch: hour[1],
+  });
+  inferredCandidates.value = [];
+  inferredYearNote.value = "";
+  selectedCandidateKey.value = null;
+  pasteError.value = parsed.note.startsWith("⚠");
+  pasteMessage.value = `已填入：年 ${year}、月 ${month}、日 ${day}、時 ${hour}。${parsed.note}`;
+  if (submit) onSubmit();
+}
+
 function resetSavedInput() {
   Object.assign(form, defaultForm());
   inferredCandidates.value = [];
@@ -255,6 +312,36 @@ function resetSavedInput() {
 </script>
 
 <style scoped>
+.paste-box {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px dashed #d9c7a6;
+  border-radius: 10px;
+  background: #fffbf3;
+}
+.paste-title {
+  font-weight: 700;
+}
+.paste-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.paste-label {
+  color: #526071;
+  font-size: calc(12px * var(--app-font-scale));
+}
+.paste-note {
+  color: #23703c;
+  font-size: calc(12px * var(--app-font-scale));
+  line-height: 1.6;
+}
+.paste-note.is-error {
+  color: #b45309;
+}
+
 .pillar-row-title {
   font-weight: 600;
   margin: 4px 0 2px;

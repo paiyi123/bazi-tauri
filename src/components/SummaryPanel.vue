@@ -14,6 +14,14 @@
       <el-descriptions-item v-if="isResearch" label="輸入曆別">{{ result.inputCalendarType }}</el-descriptions-item>
       <el-descriptions-item v-if="isResearch" label="輸入日期">{{ result.inputDateTime }}</el-descriptions-item>
       <el-descriptions-item label="公曆">{{ result.solarDateTime }}</el-descriptions-item>
+      <el-descriptions-item v-if="result.timeCorrection?.lines?.length" label="時間校正" :span="fullSpan">
+        <div v-for="line in result.timeCorrection.lines" :key="line">{{ line }}</div>
+      </el-descriptions-item>
+      <el-descriptions-item v-if="result.birthWarnings?.length" label="出生時間提醒" :span="fullSpan">
+        <div v-for="item in result.birthWarnings" :key="item.kind + item.title" :class="['birth-warning', `is-${item.level}`]">
+          <strong>{{ item.title }}</strong>：{{ item.detail }}
+        </div>
+      </el-descriptions-item>
       <el-descriptions-item label="農曆">{{ result.lunarDateTime }}</el-descriptions-item>
       <el-descriptions-item label="八字">
         <span class="bazi-colored">
@@ -147,6 +155,12 @@ const baziPillars = computed(() => {
 </script>
 
 <style scoped>
+.birth-warning + .birth-warning {
+  margin-top: 4px;
+}
+.birth-warning.is-warn strong {
+  color: var(--el-color-warning-dark-2, #b88230);
+}
 .section-header {
   align-items: center;
 }

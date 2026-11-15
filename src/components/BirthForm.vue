@@ -300,6 +300,48 @@
           </el-col>
         </template>
 
+        <el-col :span="24">
+          <div class="time-correction-box">
+            <div class="time-correction-title">出生地與時間校正</div>
+            <el-row :gutter="12">
+              <el-col :span="12">
+                <el-form-item label="出生地">
+                  <el-select v-model="placeName" filterable class="full-width">
+                    <el-option-group v-for="group in placeGroups" :key="group.label" :label="group.label">
+                      <el-option v-for="place in group.places" :key="place" :label="place" :value="place" />
+                    </el-option-group>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="夏令時間">
+                  <el-select v-model="timeCorrection.dst" class="full-width">
+                    <el-option label="自動（依台灣夏令時間表）" value="auto" />
+                    <el-option label="這是夏令時間，扣 1 小時" value="on" />
+                    <el-option label="不校正" value="off" />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <template v-if="placeName === CUSTOM_PLACE">
+                <el-col :span="12">
+                  <el-form-item label="東經（度）">
+                    <el-input-number v-model="customLongitude" :min="-180" :max="180" :step="0.01" :precision="2" controls-position="right" class="full-width" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="時區（UTC+小時）">
+                    <el-input-number v-model="utcOffsetHours" :min="-12" :max="14" :step="0.5" controls-position="right" class="full-width" />
+                  </el-form-item>
+                </el-col>
+              </template>
+              <el-col :span="24">
+                <el-checkbox v-model="timeCorrection.trueSolarTime">改用真太陽時排盤</el-checkbox>
+                <p class="time-correction-note">{{ timeCorrectionNote }}</p>
+              </el-col>
+            </el-row>
+          </div>
+        </el-col>
+
         <el-col :span="12">
           <el-form-item label="日柱流派">
             <el-select v-model="form.baziSect" class="full-width">
@@ -358,6 +400,7 @@ import { computed, onMounted, reactive, ref, watch } from "vue";
 import { getLunarMonthDetail, getLunarYearOptions } from "../services/bazi";
 import { canScanRecordQr, cancelRecordQrScan, getRecordShareQrSvg, scanRecordQr } from "../services/recordShare";
 import { QR_MAX_RECORDS, chunkRecordsForShare, decodeRecordsShare, importSharedRecords } from "../utils/recordShare";
+import { BIRTH_PLACES, CUSTOM_PLACE, applyPlace, defaultTimeCorrection } from "../constants/birthPlaces";
 import type {
   BaziRequest,
   BirthRecordResponse,
@@ -395,6 +438,7 @@ const defaultForm = (): BaziRequest => ({
   baziSect: 2,
   yunSect: 1,
   leapMonth: false,
+  timeCorrection: defaultTimeCorrection(),
 });
 
 function loadDraft() {
@@ -407,6 +451,50 @@ function loadDraft() {
 }
 
 const form = reactive<BaziRequest>(loadDraft());
+if (!form.timeCorrection) form.timeCorrection = defaultTimeCorrection();
+
+// 出生地與時間校正：夏令時間預設依台灣夏令時間表自動扣；真太陽時預設不用（子平各家看法不同，老師與多數書用當地鐘錶時間）。
+const timeCorrection = computed(() => form.timeCorrection!);
+const placeGroups = computed(() => [
+  { label: "台灣", places: BIRTH_PLACES.filter((item) => item.group === "台灣").map((item) => item.name) },
+  { label: "其他", places: [...BIRTH_PLACES.filter((item) => item.group !== "台灣").map((item) => item.name), CUSTOM_PLACE] },
+]);
+const placeName = computed({
+  get: () => form.timeCorrection?.placeName ?? "台北",
+  set: (name: string) => {
+    const next = applyPlace(form.timeCorrection ?? defaultTimeCorrection(), name);
+    // 換到台灣以外的地方時，夏令時間「自動」不會扣；換回台灣維持原設定。
+    form.timeCorrection = next;
+  },
+});
+const customLongitude = computed({
+  get: () => form.timeCorrection?.longitude ?? 120,
+  set: (value: number | undefined) => {
+    form.timeCorrection = { ...(form.timeCorrection ?? defaultTimeCorrection()), longitude: value ?? 120 };
+  },
+});
+const utcOffsetHours = computed({
+  get: () => (form.timeCorrection?.utcOffsetMinutes ?? 480) / 60,
+  set: (value: number | undefined) => {
+    form.timeCorrection = { ...(form.timeCorrection ?? defaultTimeCorrection()), utcOffsetMinutes: Math.round((value ?? 8) * 60) };
+  },
+});
+const timeCorrectionNote = computed(() => {
+  if (timeInputMode.value === "SHICHEN") {
+    return "用「時辰」輸入時不知道確切分鐘，不做夏令時間和真太陽時校正；出生在夏令時間期間時，排盤結果會提醒。要校正請改用「時分」輸入。";
+  }
+  const parts = [
+    timeCorrection.value.dst === "auto"
+      ? "出生在台灣夏令時間期間（1946–1961、1974–1975、1979 年夏天）或日治時期（UTC+9）時自動扣 1 小時。"
+      : timeCorrection.value.dst === "on"
+        ? "一律把輸入時間扣 1 小時。"
+        : "不做夏令時間校正。",
+    timeCorrection.value.trueSolarTime
+      ? "依出生地經度和均時差換成真太陽時再排盤（部分書的做法）。"
+      : "真太陽時只算出來提示，不改四柱（許老師與多數子平書用當地標準時間）。",
+  ];
+  return parts.join("");
+});
 const lunarMonthOptions = ref<LunarMonthOption[]>([]);
 const lunarDayOptions = ref<LunarDayOption[]>([]);
 const selectedLunarMonthKey = ref(`${form.month}-${form.leapMonth}`);
@@ -511,6 +599,7 @@ function currentRecordPayload() {
     hour: form.hour,
     minute: form.minute,
     leapMonth: form.leapMonth,
+    timeCorrection: form.timeCorrection ? { ...form.timeCorrection } : undefined,
     timeLabel: timeInputMode.value === "SHICHEN" ? timePresetMap[timePreset.value].label : currentShiChenLabel.value,
     notes: "",
   };
@@ -526,6 +615,7 @@ function applyRecord(record: BirthRecordResponse) {
   form.hour = record.hour;
   form.minute = record.minute;
   form.leapMonth = record.leapMonth;
+  form.timeCorrection = record.timeCorrection ? { ...record.timeCorrection } : defaultTimeCorrection();
   saveName.value = record.name;
   syncFormToTimePreset();
 }
@@ -543,6 +633,7 @@ async function applyBirthDraft(draft: BaziRequest) {
   form.baziSect = draft.baziSect;
   form.yunSect = draft.yunSect;
   form.leapMonth = draft.leapMonth;
+  if (draft.timeCorrection) form.timeCorrection = { ...draft.timeCorrection };
   timeInputMode.value = "SHICHEN";
   syncFormToTimePreset();
   await refreshLunarMonthOptions();
@@ -898,11 +989,33 @@ function onSubmit() {
       `${String(form.hour).padStart(2, "0")}:${String(form.minute).padStart(2, "0")}`,
     timeLabel: timeInputMode.value === "SHICHEN" ? timePresetMap[timePreset.value].label : currentShiChenLabel.value,
   });
-  emit("submit", { ...form });
+  // 用時辰輸入時不知道確切分鐘，不做夏令時間／真太陽時校正（後端仍會提醒夏令時間期間）。
+  const correction = form.timeCorrection ?? defaultTimeCorrection();
+  emit("submit", {
+    ...form,
+    timeCorrection: timeInputMode.value === "SHICHEN" ? { ...correction, dst: "off", trueSolarTime: false } : { ...correction },
+  });
 }
 </script>
 
 <style scoped>
+.time-correction-box {
+  margin-bottom: 12px;
+  padding: 8px 10px 2px;
+  border: 1px dashed var(--el-border-color, #dcdfe6);
+  border-radius: 6px;
+}
+.time-correction-title {
+  margin-bottom: 4px;
+  font-weight: 600;
+  font-size: 0.92em;
+}
+.time-correction-note {
+  margin: 2px 0 8px;
+  color: var(--el-text-color-secondary, #909399);
+  font-size: 0.82em;
+  line-height: 1.5;
+}
 .save-button-wrap {
   display: flex;
   align-items: center;

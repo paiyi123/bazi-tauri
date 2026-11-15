@@ -185,6 +185,27 @@ pub(super) fn build_preferences(
         ));
     }
 
+    // 母慈滅子（2026-11-04 講義例一）：印是病，普通身弱「用印」的方案都不適用，只留比劫方案。
+    if strength.mother_overload.is_some() {
+        plans = vec![plan(
+            &day_element,
+            "weak-seal-overload-use-peer",
+            "母慈滅子：比劫洩印幫身",
+            "印太多反埋日主、原局不見比劫時；運只宜比劫，財要原局有根才能疏印",
+            &["比劫"],
+            &[],
+            &["印", "官殺"],
+            &["財", "食傷"],
+            family_evidence_ids(facts, &["印", "比劫", "財"]),
+            &[
+                "財（制印）若原局無根，印旺財折，走財運也沒用",
+                "食傷洩身，日主無根時難承受",
+                "官殺會再生印，加重病",
+            ],
+            &["2026-11-04"],
+        )];
+    }
+
     plans.sort_by(|a, b| a.rule_id.cmp(&b.rule_id));
     let no_plan_reasons = if plans.is_empty() {
         vec![if strength.classification == "依據不足" {

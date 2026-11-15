@@ -328,6 +328,8 @@ import {
   type RelationSide,
 } from "../utils/lessonPreference";
 import { annualEvents, majorLuckEvents, type LuckEvent, type LuckEventContext } from "../utils/luckEvents";
+import { classroomLuckEvents } from "../utils/classroomLuckNotes";
+import { baziYearAt, currentLuckIndex } from "../utils/baziNow";
 import { useViewMode } from "../composables/useViewMode";
 import { spouseStorageYears, topicEvents, type TopicContext } from "../utils/lifeTopics";
 import { movingGodEvents } from "../utils/tenGodCombos";
@@ -376,7 +378,9 @@ type InteractionSummary = {
   end: number;
 };
 
-const currentYear = new Date().getFullYear();
+// 今年以立春分年、目前大運以交運時刻分（1/1–立春、交運那年用西曆年份會錯）。
+const currentYear = baziYearAt();
+const currentLuck = computed(() => currentLuckIndex(props.result));
 // 選擇和四柱下方的大運列共用（useLuckSelection），兩邊同步。
 const {
   luckIndex: selectedLuckIndex,
@@ -572,7 +576,7 @@ function buildPreviewPillar(
 }
 
 function isCurrentLuckRow(row: DaYun): boolean {
-  return !!row.liuNian?.some((item) => item.year === currentYear);
+  return row.index === currentLuck.value;
 }
 
 function isCurrentAnnualRow(row: LiuNian): boolean {
@@ -958,6 +962,7 @@ const luckEventsByRow = computed(
           ...specialPatternLuckEvents(row.ganZhi, "運", luckEventContext.value.natal),
           ...fourBookLuckEvents(row.ganZhi, "運", fourBookOptions.value),
           ...fourBookTopicEvents(row.ganZhi, "運", { ...fourBookTopicOptions.value, previousLuck: previousLuckOf.value.get(row.index) }),
+          ...classroomLuckEvents(row.ganZhi, "運", { natal: luckEventContext.value.natal, analysis: props.result.quantModel?.lessonContent?.threeStepAnalysis }),
         ],
       ]),
     ),
@@ -997,6 +1002,7 @@ const annualEventsByYear = computed(
             ...specialPatternLuckEvents(annual.ganZhi, "歲", luckEventContext.value.natal),
             ...fourBookLuckEvents(annual.ganZhi, "歲", { ...fourBookOptions.value, luck }),
             ...fourBookTopicEvents(annual.ganZhi, "歲", { ...fourBookTopicOptions.value, luck }),
+            ...classroomLuckEvents(annual.ganZhi, "歲", { natal: luckEventContext.value.natal, analysis: props.result.quantModel?.lessonContent?.threeStepAnalysis, luck }),
           ],
         ];
       }),

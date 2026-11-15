@@ -53,7 +53,33 @@ pub(super) fn build_strength(
     let party_tie = same_party_count == opposing_party_count;
     let momentum_proxy =
         same_party_count > opposing_party_count || (party_tie && month_command_same_party);
-    let rooted = !facts.roots.is_empty();
+    // 2026-11-04：被刑沖的地支只剩本氣，裡面的中氣、餘氣根被打掉，不算得地。
+    let mut root_knockouts = Vec::new();
+    let effective_roots = facts
+        .roots
+        .iter()
+        .filter(|root| {
+            let index = BRANCH_LOCATION_LABELS
+                .iter()
+                .position(|label| *label == root.pillar)
+                .unwrap_or(0);
+            let knocks = adjacent_knocks(facts, index);
+            if root.hidden_stem_layer != "本氣" && !knocks.is_empty() {
+                root_knockouts.push(format!(
+                    "{}{}藏{}（{}）被{}打掉",
+                    root.pillar,
+                    root.branch,
+                    root.hidden_stem,
+                    root.hidden_stem_layer,
+                    knocks.join("、")
+                ));
+                false
+            } else {
+                true
+            }
+        })
+        .collect::<Vec<_>>();
+    let rooted = !effective_roots.is_empty();
     let observation_count =
         usize::from(same_season_element) + usize::from(momentum_proxy) + usize::from(rooted);
     let pressure_families_surface = pressure_families(facts, true);
@@ -61,6 +87,7 @@ pub(super) fn build_strength(
     // On a 四比四 tie the teacher reads the month-command party as decisive (2026-09-02 source
     // chart: 金得令 → 身強), even when 得時 and 得地 are both missing.
     let tie_won_by_month = party_tie && month_command_same_party;
+    let mother_overload = mother_overload(facts, &day_element, month_element.clone(), &effective_roots);
     let classification = match observation_count {
         3 if pressure_families_surface.is_empty() => "旺極候選",
         3 => "旺候選",
@@ -76,9 +103,30 @@ pub(super) fn build_strength(
         _ => "依據不足",
     }
     .to_string();
+    let classification = if mother_overload.is_some()
+        && matches!(classification.as_str(), "強候選" | "旺候選" | "旺極候選")
+    {
+        "弱候選".to_string()
+    } else {
+        classification
+    };
+    let balance_hint = if mother_overload.is_none()
+        && matches!(classification.as_str(), "強候選" | "弱候選")
+    {
+        balance_hint(
+            facts,
+            same_party_count,
+            opposing_party_count,
+            classification == "強候選",
+        )
+    } else {
+        None
+    };
     let checks = strength_checks(
         facts,
         StrengthCheckInputs {
+            root_knockouts: root_knockouts.clone(),
+            rooted,
             same_season_element,
             seal_in_season,
             same_party_count,
@@ -88,12 +136,20 @@ pub(super) fn build_strength(
         },
     );
     let (same_party_characters, opposing_party_characters) = party_characters(facts, &is_same_party);
-    let verdict_reason = verdict_reason(
-        &checks,
-        &classification,
-        &pressure_families_surface,
-        tie_won_by_month,
-    );
+    let verdict_reason = match &mother_overload {
+        Some(text) => format!(
+            "{}；{}",
+            verdict_reason(&checks, "強候選", &pressure_families_surface, tie_won_by_month)
+                .trim_end_matches('。'),
+            text
+        ),
+        None => verdict_reason(
+            &checks,
+            &classification,
+            &pressure_families_surface,
+            tie_won_by_month,
+        ),
+    };
     let mut ordered_interactions = interactions.iter().collect::<Vec<_>>();
     ordered_interactions.sort_by(|left, right| {
         left.scope
@@ -159,6 +215,31 @@ pub(super) fn build_strength(
             source_date: None,
         },
     ];
+    if !root_knockouts.is_empty() {
+        evidence.push(LessonEvidence {
+            id: "strength-root-knockouts".to_string(),
+            kind: "lesson_rule".to_string(),
+            pillar: None,
+            hidden_stem_layer: None,
+            interaction_id: None,
+            description: format!(
+                "刑沖後只剩本氣：{}，不算得地。",
+                root_knockouts.join("；")
+            ),
+            source_date: Some("2026-11-04".to_string()),
+        });
+    }
+    if let Some(text) = &mother_overload {
+        evidence.push(LessonEvidence {
+            id: "strength-mother-overload".to_string(),
+            kind: "lesson_rule".to_string(),
+            pillar: Some("月支".to_string()),
+            hidden_stem_layer: None,
+            interaction_id: None,
+            description: text.clone(),
+            source_date: Some("2026-11-04".to_string()),
+        });
+    }
     for interaction in &interaction_rows {
         evidence.push(LessonEvidence {
             id: format!("strength-{}", interaction.id),
@@ -200,7 +281,7 @@ pub(super) fn build_strength(
     LessonStrengthAnalysis {
         title: "第二步：日主強弱".to_string(),
         conclusion: format!(
-            "三項觀察命中 {observation_count} 項；表層剋洩耗家族為{}，初判{}{}。",
+            "三項觀察命中 {observation_count} 項；表層剋洩耗家族為{}，初判{}{}{}。",
             if pressure_families_surface.is_empty() {
                 "無".to_string()
             } else {
@@ -209,6 +290,11 @@ pub(super) fn build_strength(
             classification,
             if tie_won_by_month && observation_count == 1 {
                 "（同黨異黨四比四，得令者為旺）"
+            } else {
+                ""
+            },
+            if mother_overload.is_some() {
+                "（印太多反埋日主，母慈滅子，不論身強）"
             } else {
                 ""
             }
@@ -223,7 +309,7 @@ pub(super) fn build_strength(
         opposing_party_count,
         month_command_same_party,
         momentum_proxy,
-        root_count: facts.roots.len(),
+        root_count: effective_roots.len(),
         observation_count,
         same_party_characters,
         opposing_party_characters,
@@ -234,10 +320,86 @@ pub(super) fn build_strength(
         interactions: interaction_rows,
         evidence,
         limitations,
+        root_knockouts,
+        mother_overload,
+        balance_hint,
     }
 }
 
+/// 母慈滅子（《滴天髓》；2026-11-04 講義例一「土厚埋金」）：月令是印、印在其餘七字中佔 4 個以上、
+/// 天干地支本氣不見比劫、日主也沒有本氣根 → 印太多反把日主埋掉，不能論身強；只能用比劫洩印幫身，
+/// 印與生印的官殺都忌，財要原局有根才能制印（否則印旺財折）。
+fn mother_overload(
+    facts: &LessonFacts,
+    day_element: &Element,
+    month_element: Element,
+    effective_roots: &[&LessonRootFact],
+) -> Option<String> {
+    let seal = day_element.get_reinforced();
+    if month_element != seal {
+        return None;
+    }
+    let others = facts
+        .pillars
+        .iter()
+        .enumerate()
+        .flat_map(|(index, pillar)| {
+            let mut items = vec![pillar.branch_main_element.as_str()];
+            if index != 2 {
+                items.push(pillar.stem_element.as_str());
+            }
+            items
+        })
+        .map(Element::from_name)
+        .collect::<Vec<_>>();
+    let seal_count = others.iter().filter(|element| **element == seal).count();
+    let peer_count = others.iter().filter(|element| *element == day_element).count();
+    let main_root = effective_roots.iter().any(|root| root.hidden_stem_layer == "本氣");
+    if seal_count < 4 || peer_count > 0 || main_root {
+        return None;
+    }
+    Some(format!(
+        "母慈滅子：月令是印（{}），其餘七字中印佔 {} 個，又不見比劫、日主沒有本氣根，印太多反把日主埋掉（{}多{}弱），不論身強；運只宜比劫（{}）洩印幫身，印與官殺都忌（2026-11-04 講義例一、《滴天髓》）",
+        element_name(&seal),
+        seal_count,
+        element_name(&seal),
+        element_name(day_element),
+        element_name(day_element)
+    ))
+}
+
+/// 中和提示（2026-11-04 講義例三）：強弱初判和得勢的多數方向相反（判強卻異黨較多，或判弱卻同黨較多）、
+/// 兩黨只差 2 個、八字見到四種以上五行、沒有一行超過 3 個 → 兩邊力量拉鋸，可能屬中和；
+/// 這種命「行五運皆可」，起落不大，看運重點在沖。四比四平手已由「得令者為旺」決定，不算。
+fn balance_hint(facts: &LessonFacts, same: usize, opposing: usize, strong: bool) -> Option<String> {
+    let contradicts = if strong { opposing > same } else { same > opposing };
+    if !contradicts {
+        return None;
+    }
+    let mut counts: Vec<(String, usize)> = Vec::new();
+    for pillar in &facts.pillars {
+        for element in [&pillar.stem_element, &pillar.branch_main_element] {
+            match counts.iter_mut().find(|(name, _)| name == element) {
+                Some(entry) => entry.1 += 1,
+                None => counts.push((element.clone(), 1)),
+            }
+        }
+    }
+    let max = counts.iter().map(|(_, count)| *count).max().unwrap_or(0);
+    if same.abs_diff(opposing) > 2 || counts.len() < 4 || max > 3 {
+        return None;
+    }
+    Some(format!(
+        "可能偏中和：初判{}，但得勢是{}較多（同黨 {same}、異黨 {opposing}），兩邊相差不大；八字見{}種五行、沒有一行超過 3 個。講義例三：五行中和的命「行五運皆可」，起落不大，看運重點放在有沒有沖（2026-11-04）。",
+        if strong { "身強" } else { "身弱" },
+        if strong { "異黨" } else { "同黨" },
+        counts.len()
+    ))
+}
+
 struct StrengthCheckInputs {
+    root_knockouts: Vec<String>,
+    rooted: bool,
     same_season_element: bool,
     seal_in_season: bool,
     same_party_count: usize,
@@ -344,8 +506,20 @@ fn strength_checks(facts: &LessonFacts, inputs: StrengthCheckInputs) -> Vec<Less
             if inputs.momentum_proxy { "得勢" } else { "失勢" }
         )
     };
+    let knocked = if inputs.root_knockouts.is_empty() {
+        String::new()
+    } else {
+        format!(
+            "刑沖後只剩本氣：{}（2026-11-04）。",
+            inputs.root_knockouts.join("、")
+        )
+    };
     let root_finding = if facts.roots.is_empty() {
         format!("四支藏干都沒有{}（不分陰陽）→ 不得地。", day.element)
+    } else if !inputs.rooted {
+        format!("{knocked}剩下沒有根 → 不得地。")
+    } else if !knocked.is_empty() {
+        format!("{knocked}其餘仍有根 → 得地。")
     } else {
         format!(
             "{} → 得地（共 {} 處根）。",
@@ -378,7 +552,7 @@ fn strength_checks(facts: &LessonFacts, inputs: StrengthCheckInputs) -> Vec<Less
         },
         LessonStrengthCheck {
             item: "得地".to_string(),
-            hit: !facts.roots.is_empty(),
+            hit: inputs.rooted,
             rule: "地支藏干中有與日干同五行者即通根，不分陰陽；根以本氣最穩，其次長生，再次餘氣、墓庫。".to_string(),
             finding: root_finding,
             source_date: "2026-07-22".to_string(),

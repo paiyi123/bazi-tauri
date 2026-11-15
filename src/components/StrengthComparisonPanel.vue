@@ -44,6 +44,7 @@
       </div>
 
       <div class="conclusion">{{ lesson.verdictReason }}</div>
+      <div v-if="lesson.balanceHint" class="conclusion balance-hint">{{ lesson.balanceHint }}</div>
       <el-collapse class="note-collapse">
         <el-collapse-item title="課堂判定表與限制" name="lesson-notes">
           <ul class="reason-list">
@@ -51,6 +52,8 @@
             <li>三者得其二 → 強（2026-07-22）；不得時但得勢得地 → 衰中轉強（2026-07-29）。</li>
             <li>三者只得其一 → 弱；三者皆無且滿盤剋洩耗 → 衰極，可能入從格。</li>
             <li>同黨異黨四比四時，看月令屬哪一黨：得令者為旺（2026-09-02、09-09）。</li>
+            <li>被相鄰地支刑、沖的地支只剩本氣，裡面的中氣、餘氣根不算得地；自刑、或同時被合住的不算（2026-11-04）。</li>
+            <li>月令是印、其餘七字印佔 4 個以上、不見比劫、日主沒有本氣根 → 母慈滅子，不論身強（2026-11-04 講義例一）。</li>
             <li v-for="item in lesson.limitations" :key="item">{{ item }}</li>
           </ul>
         </el-collapse-item>

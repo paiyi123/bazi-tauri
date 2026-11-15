@@ -1,5 +1,6 @@
 import { ref } from "vue";
 import type { BaziResponse } from "../types/bazi";
+import { baziYearAt, currentLuckRow } from "../utils/baziNow";
 
 // 大運／流年／流月選到哪一格，整個 App 共用：四柱下方的大運列和正式的「大運流年」面板同步。
 // 只有換了一張命盤才回到預設（目前大運），切換手機分頁、面板重新出現時保留選擇。
@@ -14,8 +15,9 @@ export function useLuckSelection() {
   function ensureFor(result: BaziResponse) {
     if (initializedFor === result) return false;
     initializedFor = result;
-    const year = new Date().getFullYear();
-    const current = result.daYun?.find((row) => row.liuNian?.some((item) => item.year === year)) ?? result.daYun?.[0];
+    // 今年以立春分年、目前大運以交運時刻分（不能用西曆年份：1/1–立春、交運那年都會錯）。
+    const year = baziYearAt();
+    const current = currentLuckRow(result) ?? result.daYun?.[0];
     luckIndex.value = current?.index ?? null;
     annualYear.value = current?.liuNian?.some((item) => item.year === year) ? year : null;
     monthIndex.value = null;
